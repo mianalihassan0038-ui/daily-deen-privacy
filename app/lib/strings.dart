@@ -468,6 +468,8 @@ class S {
     'stop_chilla': ['Stop chilla', 'چلہ ختم کریں'],
     'change': ['Change', 'تبدیل'],
     'tilawat': ['Tilawat', 'تلاوت'],
+    'tap_when_read': ['Tap when read', 'پڑھ کر ٹیپ کریں'],
+    'tilawat_hint': ['Tap a surah to open it; tap the button after reading. Tap a tasbeeh to count it.', 'سورت کھولنے کے لیے کارڈ دبائیں، پڑھنے کے بعد بٹن دبائیں۔ گننے کے لیے تسبیح پر ٹیپ کریں۔'],
     'tasbeehat': ['Tasbeehat', 'تسبیحات'],
     'report_preview': ['Report text (WhatsApp)', 'رپورٹ کا متن (واٹس ایپ)'],
     'session': ['Time', 'وقت'],

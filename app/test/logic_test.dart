@@ -398,6 +398,20 @@ void main() {
     });
   });
 
+  test('saved v2 routine gets new chilla items', () async {
+    final old = defaultRoutine.where((i) => !newDefaultIds.contains(i.id)).map((e) => e.toJson()).toList();
+    SharedPreferences.setMockInitialValues({
+      'settings': jsonEncode({'onboarded': true, 'routine': old}),
+    });
+    final state = await AppState.load();
+    for (final id in newDefaultIds) {
+      expect(state.itemById(id), isNotNull, reason: id);
+    }
+    final ids = state.allItems.map((e) => e.id).toList();
+    expect(ids.indexOf('waqiah'), ids.indexOf('maghrib') + 1);
+    expect(ids.indexOf('m_istighfar'), ids.indexOf('tasbeeh_100') + 1);
+  });
+
   test('v1 settings migrate to the new routine model', () async {
     final v1 = {
       'urdu': false,

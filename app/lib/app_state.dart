@@ -325,6 +325,7 @@ class AppSettings {
         'tTargets': tasbeehTargets,
         'tCustom': customDhikr.map((e) => e.toJson()).toList(),
         'routine': routine.map((e) => e.toJson()).toList(),
+        'rv': routineVersion,
         'templates': routineTemplates.map((k, v) => MapEntry(k, v.map((e) => e.toJson()).toList())),
         'favAzkar': favAzkar.toList(),
         'habits': habits.map((e) => e.toJson()).toList(),
@@ -356,6 +357,7 @@ class AppSettings {
     List<RoutineItem> routine;
     if (j['routine'] is List) {
       routine = maps(j['routine']).map(RoutineItem.fromJson).toList();
+      if (((j['rv'] as num?)?.toInt() ?? 1) < routineVersion) routine = addNewDefaults(routine);
     } else {
       final disabled = ((j['disabled'] as List?) ?? []).map((e) => e.toString()).toSet();
       final legacyCustom = maps(j['custom']).map(RoutineItem.customFromJson).toList();
@@ -418,6 +420,38 @@ class AppSettings {
 }
 
 const int quranTotalPages = 604;
+
+/// Bumped when new default activities are added, so saved routines get them.
+const int routineVersion = 3;
+
+/// Default activities added in later versions (chilla: Surah Waqiah and
+/// morning / evening tasbeehat).
+const newDefaultIds = [
+  'waqiah',
+  'm_istighfar', 'm_durood', 'm_kalima1', 'm_kalima3',
+  'e_istighfar', 'e_durood', 'e_kalima1', 'e_kalima3',
+];
+
+/// Inserts missing [newDefaultIds] into a saved routine, each after the
+/// default item that precedes it.
+List<RoutineItem> addNewDefaults(List<RoutineItem> routine) {
+  final out = List<RoutineItem>.of(routine);
+  for (final id in newDefaultIds) {
+    if (out.any((e) => e.id == id)) continue;
+    final di = defaultRoutine.indexWhere((e) => e.id == id);
+    if (di < 0) continue;
+    var insertAt = out.length;
+    for (var k = di - 1; k >= 0; k--) {
+      final prev = out.indexWhere((e) => e.id == defaultRoutine[k].id);
+      if (prev >= 0) {
+        insertAt = prev + 1;
+        break;
+      }
+    }
+    out.insert(insertAt, defaultRoutine[di]);
+  }
+  return out;
+}
 
 int _idCounter = 0;
 

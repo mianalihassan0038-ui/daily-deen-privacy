@@ -10,6 +10,7 @@ import '../widgets/common.dart';
 import '../strings.dart';
 import '../widgets/islamic_art.dart';
 import '../widgets/pickers.dart';
+import '../data/azkar.dart';
 import 'azkar_screen.dart';
 import 'home_screen.dart' show showPrayerStatusSheet;
 import 'quran_reader_screen.dart';
@@ -227,12 +228,33 @@ class _ReportScreenState extends State<ReportScreen> {
                                         fit: BoxFit.scaleDown,
                                         child: Text(reportItemName(it, urdu), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                                       ),
-                                      const SizedBox(height: 4),
-                                      InkWell(
-                                        key: Key('report_check_$id'),
-                                        onTap: () => state.toggleItem(date, it),
-                                        child: Text(done ? s.t('read') : s.t('mark_read'),
-                                            style: TextStyle(fontSize: 11, color: done ? AppColors.onTime : AppColors.gold)),
+                                      const SizedBox(height: 6),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: done
+                                            ? FilledButton.icon(
+                                                key: Key('report_check_$id'),
+                                                style: FilledButton.styleFrom(
+                                                  backgroundColor: AppColors.onTime,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                                                  minimumSize: const Size(0, 34),
+                                                ),
+                                                onPressed: () => state.toggleItem(date, it),
+                                                icon: const Icon(Icons.check_circle, size: 16),
+                                                label: FittedBox(child: Text(s.t('read'))),
+                                              )
+                                            : OutlinedButton.icon(
+                                                key: Key('report_check_$id'),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: AppColors.emerald,
+                                                  side: const BorderSide(color: AppColors.emerald, width: 1.3),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                                                  minimumSize: const Size(0, 34),
+                                                ),
+                                                onPressed: () => state.toggleItem(date, it),
+                                                icon: const Icon(Icons.radio_button_unchecked, size: 16),
+                                                label: FittedBox(child: Text(s.t('tap_when_read'))),
+                                              ),
                                       ),
                                     ]),
                                   ),
@@ -246,9 +268,25 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
                 const SizedBox(height: 18),
                 // ---------- tasbeehat morning / evening ----------
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(s.t('tilawat_hint'), textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+                ),
                 LayoutBuilder(builder: (context, c) {
-                  final morning = _TasbeehCard(title: '${s.t('tasbeehat')} : ${s.t('az_m')}', icon: Icons.wb_twilight, ids: reportMorning, date: date, onOpen: openItem);
-                  final evening = _TasbeehCard(title: '${s.t('tasbeehat')} : ${s.t('az_e')}', icon: Icons.wb_sunny_outlined, ids: reportEvening, date: date, onOpen: openItem);
+                  final morning = _TasbeehCard(
+                      title: '${s.t('tasbeehat')} : ${s.t('az_m')}',
+                      icon: Icons.wb_twilight,
+                      ids: reportMorning,
+                      azkarType: AzkarType.morning,
+                      date: date,
+                      onOpen: openItem);
+                  final evening = _TasbeehCard(
+                      title: '${s.t('tasbeehat')} : ${s.t('az_e')}',
+                      icon: Icons.wb_sunny_outlined,
+                      ids: reportEvening,
+                      azkarType: AzkarType.evening,
+                      date: date,
+                      onOpen: openItem);
                   if (c.maxWidth < 340) return Column(children: [morning, const SizedBox(height: 12), evening]);
                   return IntrinsicHeight(
                     child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -515,9 +553,17 @@ class _TasbeehCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<String> ids;
+  final AzkarType azkarType;
   final DateTime date;
   final void Function(String id) onOpen;
-  const _TasbeehCard({required this.title, required this.icon, required this.ids, required this.date, required this.onOpen});
+  const _TasbeehCard({
+    required this.title,
+    required this.icon,
+    required this.ids,
+    required this.azkarType,
+    required this.date,
+    required this.onOpen,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -534,9 +580,15 @@ class _TasbeehCard extends StatelessWidget {
           child: CustomPaint(painter: MosqueSkylinePainter(color: Color(0x1A0B4D35))),
         ),
         Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          Material(
+            color: Colors.transparent,
+            child: Ink(
             decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+            child: InkWell(
+            key: Key('report_header_${azkarType.name}'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AzkarDetailScreen(type: azkarType))),
+            child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Icon(icon, color: AppColors.goldLight, size: 22),
               const SizedBox(width: 6),
@@ -547,7 +599,12 @@ class _TasbeehCard extends StatelessWidget {
                 ),
               ),
             ]),
+            ),
+            ),
+            ),
           ),
+          _AzkarRow(type: azkarType, date: date),
+          const Divider(height: 1),
           for (final id in ids)
             Builder(builder: (context) {
               final it = state.itemById(id);
@@ -668,6 +725,47 @@ class _ChillaGrid extends StatelessWidget {
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall,
           ),
+        ]),
+      ),
+    );
+  }
+}
+
+
+/// "Morning Azkar 5/9" row that mirrors progress made in the Azkar tab.
+class _AzkarRow extends StatelessWidget {
+  final AzkarType type;
+  final DateTime date;
+  const _AzkarRow({required this.type, required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final s = state.s;
+    final list = azkar[type]!;
+    var count = 0;
+    for (var i = 0; i < list.length; i++) {
+      if (state.azkarCount(date, '${type.name}_$i') >= list[i].count) count++;
+    }
+    final routineId = azkarRoutineId[type]!;
+    final done = state.day(date).done.contains(routineId) || count == list.length;
+    return InkWell(
+      key: Key('report_azkar_${type.name}'),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AzkarDetailScreen(type: type))),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(children: [
+          Icon(done ? Icons.check_circle : Icons.auto_awesome, color: done ? AppColors.onTime : AppColors.gold, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(s.t(type == AzkarType.morning ? 'morning_azkar' : 'evening_azkar'),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              Text(done ? s.t('completed') : '$count / ${list.length} ${s.t('completed').toLowerCase()}',
+                  style: TextStyle(fontSize: 11, color: done ? AppColors.onTime : Theme.of(context).colorScheme.outline)),
+            ]),
+          ),
+          const Icon(Icons.chevron_right, size: 18),
         ]),
       ),
     );
