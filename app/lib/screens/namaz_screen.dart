@@ -94,7 +94,6 @@ class _TodayTab extends StatelessWidget {
     final urdu = state.settings.urdu;
     final theme = Theme.of(context);
     final times = state.prayerTimes(date);
-    final rec = state.day(date);
     final isToday = date == state.today;
     final next = state.nextPrayer(now);
     final weekDays = [for (var i = 6; i >= 0; i--) state.today.subtract(Duration(days: i))];
