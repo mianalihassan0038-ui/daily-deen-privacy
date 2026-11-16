@@ -54,6 +54,20 @@ jobs:
         continue-on-error: true
         run: flutter test --update-goldens test/screenshots
 
+      - name: Screenshot previews (small JPEGs in the log)
+        continue-on-error: true
+        run: |
+          pip install --quiet pillow
+          python3 - <<'PY'
+          import base64, io, pathlib
+          from PIL import Image
+          for f in sorted(pathlib.Path('test/screenshots/goldens').glob('*.png')):
+              im = Image.open(f).convert('RGB')
+              im.thumbnail((420, 1000))
+              buf = io.BytesIO(); im.save(buf, 'JPEG', quality=70)
+              print(f'@@SHOT {f.stem} ' + base64.b64encode(buf.getvalue()).decode())
+          PY
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
