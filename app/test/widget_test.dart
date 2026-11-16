@@ -268,7 +268,7 @@ void main() {
     final state = await pumpApp(tester);
     await tester.tap(find.byKey(const Key('open_daily_plan')));
     await tester.pumpAndSettle();
-    expect(find.text('My Daily Plan'), findsOneWidget);
+    expect(find.text('My Chilla'), findsWidgets);
     await tester.ensureVisible(find.byKey(const Key('report_check_waqiah')));
     await tester.tap(find.byKey(const Key('report_check_waqiah')));
     await tester.pumpAndSettle();

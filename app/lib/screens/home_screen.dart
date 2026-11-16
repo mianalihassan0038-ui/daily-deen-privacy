@@ -16,6 +16,7 @@ import 'azkar_screen.dart';
 import 'more_screen.dart';
 import 'navigation.dart';
 import 'report_screen.dart';
+import '../services/report.dart';
 import 'routine_screen.dart';
 import 'settings_screen.dart';
 import 'shell.dart';
@@ -756,7 +757,7 @@ class RoutineTile extends StatelessWidget {
 }
 
 
-/// Shortcut to "My Daily Plan" (chilla report).
+/// "My Chilla" card: day x/40 and today's chilla tasks.
 class _PlanCard extends StatelessWidget {
   const _PlanCard();
 
@@ -765,18 +766,80 @@ class _PlanCard extends StatelessWidget {
     final state = AppScope.of(context);
     final s = state.s;
     final chilla = state.chillaOn(state.today);
+    final (done, total) = chillaProgress(state, state.today);
+    void open() => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReportScreen()));
     return Card(
-      color: AppColors.emerald,
-      child: ListTile(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
         key: const Key('open_daily_plan'),
-        leading: const Icon(Icons.assignment_turned_in, color: AppColors.goldLight, size: 32),
-        title: Text(s.t('my_daily_plan'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-        subtitle: Text(
-          chilla == null ? s.t('daily_plan_sub') : '${s.t('chilla')} ${chilla.$1.toString().padLeft(2, '0')} • ${s.t('day')} ${chilla.$2.toString().padLeft(2, '0')}',
-          style: const TextStyle(color: Colors.white70),
+        onTap: open,
+        child: Ink(
+          decoration: const BoxDecoration(gradient: AppColors.headerGradient),
+          child: Stack(children: [
+            const Positioned(
+              right: 0,
+              bottom: 0,
+              width: 150,
+              height: 70,
+              child: CustomPaint(painter: MosqueSkylinePainter(color: Color(0x33000000))),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(children: [
+                ProgressRing(
+                  value: chilla == null ? 0 : chilla.$2 / 40,
+                  size: 70,
+                  stroke: 7,
+                  color: AppColors.gold,
+                  trackColor: Colors.white24,
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(chilla == null ? '—' : '${chilla.$2}',
+                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                    const Text('/ 40', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  ]),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(s.t('my_daily_plan'),
+                        style: const TextStyle(color: AppColors.goldLight, fontSize: 18, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      chilla == null
+                          ? s.t('daily_plan_sub')
+                          : '${s.t('chilla')} ${chilla.$1.toString().padLeft(2, '0')} • ${s.t('day')} ${chilla.$2.toString().padLeft(2, '0')}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    if (chilla != null) ...[
+                      Text('${s.t('chilla_today')}: $done/$total', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: total == 0 ? 0 : done / total,
+                          minHeight: 6,
+                          color: AppColors.gold,
+                          backgroundColor: Colors.white24,
+                        ),
+                      ),
+                    ] else
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: AppColors.emerald,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        ),
+                        onPressed: () => state.startChilla(state.today),
+                        child: Text(s.t('start_chilla')),
+                      ),
+                  ]),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.goldLight),
+              ]),
+            ),
+          ]),
         ),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.goldLight),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReportScreen())),
       ),
     );
   }

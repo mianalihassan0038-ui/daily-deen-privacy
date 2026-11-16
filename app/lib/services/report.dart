@@ -67,3 +67,19 @@ String buildDailyReport(AppState state, DateTime date, {required bool urdu}) {
   section(urdu ? '*تسبیحات:* شام' : '*Tasbeehat:* Evening', reportEvening, bullets: true);
   return b.toString().trimRight();
 }
+
+
+/// (done, total) of the chilla tasks for [date]: 5 prayers, tilawat and
+/// morning/evening tasbeehat.
+(int, int) chillaProgress(AppState state, DateTime date) {
+  final rec = state.day(date);
+  var done = prayerKeys.where((k) => isPrayed(rec.prayer(k))).length;
+  var total = prayerKeys.length;
+  for (final id in [...reportTilawat, ...reportMorning, ...reportEvening]) {
+    final it = state.itemById(id);
+    if (it == null) continue;
+    total++;
+    if (state.isDone(date, it)) done++;
+  }
+  return (done, total);
+}

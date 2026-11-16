@@ -133,6 +133,13 @@ class _ReportScreenState extends State<ReportScreen> {
                     ]),
                   ),
                 ),
+                if (chilla != null) ...[
+                  const SizedBox(height: 14),
+                  _ChillaGrid(
+                    selected: date,
+                    onSelect: (d) => setState(() => _date = d),
+                  ),
+                ],
                 const SizedBox(height: 18),
                 // ---------- prayers ----------
                 _RibbonCard(
@@ -573,6 +580,96 @@ class _TasbeehCard extends StatelessWidget {
           const SizedBox(height: 6),
         ]),
       ]),
+    );
+  }
+}
+
+
+/// 40 circles for the current chilla, coloured by how many tasks were done.
+class _ChillaGrid extends StatelessWidget {
+  final DateTime selected;
+  final ValueChanged<DateTime> onSelect;
+  const _ChillaGrid({required this.selected, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final s = state.s;
+    final theme = Theme.of(context);
+    final today = state.today;
+    final current = state.chillaOn(today) ?? state.chillaOn(selected);
+    final start = DateTime.parse(state.settings.chillaStart!);
+    final number = current?.$1 ?? 1;
+    final first = DateTime(start.year, start.month, start.day + (number - 1) * 40);
+    final days = [for (var i = 0; i < 40; i++) DateTime(first.year, first.month, first.day + i)];
+    final ratios = [
+      for (final d in days)
+        if (d.isAfter(today))
+          0.0
+        else
+          (() {
+            final (done, total) = chillaProgress(state, d);
+            return total == 0 ? 0.0 : done / total;
+          })(),
+    ];
+    final full = ratios.where((r) => r >= 1).length;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text('${s.t('chilla_40_days')} • ${s.t('chilla')} ${number.toString().padLeft(2, '0')}',
+              style: const TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 10),
+          GridView.count(
+            crossAxisCount: 10,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
+            children: [
+              for (var i = 0; i < 40; i++)
+                Builder(builder: (context) {
+                  final d = days[i];
+                  final future = d.isAfter(today);
+                  final ratio = ratios[i];
+                  final isSel = d == selected;
+                  return InkWell(
+                    key: Key('chilla_day_${i + 1}'),
+                    customBorder: const CircleBorder(),
+                    onTap: future ? null : () => onSelect(d),
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: ratio >= 1
+                            ? AppColors.onTime
+                            : ratio > 0
+                                ? AppColors.gold.withValues(alpha: 0.25 + ratio * 0.6)
+                                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: future ? 0.3 : 0.8),
+                        border: isSel ? Border.all(color: AppColors.emerald, width: 2) : null,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('${i + 1}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: ratio >= 1 ? Colors.white : (future ? theme.colorScheme.outline : null),
+                            )),
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            full >= 40 ? s.t('chilla_complete') : '✅ $full / 40',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall,
+          ),
+        ]),
+      ),
     );
   }
 }
