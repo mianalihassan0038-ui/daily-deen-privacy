@@ -264,6 +264,37 @@ void main() {
     expect(state.day(state.today).muhasaba['rating'], '4');
   });
 
+  testWidgets('Daily plan screen: mark items and start chilla', (tester) async {
+    final state = await pumpApp(tester);
+    await tester.tap(find.byKey(const Key('open_daily_plan')));
+    await tester.pumpAndSettle();
+    expect(find.text('My Daily Plan'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('report_check_waqiah')));
+    await tester.tap(find.byKey(const Key('report_check_waqiah')));
+    await tester.pumpAndSettle();
+    expect(state.day(state.today).done.contains('waqiah'), isTrue);
+    await tester.ensureVisible(find.byKey(const Key('report_check_e_kalima1')));
+    await tester.tap(find.byKey(const Key('report_check_e_kalima1')));
+    await tester.pumpAndSettle();
+    expect(state.day(state.today).done.contains('e_kalima1'), isTrue);
+    state.startChilla(state.today);
+    await tester.pumpAndSettle();
+    expect(find.text('Chilla: 01'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Daily plan fits a small screen in Urdu', (tester) async {
+    final state = await pumpApp(tester);
+    state.settings.urdu = true;
+    state.saveSettings();
+    tester.view.physicalSize = const Size(720, 1280);
+    tester.view.devicePixelRatio = 2.0;
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open_daily_plan')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Dark mode renders home', (tester) async {
     final state = await pumpApp(tester);
     state.settings.themeMode = ThemeMode.dark;

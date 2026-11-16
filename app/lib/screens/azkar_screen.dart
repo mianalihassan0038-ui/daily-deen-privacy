@@ -399,11 +399,12 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
   }
 
   ({String key, String arabic, String name, int defTarget, bool custom}) _current(AppState state) {
+    final base = dhikrBase(_key);
     for (final d in tasbeehList) {
-      if (d.key == _key) return (key: d.key, arabic: d.arabic, name: state.settings.urdu ? d.ur : d.en, defTarget: d.target, custom: false);
+      if (d.key == base) return (key: _key, arabic: d.arabic, name: state.settings.urdu ? d.ur : d.en, defTarget: d.target, custom: false);
     }
     for (final c in state.settings.customDhikr) {
-      if (c.key == _key) return (key: c.key, arabic: c.text, name: c.text, defTarget: c.target, custom: true);
+      if (c.key == base) return (key: _key, arabic: c.text, name: c.text, defTarget: c.target, custom: true);
     }
     final d = tasbeehList.first;
     return (key: d.key, arabic: d.arabic, name: state.settings.urdu ? d.ur : d.en, defTarget: d.target, custom: false);
@@ -450,7 +451,10 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
                   textAlign: TextAlign.center,
                   textDirection: TextDirection.rtl,
                   style: arabicStyle(context, size: 30, weight: FontWeight.w700)),
-              if (!d.custom) Text(d.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                [if (!d.custom) d.name, if (dhikrSession(d.key) == '@m') s.t('az_m'), if (dhikrSession(d.key) == '@e') s.t('az_e')].join(' • '),
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -531,22 +535,34 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
             },
           ),
         ]),
+        SectionTitle(s.t('session')),
+        SegmentedButton<String>(
+          key: const Key('tasbeeh_session'),
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(value: '', label: Text(s.t('anytime'))),
+            ButtonSegment(value: '@m', label: Text(s.t('az_m'))),
+            ButtonSegment(value: '@e', label: Text(s.t('az_e'))),
+          ],
+          selected: {dhikrSession(_key)},
+          onSelectionChanged: (v) => setState(() => _key = dhikrBase(_key) + v.first),
+        ),
         SectionTitle(s.t('my_tasbeeh'), actionLabel: s.t('add'), onAction: () => _addCustom(context, state)),
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final t in tasbeehList)
             ChoiceChip(
               label: Text(urdu ? t.ur : t.en),
-              selected: _key == t.key,
-              onSelected: (_) => setState(() => _key = t.key),
+              selected: dhikrBase(_key) == t.key,
+              onSelected: (_) => setState(() => _key = t.key + dhikrSession(_key)),
             ),
           for (final c in state.settings.customDhikr)
             InputChip(
               label: Text(c.text, overflow: TextOverflow.ellipsis),
-              selected: _key == c.key,
-              onSelected: (_) => setState(() => _key = c.key),
+              selected: dhikrBase(_key) == c.key,
+              onSelected: (_) => setState(() => _key = c.key + dhikrSession(_key)),
               onDeleted: () async {
                 if (await confirm(context, state, '${s.t('delete')}: ${c.text}?')) {
-                  if (_key == c.key) setState(() => _key = tasbeehList.first.key);
+                  if (dhikrBase(_key) == c.key) setState(() => _key = tasbeehList.first.key);
                   state.deleteCustomDhikr(c.key);
                 }
               },

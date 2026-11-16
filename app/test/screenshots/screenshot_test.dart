@@ -7,6 +7,7 @@ import 'package:dailydeen/data/routine.dart';
 import 'package:dailydeen/main.dart';
 import 'package:dailydeen/screens/azkar_screen.dart';
 import 'package:dailydeen/screens/more_screen.dart';
+import 'package:dailydeen/screens/report_screen.dart';
 import 'package:dailydeen/screens/routine_screen.dart';
 import 'package:dailydeen/screens/settings_screen.dart';
 import 'package:dailydeen/screens/shell.dart';
@@ -149,6 +150,20 @@ void main() {
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/00_splash.png'));
     await tester.pump(const Duration(seconds: 1));
     await shot(tester, '00_onboarding');
+  });
+
+  testWidgets('daily plan urdu', (tester) async {
+    final state = await setup(tester, urdu: true);
+    state.startChilla(state.today);
+    for (final k in prayerKeys) {
+      state.setPrayer(state.today, k, PrayerStatus.jamaat);
+    }
+    state.setDone(state.today, 'yaseen', true);
+    state.setDone(state.today, 'm_istighfar', true);
+    await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
+    await tester.pumpAndSettle();
+    await push(tester, const ReportScreen());
+    await shot(tester, '12_daily_plan_urdu');
   });
 
   testWidgets('urdu home', (tester) async {

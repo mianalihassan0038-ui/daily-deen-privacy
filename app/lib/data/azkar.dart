@@ -19,7 +19,22 @@ const List<Dhikr> tasbeehList = [
   Dhikr('astaghfirullah', 'أَسْتَغْفِرُ ٱللَّٰهَ', 'Astaghfirullah', 'استغفر اللہ', 100),
   Dhikr('durood', 'اللَّهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ وَعَلَىٰ آلِ مُحَمَّدٍ', 'Durood Shareef', 'درود شریف', 100),
   Dhikr('lailaha', 'لَا إِلَٰهَ إِلَّا ٱللَّٰهُ', 'La ilaha illallah', 'لا الہ الا اللہ', 100),
+  Dhikr('kalima1', 'لَا إِلَٰهَ إِلَّا ٱللَّٰهُ مُحَمَّدٌ رَسُولُ ٱللَّٰهِ', 'First Kalima', 'پہلا کلمہ', 100),
+  Dhikr(
+    'kalima3',
+    'سُبْحَانَ ٱللَّٰهِ وَٱلْحَمْدُ لِلَّٰهِ وَلَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَٱللَّٰهُ أَكْبَرُ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِٱللَّٰهِ ٱلْعَلِيِّ ٱلْعَظِيمِ',
+    'Third Kalima',
+    'تیسرا کلمہ',
+    100,
+  ),
 ];
+
+/// Tasbeeh sessions: a dhikr key may carry a suffix so morning and evening
+/// counts are kept separately (e.g. "durood@m", "durood@e").
+const tasbeehSessions = ['', '@m', '@e'];
+
+String dhikrBase(String key) => key.split('@').first;
+String dhikrSession(String key) => key.contains('@') ? '@${key.split('@').last}' : '';
 
 class Zikr {
   final String id;

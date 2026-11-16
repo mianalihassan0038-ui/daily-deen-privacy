@@ -8,6 +8,7 @@ import 'calendar_screen.dart';
 import 'extras_screens.dart';
 import 'muhasaba_screen.dart';
 import 'qibla_screen.dart';
+import 'report_screen.dart';
 import 'routine_screen.dart';
 import 'settings_screen.dart';
 import 'shell.dart';
@@ -22,6 +23,7 @@ class MoreFeaturesScreen extends StatelessWidget {
     void push(Widget w) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => w));
 
     final items = <(String, String, IconData, Color, VoidCallback)>[
+      (s.t('my_daily_plan'), s.t('chilla'), Icons.assignment_turned_in, AppColors.emerald, () => push(const ReportScreen())),
       (s.t('dua_library'), s.t('dua_library_sub'), Icons.volunteer_activism, AppColors.gold,
           () => push(HeaderScaffold(title: s.t('dua_library'), body: const AzkarCategoriesList()))),
       (s.t('surah_list'), s.t('surah_list_sub'), Icons.menu_book, AppColors.emeraldMid, () => ShellScope.go(context, Tabs.quran)),

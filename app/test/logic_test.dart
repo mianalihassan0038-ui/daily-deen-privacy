@@ -6,6 +6,7 @@ import 'package:dailydeen/data/routine.dart';
 import 'package:dailydeen/screens/qibla_screen.dart';
 import 'package:dailydeen/services/hijri.dart';
 import 'package:dailydeen/services/prayer_times.dart';
+import 'package:dailydeen/services/report.dart';
 import 'package:dailydeen/strings.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -187,13 +188,14 @@ void main() {
     test('dhikr reaching target ticks routine item', () {
       final today = state.today;
       for (var i = 0; i < 99; i++) {
-        state.incrementDhikr(today, 'durood');
+        state.incrementDhikr(today, 'durood@m');
       }
-      expect(state.day(today).done.contains('durood_100'), isFalse);
-      state.incrementDhikr(today, 'durood');
-      expect(state.day(today).done.contains('durood_100'), isTrue);
-      state.incrementDhikr(today, 'durood', by: -1);
-      expect(state.day(today).done.contains('durood_100'), isFalse);
+      expect(state.day(today).done.contains('m_durood'), isFalse);
+      state.incrementDhikr(today, 'durood@m');
+      expect(state.day(today).done.contains('m_durood'), isTrue);
+      expect(state.day(today).done.contains('e_durood'), isFalse, reason: 'evening is counted separately');
+      state.incrementDhikr(today, 'durood@m', by: -1);
+      expect(state.day(today).done.contains('m_durood'), isFalse);
     });
 
     test('quran pages, target and khatam rollover', () {
@@ -329,6 +331,37 @@ void main() {
       expect(state.sadaqahInMonth(state.today.year, state.today.month), 150.5);
       state.deleteSadaqah(state.sadaqah.first.id);
       expect(state.sadaqahOn(state.today), 100);
+    });
+
+    test('chilla day and number', () {
+      expect(state.chillaOn(state.today), isNull);
+      state.startChilla(state.today.subtract(const Duration(days: 44)));
+      expect(state.chillaOn(state.today), (2, 5));
+      state.startChilla(state.today);
+      expect(state.chillaOn(state.today), (1, 1));
+    });
+
+    test('daily report has prayers, tilawat and morning/evening tasbeehat', () {
+      final today = state.today;
+      state.startChilla(today);
+      for (final k in prayerKeys) {
+        state.setPrayer(today, k, PrayerStatus.jamaat);
+      }
+      state.setDone(today, 'yaseen', true);
+      for (var i = 0; i < 100; i++) {
+        state.incrementDhikr(today, 'kalima3@e');
+      }
+      final ur = buildDailyReport(state, today, urdu: true);
+      expect(ur, contains('چلہ : 01'));
+      expect(ur, contains('باجماعت'));
+      expect(ur, contains('*تلاوت*'));
+      expect(ur, contains('سورۃ الواقعہ'));
+      expect(ur, contains('*تسبیحات:* صبح'));
+      expect(ur, contains('*تسبیحات:* شام'));
+      final en = buildDailyReport(state, today, urdu: false);
+      expect(en, contains('Third Kalima  ✅'));
+      expect(en, contains('Surah Yaseen  ✅'));
+      expect(en, contains('Surah Al-Waqiah  ❌'));
     });
 
     test('muhasaba fields are stored per day', () {

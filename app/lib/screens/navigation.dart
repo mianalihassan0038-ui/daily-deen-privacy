@@ -29,6 +29,7 @@ const Map<String, (int, int)> _quranTargets = {
   'yaseen': (36, 1),
   'kahf': (18, 1),
   'mulk': (67, 1),
+  'waqiah': (56, 1),
   'kursi_morning': (2, 255),
   'kursi_night': (2, 255),
   'baqarah_last2': (2, 285),

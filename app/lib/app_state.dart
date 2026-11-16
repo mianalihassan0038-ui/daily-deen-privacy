@@ -223,6 +223,7 @@ class AppSettings {
   List<HabitGoal> habits;
   double sadaqahGoal;
   String currency;
+  String? chillaStart; // dayKey of day 1 of the current chilla
 
   AppSettings({
     this.urdu = false,
@@ -266,6 +267,7 @@ class AppSettings {
     List<HabitGoal>? habits,
     this.sadaqahGoal = 0,
     this.currency = 'Rs',
+    this.chillaStart,
   })  : prayerOffsets = prayerOffsets ?? <String, int>{},
         fixedPrayerTimes = fixedPrayerTimes ?? <String, int>{},
         notif = notif ?? {for (final k in notifKeys) k: true},
@@ -328,6 +330,7 @@ class AppSettings {
         'habits': habits.map((e) => e.toJson()).toList(),
         'sadaqahGoal': sadaqahGoal,
         'currency': currency,
+        if (chillaStart != null) 'chilla': chillaStart,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> j) {
@@ -409,6 +412,7 @@ class AppSettings {
       habits: maps(j['habits']).map(HabitGoal.fromJson).toList(),
       sadaqahGoal: dblOr('sadaqahGoal', 0),
       currency: (j['currency'] as String?) ?? 'Rs',
+      chillaStart: j['chilla'] as String?,
     );
   }
 }
@@ -755,7 +759,7 @@ class AppState extends ChangeNotifier {
     rec.dhikr[key] = v;
     for (final item in allItems) {
       if (item.dhikrKey == key && item.dhikrTarget > 0) {
-        if (v >= item.dhikrTarget) {
+        if (v >= dhikrTarget(key, item.dhikrTarget)) {
           rec.done.add(item.id);
         } else if (by < 0) {
           rec.done.remove(item.id);
@@ -874,6 +878,26 @@ class AppState extends ChangeNotifier {
     prefs.setInt('khatamCount', khatamCount);
     prefs.setStringList('juzDone', juzDone.map((e) => e.toString()).toList());
     prefs.setStringList('readPages', readPages.map((e) => e.toString()).toList());
+  }
+
+  // ---------------- chilla (40-day cycle) ----------------
+  /// (chilla number, day 1..40) for [date], or null if no chilla was started.
+  (int, int)? chillaOn(DateTime date) {
+    final start = DateTime.tryParse(settings.chillaStart ?? '');
+    if (start == null) return null;
+    final d = DateTime.utc(date.year, date.month, date.day).difference(DateTime.utc(start.year, start.month, start.day)).inDays;
+    if (d < 0) return null;
+    return (d ~/ 40 + 1, d % 40 + 1);
+  }
+
+  void startChilla(DateTime date) {
+    settings.chillaStart = dayKey(date);
+    saveSettings();
+  }
+
+  void stopChilla() {
+    settings.chillaStart = null;
+    saveSettings();
   }
 
   // ---------------- muhasaba / notes ----------------

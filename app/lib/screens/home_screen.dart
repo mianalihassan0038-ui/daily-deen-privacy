@@ -15,6 +15,7 @@ import '../widgets/islamic_art.dart';
 import 'azkar_screen.dart';
 import 'more_screen.dart';
 import 'navigation.dart';
+import 'report_screen.dart';
 import 'routine_screen.dart';
 import 'settings_screen.dart';
 import 'shell.dart';
@@ -71,6 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _ProgressCard(ratio: ratio, done: done, total: total),
+                const SizedBox(height: 12),
+                const _PlanCard(),
                 const SizedBox(height: 12),
                 _NextPrayerCard(now: _now),
                 const SizedBox(height: 4),
@@ -748,6 +751,33 @@ class RoutineTile extends StatelessWidget {
           : item.optional
               ? Text(s.t('optional'), style: TextStyle(color: AppColors.gold, fontSize: 11))
               : const Icon(Icons.chevron_right, size: 18),
+    );
+  }
+}
+
+
+/// Shortcut to "My Daily Plan" (chilla report).
+class _PlanCard extends StatelessWidget {
+  const _PlanCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final s = state.s;
+    final chilla = state.chillaOn(state.today);
+    return Card(
+      color: AppColors.emerald,
+      child: ListTile(
+        key: const Key('open_daily_plan'),
+        leading: const Icon(Icons.assignment_turned_in, color: AppColors.goldLight, size: 32),
+        title: Text(s.t('my_daily_plan'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+        subtitle: Text(
+          chilla == null ? s.t('daily_plan_sub') : '${s.t('chilla')} ${chilla.$1.toString().padLeft(2, '0')} • ${s.t('day')} ${chilla.$2.toString().padLeft(2, '0')}',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: AppColors.goldLight),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ReportScreen())),
+      ),
     );
   }
 }
