@@ -200,12 +200,13 @@ class _TodayTab extends StatelessWidget {
                     ],
                   ),
                 ),
-                OutlinedButton(onPressed: () => state.changeQaza(1), child: Text(s.t('qaza_add'))),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: state.qazaPending > 0 ? () => state.changeQaza(-1) : null,
-                  child: Text(s.t('qaza_done')),
-                ),
+                Wrap(spacing: 8, runSpacing: 6, alignment: WrapAlignment.end, children: [
+                  OutlinedButton(onPressed: () => state.changeQaza(1), child: Text(s.t('qaza_add'))),
+                  FilledButton(
+                    onPressed: state.qazaPending > 0 ? () => state.changeQaza(-1) : null,
+                    child: Text(s.t('qaza_done')),
+                  ),
+                ]),
               ],
             ),
           ),
@@ -260,7 +261,10 @@ class _PrayerRow extends StatelessWidget {
           color: labelColor,
         ),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: labelColor, fontSize: 12, fontWeight: FontWeight.w600)),
+        Flexible(
+          child: Text(label,
+              overflow: TextOverflow.ellipsis, style: TextStyle(color: labelColor, fontSize: 12, fontWeight: FontWeight.w600)),
+        ),
         if (status == PrayerStatus.jamaat) ...[
           const SizedBox(width: 6),
           const Icon(Icons.groups, size: 14, color: AppColors.jamaat),
