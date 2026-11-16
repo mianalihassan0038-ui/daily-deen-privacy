@@ -186,6 +186,7 @@ class AppSettings {
   bool hanafiAsr;
   int hijriAdjust;
   Map<String, int> prayerOffsets;
+  Map<String, int> fixedPrayerTimes; // prayer -> minutes after midnight (user's own time)
 
   // ---- notifications ----
   bool notifications; // master switch
@@ -238,6 +239,7 @@ class AppSettings {
     this.hanafiAsr = true,
     this.hijriAdjust = 0,
     Map<String, int>? prayerOffsets,
+    Map<String, int>? fixedPrayerTimes,
     this.notifications = true,
     this.tahajjudReminder = true,
     Map<String, bool>? notif,
@@ -265,6 +267,7 @@ class AppSettings {
     this.sadaqahGoal = 0,
     this.currency = 'Rs',
   })  : prayerOffsets = prayerOffsets ?? <String, int>{},
+        fixedPrayerTimes = fixedPrayerTimes ?? <String, int>{},
         notif = notif ?? {for (final k in notifKeys) k: true},
         tasbeehTargets = tasbeehTargets ?? <String, int>{},
         customDhikr = customDhikr ?? <CustomDhikr>[],
@@ -298,6 +301,7 @@ class AppSettings {
         'hanafi': hanafiAsr,
         'hijriAdjust': hijriAdjust,
         'offsets': prayerOffsets,
+        'fixedTimes': fixedPrayerTimes,
         'notifications': notifications,
         'tahajjud': notif['tahajjud'] ?? tahajjudReminder,
         'notif': notif,
@@ -378,6 +382,7 @@ class AppSettings {
       hanafiAsr: boolOr('hanafi', true),
       hijriAdjust: intOr('hijriAdjust', 0),
       prayerOffsets: (j['offsets'] as Map<String, dynamic>? ?? {}).map((k, v) => MapEntry(k, (v as num).toInt())),
+      fixedPrayerTimes: (j['fixedTimes'] as Map<String, dynamic>? ?? {}).map((k, v) => MapEntry(k, (v as num).toInt())),
       notifications: boolOr('notifications', true),
       tahajjudReminder: tahajjud,
       notif: notif,
@@ -523,13 +528,28 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------- prayer times ----------------
-  /// Calculated prayer times with the user's manual adjustments applied.
+  /// Prayer times for [date]: the user's own fixed time if set, otherwise the
+  /// calculated time plus the manual +/- minutes adjustment.
   DayPrayerTimes prayerTimes(DateTime date) {
     final raw = calculator.forDate(date);
     return DayPrayerTimes({
       for (final p in PrayerName.values)
-        p: raw[p].add(Duration(minutes: settings.prayerOffsets[p.name] ?? 0)),
+        p: settings.fixedPrayerTimes[p.name] != null
+            ? DateTime(date.year, date.month, date.day).add(Duration(minutes: settings.fixedPrayerTimes[p.name]!)).toUtc()
+            : raw[p].add(Duration(minutes: settings.prayerOffsets[p.name] ?? 0)),
     });
+  }
+
+  bool hasFixedTime(String key) => settings.fixedPrayerTimes.containsKey(key);
+
+  /// Sets the user's own time for a prayer (null = back to calculated time).
+  void setFixedPrayerTime(String key, int? minutes) {
+    if (minutes == null) {
+      settings.fixedPrayerTimes.remove(key);
+    } else {
+      settings.fixedPrayerTimes[key] = minutes.clamp(0, 24 * 60 - 1).toInt();
+    }
+    saveSettings(reschedule: true);
   }
 
   static const farzPrayers = [PrayerName.fajr, PrayerName.dhuhr, PrayerName.asr, PrayerName.maghrib, PrayerName.isha];

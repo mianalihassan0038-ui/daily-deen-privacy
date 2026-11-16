@@ -11,7 +11,7 @@ import '../widgets/common.dart';
 import '../widgets/date_switcher.dart';
 import '../widgets/islamic_art.dart';
 import 'home_screen.dart' show prayerVisual, showPrayerStatusSheet, statusColor, statusLabel;
-import 'settings_screen.dart';
+import 'settings_screen.dart' show PrayerSettingsScreen, editPrayerTime;
 
 class NamazScreen extends StatefulWidget {
   const NamazScreen({super.key});
@@ -246,6 +246,7 @@ class _PrayerRow extends StatelessWidget {
       leading: IconBadge(icon, color: color, size: 32),
       title: Row(children: [
         Expanded(child: Text(s.t(prayerKey), style: const TextStyle(fontWeight: FontWeight.w700))),
+        if (state.hasFixedTime(prayerKey)) const Icon(Icons.push_pin, size: 14, color: AppColors.gold),
         Text(formatTime(time, urdu: urdu), style: theme.textTheme.bodyMedium),
       ]),
       subtitle: Row(children: [
@@ -298,13 +299,18 @@ class _PrayerRow extends StatelessWidget {
           onChanged: (_) => state.toggleSunnah(date, prayerKey),
           title: Text(s.t('sunnah_nafl')),
         ),
-        Align(
-          alignment: AlignmentDirectional.centerEnd,
-          child: TextButton(
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          TextButton.icon(
+            key: Key('edit_time_$prayerKey'),
+            onPressed: () => editPrayerTime(context, state, prayerKey),
+            icon: const Icon(Icons.schedule, size: 18),
+            label: Text(s.t('edit_time')),
+          ),
+          TextButton(
             onPressed: () => showPrayerStatusSheet(context, state, date, prayerKey),
             child: Text(s.t('more_options')),
           ),
-        ),
+        ]),
       ],
     );
   }

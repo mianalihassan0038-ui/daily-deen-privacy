@@ -268,6 +268,16 @@ void main() {
       expect(state.settings.prayerOffsets['asr'], 60);
     });
 
+    test('user can set their own prayer time', () {
+      state.setFixedPrayerTime('fajr', 5 * 60 + 30);
+      final t = state.prayerTimes(state.today)[PrayerName.fajr].toLocal();
+      expect(t.hour, 5);
+      expect(t.minute, 30);
+      expect(state.hasFixedTime('fajr'), isTrue);
+      state.setFixedPrayerTime('fajr', null);
+      expect(state.hasFixedTime('fajr'), isFalse);
+    });
+
     test('routine add, edit, reorder, delete, repeat days', () {
       final today = state.today;
       final item = RoutineItem(

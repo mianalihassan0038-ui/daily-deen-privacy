@@ -354,19 +354,25 @@ class PrayerSettingsScreen extends StatelessWidget {
                   key: Key('offset_${p.name}'),
                   title: Text(s.t(p.name)),
                   subtitle: Text(
-                    '${formatTime(raw[p].add(Duration(minutes: st.prayerOffsets[p.name] ?? 0)), urdu: urdu)}'
-                    '${(st.prayerOffsets[p.name] ?? 0) == 0 ? '' : '  (${s.t('calculated')}: ${formatTime(raw[p], urdu: urdu)})'}',
+                    st.fixedPrayerTimes[p.name] != null
+                        ? '${s.t('my_time')} • ${s.t('calculated')}: ${formatTime(raw[p], urdu: urdu)}'
+                        : (st.prayerOffsets[p.name] ?? 0) == 0
+                            ? s.t('calculated')
+                            : '${s.t('calculated')} ${(st.prayerOffsets[p.name] ?? 0) > 0 ? '+' : ''}${st.prayerOffsets[p.name]} ${s.t('min_short')}',
                   ),
-                  trailing: _Stepper(
-                    value: st.prayerOffsets[p.name] ?? 0,
-                    min: -60,
-                    max: 60,
-                    signed: true,
-                    suffix: s.t('min_short'),
-                    onChanged: (v) => state.setPrayerOffset(p.name, v),
-                  ),
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(formatTime(state.prayerTimes(state.today)[p], urdu: urdu),
+                        style: const TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(width: 6),
+                    Icon(st.fixedPrayerTimes[p.name] != null ? Icons.push_pin : Icons.edit, size: 18, color: AppColors.gold),
+                  ]),
+                  onTap: () => editPrayerTime(context, state, p.name),
                 ),
             ]),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(s.t('my_time_hint'), style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
           ),
           const SizedBox(height: 8),
           Text(s.t('disclaimer'), style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
@@ -374,6 +380,78 @@ class PrayerSettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Lets the user choose their own time for a prayer, or go back to the
+/// calculated time (with optional +/- minutes).
+Future<void> editPrayerTime(BuildContext context, AppState state, String key) {
+  final s = state.s;
+  final urdu = state.settings.urdu;
+  return showModalBottomSheet(
+    context: context,
+    showDragHandle: true,
+    builder: (c) => ListenableBuilder(
+      listenable: state,
+      builder: (c, _) {
+        final p = PrayerName.values.firstWhere((e) => e.name == key);
+        final raw = state.calculator.forDate(state.today)[p];
+        final fixed = state.settings.fixedPrayerTimes[key];
+        final offset = state.settings.prayerOffsets[key] ?? 0;
+        final current = state.prayerTimes(state.today)[p];
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Text('${s.t(key)} • ${formatTime(current, urdu: urdu)}',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(c).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 4),
+              Text('${s.t('calculated')}: ${formatTime(raw, urdu: urdu)}',
+                  textAlign: TextAlign.center, style: Theme.of(c).textTheme.bodySmall),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                key: Key('set_time_$key'),
+                icon: const Icon(Icons.edit_calendar),
+                label: Text(fixed == null ? s.t('set_my_time') : '${s.t('my_time')}: ${formatMinutes(fixed, urdu: urdu)}'),
+                onPressed: () async {
+                  final local = current.toLocal();
+                  final t = await showTimePicker(
+                    context: c,
+                    initialTime: TimeOfDay(hour: local.hour, minute: local.minute),
+                    helpText: s.t(key),
+                  );
+                  if (t != null) state.setFixedPrayerTime(key, t.hour * 60 + t.minute);
+                },
+              ),
+              if (fixed != null) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.calculate_outlined),
+                  label: Text(s.t('use_calculated')),
+                  onPressed: () => state.setFixedPrayerTime(key, null),
+                ),
+              ] else ...[
+                const SizedBox(height: 8),
+                Row(children: [
+                  Expanded(child: Text(s.t('adjust_minutes'))),
+                  _Stepper(
+                    value: offset,
+                    min: -60,
+                    max: 60,
+                    signed: true,
+                    suffix: s.t('min_short'),
+                    onChanged: (v) => state.setPrayerOffset(key, v),
+                  ),
+                ]),
+              ],
+              const SizedBox(height: 8),
+              Text(s.t('my_time_hint'), style: Theme.of(c).textTheme.bodySmall, textAlign: TextAlign.center),
+            ]),
+          ),
+        );
+      },
+    ),
+  );
 }
 
 class _Stepper extends StatelessWidget {
