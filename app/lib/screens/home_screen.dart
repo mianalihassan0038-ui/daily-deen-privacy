@@ -344,7 +344,10 @@ class _NextPrayerCard extends StatelessWidget {
                 Row(children: [
                   Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary),
                   const SizedBox(width: 6),
-                  Text(s.t(next.key.name), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  Flexible(
+                    child: Text(s.t(next.key.name),
+                        overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                  ),
                   const SizedBox(width: 10),
                   Text(formatTime(next.value, urdu: urdu), style: Theme.of(context).textTheme.bodyMedium),
                 ]),
