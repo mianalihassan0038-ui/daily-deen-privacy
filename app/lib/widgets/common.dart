@@ -41,10 +41,7 @@ class ScreenHeader extends StatelessWidget {
                         style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
                       ),
                     ),
-                    SizedBox(
-                      width: 48.0 * math.max(1, actions.length),
-                      child: Row(mainAxisAlignment: MainAxisAlignment.end, children: actions),
-                    ),
+                    if (actions.isEmpty) const SizedBox(width: 48) else Row(mainAxisSize: MainAxisSize.min, children: actions),
                   ],
                 ),
               ),

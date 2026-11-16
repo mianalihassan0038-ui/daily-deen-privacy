@@ -122,7 +122,9 @@ class _TargetCard extends StatelessWidget {
                   InkWell(
                     onTap: () => _editTarget(context, state),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Text('$target ${s.t('pages')}', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                      Flexible(
+                        child: Text('$target ${s.t('pages')}', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                      ),
                       const SizedBox(width: 4),
                       Icon(Icons.edit, size: 16, color: theme.colorScheme.primary),
                     ]),

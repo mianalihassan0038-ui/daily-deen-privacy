@@ -151,7 +151,10 @@ void main() {
     });
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('surah_1')));
-    await tester.pumpAndSettle();
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(CircularProgressIndicator), findsNothing, reason: 'reader still loading');
     expect(find.byKey(const Key('ayah_1_1')), findsOneWidget);
     expect(find.textContaining('praise is [due] to Allah'), findsOneWidget);
     expect(state.lastRead, const QuranRef(1, 1));
@@ -213,10 +216,14 @@ void main() {
     await tester.tap(find.byKey(const Key('routine_add')));
     await tester.pumpAndSettle();
     // Validation: empty name is rejected
+    await tester.ensureVisible(find.byKey(const Key('activity_save')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('activity_save')));
     await tester.pumpAndSettle();
     expect(find.text('Required'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('activity_name')), 'Morning walk');
+    await tester.ensureVisible(find.byKey(const Key('activity_save')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('activity_save')));
     await tester.pumpAndSettle();
     expect(state.allItems.any((i) => i.en == 'Morning walk'), isTrue);

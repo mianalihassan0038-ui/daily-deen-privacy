@@ -52,11 +52,15 @@ class SadaqahScreen extends StatelessWidget {
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text(s.t('today_total'), style: theme.textTheme.bodySmall),
-                    Text('$cur ${_money(todayAmount)}', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text('$cur ${_money(todayAmount)}', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                    ),
                     InkWell(
                       onTap: () => _editGoal(context, state),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Text(goal <= 0 ? s.t('set_daily_goal') : '${s.t('daily_goal')}: $cur ${_money(goal)}'),
+                        Flexible(child: Text(goal <= 0 ? s.t('set_daily_goal') : '${s.t('daily_goal')}: $cur ${_money(goal)}')),
                         const SizedBox(width: 4),
                         Icon(Icons.edit, size: 14, color: theme.colorScheme.primary),
                       ]),
