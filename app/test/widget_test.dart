@@ -1,6 +1,5 @@
 import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/main.dart';
-import 'package:dailydeen/screens/namaz_screen.dart';
 import 'package:dailydeen/screens/shell.dart';
 import 'package:dailydeen/services/quran_repo.dart';
 import 'package:flutter/material.dart';
