@@ -134,11 +134,17 @@ class _TargetCard extends StatelessWidget {
                       onPressed: rec.quranPages > 0 ? () => state.addPages(today, -1) : null,
                       icon: const Icon(Icons.remove),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('${rec.quranPages} / $target',
-                          key: const Key('quran_pages'),
-                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: theme.colorScheme.primary)),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text('${rec.quranPages} / $target',
+                              key: const Key('quran_pages'),
+                              style: theme.textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.w800, color: theme.colorScheme.primary)),
+                        ),
+                      ),
                     ),
                     IconButton.filled(
                       key: const Key('quran_plus'),
@@ -150,10 +156,11 @@ class _TargetCard extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             ProgressRing(
               value: ratio,
-              size: 92,
-              stroke: 9,
+              size: 80,
+              stroke: 8,
               child: Text('${(ratio * 100).round()}%', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             ),
           ],

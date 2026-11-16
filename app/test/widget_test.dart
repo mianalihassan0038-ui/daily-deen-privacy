@@ -65,13 +65,15 @@ void main() {
     expect(find.text('Next Prayer'), findsOneWidget);
     expect(find.byKey(const Key('countdown')), findsOneWidget);
     expect(find.byKey(const Key('home_prayer_fajr')), findsOneWidget);
-    await tester.scrollUntilVisible(find.byKey(const Key('routine_wudu')), 300, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('routine_wudu')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('routine_wudu')), findsOneWidget);
   });
 
   testWidgets('Tapping a routine check marks it done and updates progress', (tester) async {
     final state = await pumpApp(tester);
-    await tester.scrollUntilVisible(find.byKey(const Key('routine_check_wudu')), 300, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('routine_check_wudu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('routine_check_wudu')));
     await tester.pumpAndSettle();
     expect(state.day(state.today).done.contains('wudu'), isTrue);
@@ -80,7 +82,8 @@ void main() {
 
   testWidgets('Quick card opens morning azkar', (tester) async {
     await pumpApp(tester);
-    await tester.scrollUntilVisible(find.byKey(const Key('quick_morning')), 300, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('quick_morning')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('quick_morning')));
     await tester.pumpAndSettle();
     expect(find.text('Morning Azkar'), findsWidgets);
@@ -98,8 +101,8 @@ void main() {
   testWidgets('Namaz: recording a status', (tester) async {
     final state = await pumpApp(tester);
     await openTab(tester, 'Namaz');
-    await tester.scrollUntilVisible(find.byKey(const Key('prayer_fajr')), 200,
-        scrollable: find.descendant(of: find.byType(NamazScreen), matching: find.byType(Scrollable)).first);
+    await tester.ensureVisible(find.byKey(const Key('prayer_fajr')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('prayer_fajr')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('status_fajr_jamaat')));
@@ -202,7 +205,8 @@ void main() {
 
   testWidgets('Routine planner: add an activity', (tester) async {
     final state = await pumpApp(tester);
-    await tester.scrollUntilVisible(find.byKey(const Key('more_features')), 400, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('more_features')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('more_features')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Routine Planner'));
@@ -224,7 +228,8 @@ void main() {
 
   testWidgets('More features screens open', (tester) async {
     await pumpApp(tester);
-    await tester.scrollUntilVisible(find.byKey(const Key('more_features')), 400, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('more_features')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('more_features')));
     await tester.pumpAndSettle();
     for (final label in ['Islamic Calendar', 'Sadaqah Tracker', 'Habit Goals', 'Daily Muhasaba', 'Dua Library']) {
@@ -238,7 +243,8 @@ void main() {
 
   testWidgets('Muhasaba saves notes', (tester) async {
     final state = await pumpApp(tester);
-    await tester.scrollUntilVisible(find.byKey(const Key('more_features')), 400, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byKey(const Key('more_features')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('more_features')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Daily Muhasaba'));

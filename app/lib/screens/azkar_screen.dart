@@ -461,18 +461,18 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
                     onPressed: count > 0 ? () => _tap(state, d.key, -1, target) : null,
                     icon: const Icon(Icons.remove),
                   ),
-                  const SizedBox(width: 20),
+                  const SizedBox(width: 12),
                   GestureDetector(
                     key: const Key('tasbeeh_tap'),
                     onTap: () => _tap(state, d.key, 1, target),
                     child: ProgressRing(
                       value: inRound / target,
-                      size: 170,
-                      stroke: 10,
+                      size: 150,
+                      stroke: 9,
                       color: AppColors.gold,
                       child: Container(
-                        width: 140,
-                        height: 140,
+                        width: 124,
+                        height: 124,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const RadialGradient(colors: [AppColors.emeraldLight, AppColors.emerald]),
@@ -487,7 +487,7 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 20),
+                  const SizedBox(width: 12),
                   IconButton.filled(
                     key: const Key('tasbeeh_plus'),
                     iconSize: 28,
