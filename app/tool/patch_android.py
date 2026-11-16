@@ -21,6 +21,7 @@ perms = (
     '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n'
     '    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>\n'
     '    <uses-permission android:name="android.permission.VIBRATE"/>\n'
+    '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n'
 )
 if "POST_NOTIFICATIONS" not in m:
     m = re.sub(r"(<manifest[^>]*>\n)", r"\1" + perms, m, count=1)
@@ -39,7 +40,31 @@ receivers = (
 )
 if "ScheduledNotificationReceiver" not in m:
     m = m.replace("    </application>", receivers + "    </application>", 1)
+queries = (
+    '    <queries>\n'
+    '        <intent>\n'
+    '            <action android:name="android.intent.action.VIEW" />\n'
+    '            <data android:scheme="https" />\n'
+    '        </intent>\n'
+    '    </queries>\n'
+)
+if "<queries>" not in m:
+    m = m.replace("</manifest>", queries + "</manifest>", 1)
+elif 'android:scheme="https"' not in m:
+    m = m.replace("<queries>", queries.strip().replace("<queries>", "<queries>", 1).replace("</queries>", "").rstrip(), 1)
 manifest.write_text(m)
+
+# ---------------- green launch screen ----------------
+launch = (
+    '<?xml version="1.0" encoding="utf-8"?>\n'
+    '<layer-list xmlns:android="http://schemas.android.com/apk/res/android">\n'
+    '    <item><color android:color="#FF0B4D35" /></item>\n'
+    '</layer-list>\n'
+)
+for folder in ("drawable", "drawable-v21"):
+    f = app / "src/main/res" / folder / "launch_background.xml"
+    if f.parent.exists():
+        f.write_text(launch)
 
 # ---------------- app/build.gradle(.kts) ----------------
 kts = app / "build.gradle.kts"

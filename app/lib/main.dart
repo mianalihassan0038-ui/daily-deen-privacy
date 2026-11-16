@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app_state.dart';
+import 'core/theme.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/shell.dart';
+import 'screens/splash_screen.dart';
 import 'services/notifications.dart';
-
-const Color brandGreen = Color(0xFF0F7B4A);
-const Color brandGold = Color(0xFFC9A227);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,34 +16,16 @@ Future<void> main() async {
   runApp(DailyDeenApp(state: state));
   // Set up reminders after the first frame so startup stays fast.
   await notifications.init();
-  if (state.settings.notifications || state.settings.tahajjudReminder) {
+  if (state.settings.onboarded && state.settings.notifications) {
     await notifications.requestPermission();
   }
   await notifications.reschedule(state);
 }
 
-ThemeData buildTheme(Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(seedColor: brandGreen, brightness: brightness).copyWith(
-    primary: brightness == Brightness.light ? brandGreen : const Color(0xFF5FD39A),
-    tertiary: brandGold,
-  );
-  return ThemeData(
-    colorScheme: scheme,
-    useMaterial3: true,
-    scaffoldBackgroundColor: brightness == Brightness.light ? const Color(0xFFF5F8F6) : null,
-    cardTheme: CardThemeData(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      color: brightness == Brightness.light ? Colors.white : scheme.surfaceContainerHigh,
-      margin: EdgeInsets.zero,
-    ),
-    appBarTheme: const AppBarTheme(centerTitle: false),
-  );
-}
-
 class DailyDeenApp extends StatelessWidget {
   final AppState state;
-  const DailyDeenApp({super.key, required this.state});
+  final bool showSplash;
+  const DailyDeenApp({super.key, required this.state, this.showSplash = true});
 
   @override
   Widget build(BuildContext context) {
@@ -56,8 +38,8 @@ class DailyDeenApp extends StatelessWidget {
           return MaterialApp(
             title: 'Daily Deen',
             debugShowCheckedModeBanner: false,
-            theme: buildTheme(Brightness.light),
-            darkTheme: buildTheme(Brightness.dark),
+            theme: buildTheme(Brightness.light, urdu: urdu),
+            darkTheme: buildTheme(Brightness.dark, urdu: urdu),
             themeMode: state.settings.themeMode,
             locale: urdu ? const Locale('ur') : const Locale('en'),
             supportedLocales: const [Locale('en'), Locale('ur')],
@@ -66,10 +48,37 @@ class DailyDeenApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: const AppShell(),
+            home: RootGate(showSplash: showSplash),
           );
         },
       ),
     );
+  }
+}
+
+/// Splash -> Onboarding (first launch) -> main app.
+class RootGate extends StatefulWidget {
+  final bool showSplash;
+  const RootGate({super.key, this.showSplash = true});
+
+  @override
+  State<RootGate> createState() => _RootGateState();
+}
+
+class _RootGateState extends State<RootGate> {
+  late bool _splash = widget.showSplash;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    Widget child;
+    if (_splash) {
+      child = SplashScreen(key: const ValueKey('splash'), onDone: () => setState(() => _splash = false));
+    } else if (!state.settings.onboarded) {
+      child = const OnboardingScreen(key: ValueKey('onboarding'));
+    } else {
+      child = const AppShell(key: ValueKey('shell'));
+    }
+    return AnimatedSwitcher(duration: const Duration(milliseconds: 450), child: child);
   }
 }
