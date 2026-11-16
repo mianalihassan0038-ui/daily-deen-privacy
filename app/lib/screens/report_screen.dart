@@ -157,7 +157,9 @@ class _ReportScreenState extends State<ReportScreen> {
                             ),
                             Container(width: 1, height: 26, color: theme.dividerColor),
                             Expanded(
-                              child: Center(child: _StatusPill(status: rec.prayer(prayerKeys[i]), urdu: urdu)),
+                              child: Center(
+                                child: FittedBox(fit: BoxFit.scaleDown, child: _StatusPill(status: rec.prayer(prayerKeys[i]), urdu: urdu)),
+                              ),
                             ),
                             Icon(Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left : Icons.chevron_right,
                                 color: theme.colorScheme.outline),
@@ -380,15 +382,21 @@ class _PlanHeader extends StatelessWidget {
                 child: Container(
                   width: 250,
                   height: 140,
-                  padding: const EdgeInsets.only(top: 56),
+                  padding: const EdgeInsets.fromLTRB(16, 50, 16, 8),
                   decoration: const BoxDecoration(
                     color: AppColors.emerald,
                     border: Border(bottom: BorderSide(color: AppColors.gold, width: 2)),
                   ),
-                  child: Column(children: [
-                    Text(title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppColors.goldLight, fontSize: 24, fontWeight: FontWeight.w800, fontFamily: arabicFont)),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(title,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: AppColors.goldLight, fontSize: 24, height: 1.3, fontWeight: FontWeight.w800, fontFamily: arabicFont)),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Container(width: 60, height: 1, color: AppColors.gold),
