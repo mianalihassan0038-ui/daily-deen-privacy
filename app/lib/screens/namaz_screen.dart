@@ -299,7 +299,7 @@ class _PrayerRow extends StatelessWidget {
           onChanged: (_) => state.toggleSunnah(date, prayerKey),
           title: Text(s.t('sunnah_nafl')),
         ),
-        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        Wrap(alignment: WrapAlignment.end, children: [
           TextButton.icon(
             key: Key('edit_time_$prayerKey'),
             onPressed: () => editPrayerTime(context, state, prayerKey),
