@@ -1,7 +1,7 @@
 name: dailydeen
 description: "Daily Deen - Islamic daily routine, Namaz, Quran and Azkar tracker."
 publish_to: 'none'
-version: 1.0.0+1
+version: 2.0.0+1
 
 environment:
   sdk: ^3.5.0
@@ -14,6 +14,13 @@ dependencies:
   shared_preferences: ^2.3.0
   flutter_local_notifications: ^19.4.0
   timezone: ^0.10.0
+  geolocator: any
+  sensors_plus: any
+  image_picker: any
+  file_picker: any
+  wakelock_plus: any
+  path_provider: any
+  url_launcher: any
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +30,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/quran/
+  fonts:
+    - family: NotoNaskhArabic
+      fonts:
+        - asset: assets/fonts/NotoNaskhArabic-Regular.ttf
+        - asset: assets/fonts/NotoNaskhArabic-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: true
