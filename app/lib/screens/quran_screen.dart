@@ -251,7 +251,11 @@ class SurahNumberBadge extends StatelessWidget {
       ),
       child: done
           ? const Icon(Icons.check, color: Colors.white, size: 20)
-          : Text('$number', style: const TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF7A5B12))),
+          : Text('$number',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: Theme.of(context).brightness == Brightness.dark ? AppColors.goldLight : const Color(0xFF7A5B12),
+              )),
     );
   }
 }
