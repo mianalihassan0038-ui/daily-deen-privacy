@@ -410,6 +410,11 @@ class AppSettings {
 
 const int quranTotalPages = 604;
 
+int _idCounter = 0;
+
+/// Unique id for user-created records (time + counter, never repeats in a session).
+String newId(String prefix) => '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idCounter++}';
+
 class AppState extends ChangeNotifier {
   final SharedPreferences prefs;
   late AppSettings settings;
@@ -668,7 +673,7 @@ class AppState extends ChangeNotifier {
   /// Legacy helpers kept for compatibility.
   void addCustomItem(String name, String target, RoutineSection section) {
     addRoutineItem(RoutineItem(
-      id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+      id: newId('custom'),
       en: name,
       ur: name,
       section: section,
@@ -746,7 +751,7 @@ class AppState extends ChangeNotifier {
   }
 
   void addCustomDhikr(String text, int target) {
-    settings.customDhikr.add(CustomDhikr('c_${DateTime.now().millisecondsSinceEpoch}', text, target));
+    settings.customDhikr.add(CustomDhikr(newId('c'), text, target));
     saveSettings();
   }
 
@@ -869,7 +874,7 @@ class AppState extends ChangeNotifier {
 
   // ---------------- habits ----------------
   void addHabit(String name, int target) {
-    settings.habits.add(HabitGoal('h_${DateTime.now().millisecondsSinceEpoch}', name, target));
+    settings.habits.add(HabitGoal(newId('h'), name, target));
     saveSettings();
   }
 
@@ -886,7 +891,7 @@ class AppState extends ChangeNotifier {
 
   // ---------------- sadaqah ----------------
   void addSadaqah(DateTime date, double amount, String note) {
-    sadaqah.insert(0, SadaqahRecord('s_${DateTime.now().millisecondsSinceEpoch}', date, amount, note));
+    sadaqah.insert(0, SadaqahRecord(newId('s'), date, amount, note));
     _saveSadaqah();
   }
 

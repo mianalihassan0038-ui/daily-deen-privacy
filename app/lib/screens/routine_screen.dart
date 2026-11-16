@@ -318,7 +318,7 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
     final it = widget.item;
     if (it == null) {
       state.addRoutineItem(RoutineItem(
-        id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+        id: newId('custom'),
         en: name,
         ur: name,
         targetEn: target,

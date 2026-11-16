@@ -151,9 +151,10 @@ void main() {
     });
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('surah_1')));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
+    await tester.pump();
+    // The Quran text future was created in a real-async zone; let it deliver.
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pumpAndSettle();
     expect(find.byType(CircularProgressIndicator), findsNothing, reason: 'reader still loading');
     expect(find.byKey(const Key('ayah_1_1')), findsOneWidget);
     expect(find.textContaining('praise is [due] to Allah'), findsOneWidget);
