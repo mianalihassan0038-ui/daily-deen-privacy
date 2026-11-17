@@ -328,7 +328,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('activity_save')));
     await tester.pumpAndSettle();
-    expect(find.text('Required'), findsOneWidget);
+    expect(find.text('Required', skipOffstage: false), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('activity_name'), skipOffstage: false));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('activity_name')), 'Morning walk');
     await tester.ensureVisible(find.byKey(const Key('activity_save'), skipOffstage: false));
     await tester.pumpAndSettle();
