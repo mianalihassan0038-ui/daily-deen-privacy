@@ -324,13 +324,13 @@ void main() {
     expect(find.byKey(const Key('activity_name')), findsOneWidget);
     expect(find.byKey(const Key('activity_save'), skipOffstage: false), findsOneWidget);
     // Validation: empty name is rejected
-    await tester.ensureVisible(find.byKey(const Key('activity_save')));
+    await tester.ensureVisible(find.byKey(const Key('activity_save'), skipOffstage: false));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('activity_save')));
     await tester.pumpAndSettle();
     expect(find.text('Required'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('activity_name')), 'Morning walk');
-    await tester.ensureVisible(find.byKey(const Key('activity_save')));
+    await tester.ensureVisible(find.byKey(const Key('activity_save'), skipOffstage: false));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('activity_save')));
     await tester.pumpAndSettle();
