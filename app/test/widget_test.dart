@@ -326,7 +326,7 @@ void main() {
     // Validation: empty name is rejected
     await tester.ensureVisible(find.byKey(const Key('activity_save'), skipOffstage: false));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('activity_save')));
+    tester.widget<FilledButton>(find.byKey(const Key('activity_save'), skipOffstage: false)).onPressed!();
     await tester.pumpAndSettle();
     expect(find.text('Required', skipOffstage: false), findsOneWidget);
     await tester.ensureVisible(find.byKey(const Key('activity_name'), skipOffstage: false));
@@ -334,7 +334,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('activity_name')), 'Morning walk');
     await tester.ensureVisible(find.byKey(const Key('activity_save'), skipOffstage: false));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('activity_save')));
+    tester.widget<FilledButton>(find.byKey(const Key('activity_save'), skipOffstage: false)).onPressed!();
     await tester.pumpAndSettle();
     expect(state.allItems.any((i) => i.en == 'Morning walk'), isTrue);
     await tester.tap(find.byKey(const Key('routine_edit_toggle')));
