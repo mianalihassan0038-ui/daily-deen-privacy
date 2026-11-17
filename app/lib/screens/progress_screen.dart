@@ -131,12 +131,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           ]),
                         ),
                         const SizedBox(height: 4),
-                        if (_range > 0)
-                          Text(
-                            '${delta >= 0 ? '↑' : '↓'} ${delta >= 0 ? '+' : ''}$delta%',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700, color: delta >= 0 ? AppColors.onTime : AppColors.missed),
-                          ),
+                        if (_range > 0) TrendText(delta),
                       ]),
                     ]),
                     const Divider(height: 22),
@@ -599,10 +594,7 @@ class _ScoreTile extends StatelessWidget {
           Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
           Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
               style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
-          if (delta != null)
-            Text('${delta! >= 0 ? '↑ +' : '↓ '}$delta%',
-                style: TextStyle(
-                    fontSize: 11, fontWeight: FontWeight.w700, color: delta! >= 0 ? AppColors.onTime : AppColors.missed)),
+          if (delta != null) TrendText(delta!, size: 11),
         ]),
       ),
     );
@@ -661,5 +653,23 @@ class _Bar extends StatelessWidget {
         ),
       ]),
     );
+  }
+}
+
+/// "▲ +2%" / "▼ -4%" trend vs the previous period (icon, not a glyph, so it
+/// renders with every font).
+class TrendText extends StatelessWidget {
+  final int delta;
+  final double size;
+  const TrendText(this.delta, {super.key, this.size = 13});
+
+  @override
+  Widget build(BuildContext context) {
+    final up = delta >= 0;
+    final c = up ? AppColors.onTime : AppColors.missed;
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: size + 2, color: c),
+      Text('${up ? '+' : ''}$delta%', style: TextStyle(fontSize: size, fontWeight: FontWeight.w700, color: c)),
+    ]);
   }
 }

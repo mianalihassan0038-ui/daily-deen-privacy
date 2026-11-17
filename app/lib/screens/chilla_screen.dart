@@ -99,7 +99,7 @@ class _ChillaScreenState extends State<ChillaScreen> {
                           key: const Key('chilla_percent'), style: const TextStyle(fontWeight: FontWeight.w800)),
                     ]),
                     const SizedBox(height: 4),
-                    Text('${date(sum.start)} → ${date(sum.end)}', style: theme.textTheme.labelSmall),
+                    Text('${date(sum.start)} – ${date(sum.end)}', style: theme.textTheme.labelSmall),
                   ]),
                 ),
               ]),
