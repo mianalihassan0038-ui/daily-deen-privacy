@@ -180,8 +180,12 @@ void main() {
       final state = await setup(tester, urdu: urdu);
       await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
       await tester.pumpAndSettle();
-      await push(tester, const QuranReaderScreen(surah: 1));
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      tester.state<NavigatorState>(find.byType(Navigator).first).push(
+            MaterialPageRoute(builder: (_) => const QuranReaderScreen(surah: 1)),
+          );
+      await tester.pump();
+      // Quran text future comes from a real-async zone; let it deliver.
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
       await shot(tester, urdu ? '14_reader_urdu' : '13_reader');
     }
   });
