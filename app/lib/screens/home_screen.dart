@@ -601,7 +601,6 @@ class _TodayPrayers extends StatelessWidget {
     final urdu = state.settings.urdu;
     final today = state.today;
     final times = state.prayerTimes(today);
-    final rec = state.day(today);
     final theme = Theme.of(context);
     return Card(
       child: Column(

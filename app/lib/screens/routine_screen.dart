@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../core/theme.dart';
 import '../data/routine.dart';
-import '../services/prayer_times.dart';
 import '../strings.dart';
 import '../widgets/common.dart';
 import '../widgets/pickers.dart';
