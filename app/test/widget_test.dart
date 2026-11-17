@@ -351,6 +351,8 @@ void main() {
     await tester.tap(find.byKey(const Key('more_features')));
     await tester.pumpAndSettle();
     for (final label in ['Islamic Calendar', 'Sadaqah Tracker', 'Habit Goals', 'Daily Muhasaba', 'Dua Library']) {
+      await tester.ensureVisible(find.text(label));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(label));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: label);
@@ -453,7 +455,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('routine_check_morning_azkar')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('routine_check_morning_azkar')));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(state.isDone(state.today, state.itemById('morning_azkar')!), isTrue);
     expect(find.byKey(const Key('undo_action')), findsOneWidget);
     await tester.tap(find.byKey(const Key('undo_action')));
@@ -471,7 +473,8 @@ void main() {
       expect(find.byKey(const Key('tile_farz')), findsOneWidget);
       expect(find.byKey(const Key('prayer_stats_card')), findsOneWidget);
     }
-    await tester.ensureVisible(find.byKey(const Key('weekly_chart')));
+    await tester.dragUntilVisible(
+        find.byKey(const Key('weekly_chart')), find.byKey(const Key('reports_list')), const Offset(0, -300));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });

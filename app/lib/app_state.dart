@@ -532,6 +532,7 @@ class AppState extends ChangeNotifier {
 
   void _loadAll() {
     _cache.clear();
+    _savedDays.clear();
     final raw = prefs.getString('settings');
     try {
       settings = raw == null ? AppSettings() : AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
@@ -626,10 +627,17 @@ class AppState extends ChangeNotifier {
     return rec;
   }
 
-  bool hasRecord(DateTime date) => prefs.containsKey('day_${dayKey(date)}');
+  /// Days saved in this session (writes are queued, so prefs may lag).
+  final Set<String> _savedDays = {};
+
+  bool hasRecord(DateTime date) {
+    final key = dayKey(date);
+    return _savedDays.contains(key) || prefs.containsKey('day_$key');
+  }
 
   void _saveDay(DateTime date) {
     final key = dayKey(date);
+    _savedDays.add(key);
     final rec = _cache[key];
     if (rec != null) {
       final json = jsonEncode(rec.toJson());
