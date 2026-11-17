@@ -285,7 +285,7 @@ class _SurahList extends StatelessWidget {
               title: Text(info.name, style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(
                   '${urdu ? info.meaningUr : info.meaningEn} • ${info.ayahs} ${s.t('ayat')} • ${info.meccan ? s.t('makki') : s.t('madani')}'),
-              trailing: Text(info.arabicName, style: arabicStyle(context, size: 20, color: AppColors.emeraldMid)),
+              trailing: Text(info.arabicName, style: quranStyle(context, indoPak: true, size: 18, color: AppColors.emeraldMid)),
               onTap: () => onOpen(info.number),
             ),
           ),

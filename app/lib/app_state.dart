@@ -206,6 +206,7 @@ class AppSettings {
   bool showEnglish;
   bool showTranslit;
   double arabicSize;
+  bool indoPakScript; // Indo-Pak (default) or Uthmani Quran script
 
   // ---- tasbeeh ----
   bool tasbeehVibrate;
@@ -256,6 +257,7 @@ class AppSettings {
     this.showEnglish = true,
     this.showTranslit = false,
     this.arabicSize = 26,
+    this.indoPakScript = true,
     this.tasbeehVibrate = true,
     this.tasbeehSound = false,
     this.tasbeehKeepAwake = false,
@@ -319,6 +321,7 @@ class AppSettings {
         'showEn': showEnglish,
         'showTr': showTranslit,
         'arSize': arabicSize,
+        'indoPak': indoPakScript,
         'tVibrate': tasbeehVibrate,
         'tSound': tasbeehSound,
         'tAwake': tasbeehKeepAwake,
@@ -403,6 +406,7 @@ class AppSettings {
       showEnglish: boolOr('showEn', true),
       showTranslit: boolOr('showTr', false),
       arabicSize: dblOr('arSize', 26),
+      indoPakScript: boolOr('indoPak', true),
       tasbeehVibrate: boolOr('tVibrate', true),
       tasbeehSound: boolOr('tSound', false),
       tasbeehKeepAwake: boolOr('tAwake', false),

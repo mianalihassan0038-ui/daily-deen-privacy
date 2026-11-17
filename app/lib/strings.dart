@@ -183,11 +183,15 @@ class S {
     'show_english': ['English translation', 'انگریزی ترجمہ'],
     'show_translit': ['Transliteration', 'رومن تلفظ'],
     'arabic_size': ['Arabic text size', 'عربی متن کا سائز'],
+    'quran_script': ['Quran script', 'قرآن کا رسم الخط'],
+    'script_indopak': ['Indo-Pak', 'پاک و ہند'],
+    'script_uthmani': ['Uthmani', 'عثمانی'],
+    'set_last_read': ['Mark as last read', 'یہاں تک پڑھ لیا'],
     'read': ['Read', 'پڑھ لیا'],
     'mark_read': ['Mark read', 'پڑھا ہوا نشان لگائیں'],
     'quran_sources': [
-      "Arabic: Uthmani text (The Noble Qur'an Encyclopedia). Urdu: Abul A'la Maududi. English: Saheeh International. Transliteration: Tanzil.net.",
-      'عربی: عثمانی متن (موسوعہ قرآنِ کریم)۔ اردو: ابوالاعلیٰ مودودی۔ انگریزی: صحیح انٹرنیشنل۔ رومن تلفظ: تنزیل۔'
+      "Arabic: Indo-Pak Nastaleeq text and font by King Fahd Glorious Quran Printing Complex; Uthmani text (The Noble Qur'an Encyclopedia). Urdu: Abul A'la Maududi. English: Saheeh International. Transliteration: Tanzil.net.",
+      'عربی: پاک و ہند نستعلیق متن اور فونٹ (شاہ فہد قرآن کمپلیکس)؛ عثمانی متن (موسوعہ قرآنِ کریم)۔ اردو: ابوالاعلیٰ مودودی۔ انگریزی: صحیح انٹرنیشنل۔ رومن تلفظ: تنزیل۔'
     ],
 
     // ---------------- azkar / tasbeeh ----------------
@@ -447,7 +451,7 @@ class S {
     'about_app': ['About App', 'ایپ کے بارے میں'],
     'sources': ['Sources', 'ماخذ'],
     'sources_text': [
-      "Quran: Uthmani Arabic text from The Noble Qur'an Encyclopedia; Urdu translation by Abul A'la Maududi, English by Saheeh International and transliteration from Tanzil.net. Duas: Hisn al-Muslim with Hadith references. Prayer times: astronomical calculation (offline). Font: Noto Naskh Arabic (SIL Open Font License).",
+      "Quran: Indo-Pak Nastaleeq text and font from King Fahd Glorious Quran Printing Complex and Uthmani Arabic text from The Noble Qur'an Encyclopedia; Urdu translation by Abul A'la Maududi, English by Saheeh International and transliteration from Tanzil.net. Duas: Hisn al-Muslim with Hadith references. Prayer times: astronomical calculation (offline). Fonts: KFGQPC Nastaleeq (King Fahd Complex licence), Noto Nastaliq Urdu and Noto Naskh Arabic (SIL Open Font License).",
       'قرآن: عثمانی عربی متن (موسوعہ قرآنِ کریم)؛ اردو ترجمہ ابوالاعلیٰ مودودی، انگریزی صحیح انٹرنیشنل اور رومن تلفظ تنزیل سے۔ دعائیں: حصن المسلم، حدیث کے حوالوں کے ساتھ۔ نماز کے اوقات: فلکیاتی حساب (آف لائن)۔ فونٹ: نوٹو نسخ عربی۔'
     ],
     'daily_report': ['Daily Report', 'روزانہ رپورٹ'],

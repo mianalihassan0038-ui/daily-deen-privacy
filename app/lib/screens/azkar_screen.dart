@@ -294,7 +294,7 @@ class ZikrCard extends StatelessWidget {
               Text(zikr.ur,
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
-                  style: const TextStyle(fontFamily: arabicFont, fontSize: 16, height: 1.8)),
+                  style: urduStyle(context, size: 16)),
               const SizedBox(height: 6),
               Text(zikr.en, textDirection: TextDirection.ltr, style: theme.textTheme.bodyMedium),
               const SizedBox(height: 10),

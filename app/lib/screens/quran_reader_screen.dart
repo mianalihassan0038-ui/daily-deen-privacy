@@ -131,6 +131,25 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           final st = state.settings;
           return SafeArea(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(children: [
+                  Expanded(child: Text(s.t('quran_script'))),
+                  SegmentedButton<bool>(
+                    key: const Key('script_toggle'),
+                    showSelectedIcon: false,
+                    segments: [
+                      ButtonSegment(value: true, label: Text(s.t('script_indopak'))),
+                      ButtonSegment(value: false, label: Text(s.t('script_uthmani'))),
+                    ],
+                    selected: {st.indoPakScript},
+                    onSelectionChanged: (v) {
+                      st.indoPakScript = v.first;
+                      state.saveSettings();
+                    },
+                  ),
+                ]),
+              ),
               SwitchListTile(
                 title: Text(s.t('show_urdu')),
                 value: st.showUrdu,
@@ -198,14 +217,18 @@ class _SurahHeader extends StatelessWidget {
         border: Border.all(color: AppColors.gold, width: 1.5),
       ),
       child: Column(children: [
-        Text(info.arabicName, style: arabicStyle(context, size: 30, color: AppColors.goldLight)),
+        Text(info.arabicName,
+            style: quranStyle(context, indoPak: AppScope.of(context).settings.indoPakScript, size: 28, color: AppColors.goldLight)),
         Text(info.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
         Text('${urdu ? info.meaningUr : info.meaningEn} • ${info.ayahs} ${s.t('ayat')} • ${info.meccan ? s.t('makki') : s.t('madani')}',
             textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
         // Al-Fatihah includes the Basmala as ayah 1; At-Tawbah has none.
         if (info.number != 1 && info.number != 9) ...[
           const SizedBox(height: 10),
-          Text('بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ', style: arabicStyle(context, size: 24, color: Colors.white)),
+          Text(
+            AppScope.of(context).settings.indoPakScript ? 'بِسۡمِ اللّٰهِ الرَّحۡمٰنِ الرَّحِيۡمِ' : 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
+            style: quranStyle(context, indoPak: AppScope.of(context).settings.indoPakScript, size: 22, color: Colors.white),
+          ),
         ],
       ]),
     );
@@ -221,6 +244,7 @@ class _AyahCard extends StatelessWidget {
     final state = AppScope.of(context);
     final s = state.s;
     final st = state.settings;
+    final urdu = st.urdu;
     final repo = QuranRepository.instance;
     final theme = Theme.of(context);
     final bookmarked = state.isBookmarked(ayah.surah, ayah.number);
@@ -228,98 +252,161 @@ class _AyahCard extends StatelessWidget {
     final isLast = state.lastRead?.surah == ayah.surah && state.lastRead?.ayah == ayah.number;
     final pageStart = repo.isPageStart(ayah.surah, ayah.number);
     final page = repo.pageOf(ayah.surah, ayah.number);
+    final info = repo.surah(ayah.surah);
+    final ruku = repo.rukuOf(ayah.surah, ayah.number);
+    final juz = repo.juzOf(ayah.surah, ayah.number);
+    final text = ayah.text(st.indoPakScript);
+
+    // Info line under the ayah, like a printed mushaf index.
+    final infoParts = urdu
+        ? [
+            'سورۃ ${info.arabicName}',
+            'آیت نمبر ${ayah.number}',
+            'پارہ $juz',
+            if (ruku != null) 'پارہ رکوع ${ruku.$2}',
+            if (ruku != null) 'سورۃ رکوع ${ruku.$1}',
+          ]
+        : [
+            info.name,
+            '${s.t('ayah')} ${ayah.number}',
+            '${s.t('para')} $juz',
+            if (ruku != null) 'Ruku ${ruku.$1}',
+          ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (pageStart && ayah.number != 1)
-          _PageDivider(page: page - 1),
+        if (pageStart && ayah.number != 1) _PageDivider(page: page - 1),
         Card(
           key: Key('ayah_${ayah.surah}_${ayah.number}'),
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           color: isLast ? AppColors.gold.withValues(alpha: 0.10) : null,
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
-            borderRadius: BorderRadius.circular(20),
             onTap: () => state.setLastRead(ayah.surah, ayah.number),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.emerald.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text('${ayah.surah}:${ayah.number}',
-                          style: TextStyle(fontWeight: FontWeight.w700, color: theme.colorScheme.primary)),
-                    ),
-                    if (isLast) ...[
-                      const SizedBox(width: 6),
-                      const Icon(Icons.push_pin, size: 16, color: AppColors.gold),
-                    ],
-                    const Spacer(),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
+            onLongPress: () => _actions(context, state, text),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+                  child: Text(
+                    text,
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: quranStyle(context, indoPak: st.indoPakScript, size: st.arabicSize),
+                  ),
+                ),
+                if (st.showTranslit)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Text(ayah.translit,
+                        textDirection: TextDirection.ltr,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: AppColors.emeraldMid)),
+                  ),
+                if (st.showUrdu)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                    child: Text(ayah.ur, textDirection: TextDirection.rtl, textAlign: TextAlign.right, style: urduStyle(context)),
+                  ),
+                if (st.showEnglish)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Text(ayah.en, textDirection: TextDirection.ltr, style: theme.textTheme.bodyMedium),
+                  ),
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 0, 10, 0),
+                  child: Row(children: [
+                    _SmallIcon(
+                      icon: bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      color: AppColors.gold,
                       tooltip: s.t('bookmark'),
-                      icon: Icon(bookmarked ? Icons.bookmark : Icons.bookmark_border, color: AppColors.gold),
-                      onPressed: () => state.toggleBookmark(ayah.surah, ayah.number),
+                      onTap: () => state.toggleBookmark(ayah.surah, ayah.number),
                     ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
+                    _SmallIcon(
+                      icon: fav ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.redAccent,
                       tooltip: s.t('favourite'),
-                      icon: Icon(fav ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent),
-                      onPressed: () => state.toggleFavouriteAyah(ayah.surah, ayah.number),
+                      onTap: () => state.toggleFavouriteAyah(ayah.surah, ayah.number),
                     ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
+                    _SmallIcon(
+                      icon: Icons.copy,
+                      color: theme.colorScheme.outline,
                       tooltip: s.t('copy'),
-                      icon: const Icon(Icons.copy, size: 20),
-                      onPressed: () {
-                        final text = [
-                          ayah.arabic,
-                          if (st.showUrdu) ayah.ur,
-                          if (st.showEnglish) ayah.en,
-                          '(${repo.surah(ayah.surah).name} ${ayah.surah}:${ayah.number})',
-                        ].join('\n\n');
-                        Clipboard.setData(ClipboardData(text: text));
-                        toast(context, s.t('copied'));
-                      },
+                      onTap: () => _copy(context, state, text),
+                    ),
+                    if (isLast) const Icon(Icons.push_pin, size: 14, color: AppColors.gold),
+                    Expanded(
+                      child: Text(
+                        infoParts.join(urdu ? '   ' : '  •  '),
+                        textDirection: urdu ? TextDirection.rtl : TextDirection.ltr,
+                        textAlign: TextAlign.end,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: urdu
+                            ? const TextStyle(fontFamily: urduFont, fontSize: 11, height: 1.9, color: Color(0xFFB4483C))
+                            : const TextStyle(fontSize: 11, color: Color(0xFFB4483C)),
+                      ),
                     ),
                   ]),
-                  const SizedBox(height: 4),
-                  Text(
-                    ayah.arabic,
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.right,
-                    style: arabicStyle(context, size: st.arabicSize, weight: FontWeight.w400),
-                  ),
-                  if (st.showTranslit) ...[
-                    const SizedBox(height: 6),
-                    Text(ayah.translit,
-                        textDirection: TextDirection.ltr,
-                        style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: AppColors.emeraldMid)),
-                  ],
-                  if (st.showUrdu) ...[
-                    const SizedBox(height: 8),
-                    Text(ayah.ur,
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontFamily: arabicFont, fontSize: 17, height: 1.8)),
-                  ],
-                  if (st.showEnglish) ...[
-                    const SizedBox(height: 6),
-                    Text(ayah.en, textDirection: TextDirection.ltr, style: theme.textTheme.bodyMedium),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
-        if (ayah.number == repo.surah(ayah.surah).ayahs && _isLastOfPage(repo, ayah)) _PageDivider(page: page),
+        if (ayah.number == info.ayahs && _isLastOfPage(repo, ayah)) _PageDivider(page: page),
       ],
+    );
+  }
+
+  void _copy(BuildContext context, AppState state, String text) {
+    final st = state.settings;
+    final repo = QuranRepository.instance;
+    final out = [
+      text,
+      if (st.showUrdu) ayah.ur,
+      if (st.showEnglish) ayah.en,
+      '(${repo.surah(ayah.surah).name} ${ayah.surah}:${ayah.number})',
+    ].join('\n\n');
+    Clipboard.setData(ClipboardData(text: out));
+    toast(context, state.s.t('copied'));
+  }
+
+  void _actions(BuildContext context, AppState state, String text) {
+    final s = state.s;
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.push_pin_outlined),
+            title: Text(s.t('set_last_read')),
+            onTap: () {
+              state.setLastRead(ayah.surah, ayah.number);
+              Navigator.pop(c);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.bookmark_border),
+            title: Text(s.t('bookmark')),
+            onTap: () {
+              state.toggleBookmark(ayah.surah, ayah.number);
+              Navigator.pop(c);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.copy),
+            title: Text(s.t('copy')),
+            onTap: () {
+              Navigator.pop(c);
+              _copy(context, state, text);
+            },
+          ),
+        ]),
+      ),
     );
   }
 
@@ -331,6 +418,27 @@ class _AyahCard extends StatelessWidget {
 }
 
 /// Divider shown after the last ayah of a mushaf page with a "mark read" toggle.
+class _SmallIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+  const _SmallIcon({required this.icon, required this.color, required this.tooltip, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      iconSize: 19,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      padding: EdgeInsets.zero,
+      icon: Icon(icon, color: color),
+      onPressed: onTap,
+    );
+  }
+}
+
 class _PageDivider extends StatelessWidget {
   final int page;
   const _PageDivider({required this.page});

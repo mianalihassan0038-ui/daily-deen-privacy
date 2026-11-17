@@ -21,7 +21,12 @@ class Ayah {
   final String en;
   final String ur;
   final String translit;
-  const Ayah(this.surah, this.number, this.arabic, this.en, this.ur, this.translit);
+
+  /// Indo-Pak (South Asian) script, King Fahd Complex Nastaleeq edition.
+  final String indoPak;
+  const Ayah(this.surah, this.number, this.arabic, this.en, this.ur, this.translit, [this.indoPak = '']);
+
+  String text(bool indoPakScript) => indoPakScript && indoPak.isNotEmpty ? indoPak : arabic;
 }
 
 /// Offline Quran text: Uthmani Arabic (QuranEnc), Saheeh International (English),
@@ -33,6 +38,7 @@ class QuranRepository {
   List<SurahInfo> _surahs = const [];
   List<List<int>> _juzStarts = const [];
   List<List<int>> _pageStarts = const [];
+  List<List<int>> _rukuStarts = const [];
   final Map<int, List<Ayah>> _cache = {};
   Future<void>? _loading;
 
@@ -62,6 +68,7 @@ class QuranRepository {
         (l as List).map((e) => (e as List).map((x) => (x as num).toInt()).toList()).toList();
     _juzStarts = pairs(j['juz']);
     _pageStarts = pairs(j['pages']);
+    _rukuStarts = j['ruku'] == null ? const [] : pairs(j['ruku']);
   }
 
   /// Loads and decodes UTF-8 text directly (AssetBundle.loadString would use
@@ -81,7 +88,7 @@ class QuranRepository {
     final out = <Ayah>[];
     for (var i = 0; i < list.length; i++) {
       final v = list[i] as List;
-      out.add(Ayah(surah, i + 1, v[0] as String, v[1] as String, v[2] as String, v[3] as String));
+      out.add(Ayah(surah, i + 1, v[0] as String, v[1] as String, v[2] as String, v[3] as String, v.length > 4 ? v[4] as String : ''));
     }
     _cache[surah] = out;
     return out;
@@ -108,6 +115,24 @@ class QuranRepository {
 
   /// Juz / Para (1..30) containing ayah [s]:[a].
   int juzOf(int s, int a) => _juzStarts.isEmpty ? 1 : _indexOf(_juzStarts, s, a) + 1;
+
+  /// Ruku number within the surah and within the para for ayah [s]:[a]
+  /// (null when ruku data is unavailable).
+  (int, int)? rukuOf(int s, int a) {
+    if (_rukuStarts.isEmpty) return null;
+    final g = _indexOf(_rukuStarts, s, a);
+    var inSurah = 0;
+    for (var i = g; i >= 0 && _rukuStarts[i][0] == s; i--) {
+      inSurah++;
+    }
+    final juz = juzOf(s, a);
+    final js = _juzStarts[juz - 1];
+    var inJuz = 0;
+    for (var i = g; i >= 0 && _cmp(_rukuStarts[i][0], _rukuStarts[i][1], js[0], js[1]) >= 0; i--) {
+      inJuz++;
+    }
+    return (inSurah == 0 ? 1 : inSurah, inJuz == 0 ? 1 : inJuz);
+  }
 
   /// True if [s]:[a] is the first ayah on its page.
   bool isPageStart(int s, int a) {
@@ -140,7 +165,8 @@ class QuranRepository {
         if (a.en.toLowerCase().contains(query) ||
             a.translit.toLowerCase().contains(query) ||
             a.ur.contains(q.trim()) ||
-            a.arabic.contains(q.trim())) {
+            a.arabic.contains(q.trim()) ||
+            a.indoPak.contains(q.trim())) {
           out.add(a);
           if (out.length >= limit) break;
         }

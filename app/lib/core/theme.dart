@@ -28,6 +28,33 @@ class AppColors {
 
 const String arabicFont = 'NotoNaskhArabic';
 
+/// Urdu (Nastaleeq) font used for all Urdu text in the app.
+const String urduFont = 'NotoNastaliqUrdu';
+
+/// Indo-Pak Quran font (King Fahd Complex Nastaleeq).
+const String indoPakFont = 'KFGQPCNastaleeq';
+
+/// Style for Urdu text such as translations.
+TextStyle urduStyle(BuildContext context, {double size = 17, Color? color, FontWeight weight = FontWeight.w400}) {
+  return TextStyle(
+    fontFamily: urduFont,
+    fontSize: size,
+    height: 2.0,
+    fontWeight: weight,
+    color: color ?? Theme.of(context).colorScheme.onSurface,
+  );
+}
+
+/// Style for the Quran text in the chosen script.
+TextStyle quranStyle(BuildContext context, {required bool indoPak, double size = 28, Color? color}) {
+  return TextStyle(
+    fontFamily: indoPak ? indoPakFont : arabicFont,
+    fontSize: indoPak ? size + 2 : size,
+    height: indoPak ? 2.3 : 1.9,
+    color: color ?? Theme.of(context).colorScheme.onSurface,
+  );
+}
+
 /// Style for Quranic / Arabic text.
 TextStyle arabicStyle(BuildContext context, {double size = 24, Color? color, FontWeight weight = FontWeight.w400}) {
   return TextStyle(
@@ -54,7 +81,7 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
     colorScheme: scheme,
     useMaterial3: true,
     brightness: brightness,
-    fontFamily: urdu ? arabicFont : null,
+    fontFamily: urdu ? urduFont : null,
   );
   return base.copyWith(
     scaffoldBackgroundColor: light ? AppColors.cream : AppColors.darkBg,

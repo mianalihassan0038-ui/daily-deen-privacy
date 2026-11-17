@@ -308,7 +308,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         text,
                         key: const Key('report_text'),
                         textDirection: urdu ? TextDirection.rtl : TextDirection.ltr,
-                        style: TextStyle(fontFamily: urdu ? arabicFont : null, height: 1.6),
+                        style: TextStyle(fontFamily: urdu ? urduFont : null, height: urdu ? 2.0 : 1.6),
                       ),
                     ),
                   ],
@@ -439,7 +439,7 @@ class _PlanHeader extends StatelessWidget {
                         child: Text(title,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                                color: AppColors.goldLight, fontSize: 24, height: 1.3, fontWeight: FontWeight.w800, fontFamily: arabicFont)),
+                                color: AppColors.goldLight, fontSize: 24, height: 1.6, fontWeight: FontWeight.w700, fontFamily: urduFont)),
                       ),
                     ),
                     const SizedBox(height: 6),

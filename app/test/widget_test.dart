@@ -173,6 +173,10 @@ void main() {
       expect(repo.pageOf(114, 6), 604);
       final baqarah = await repo.ayahs(2);
       expect(baqarah.length, 286);
+      expect(baqarah[254].indoPak, isNotEmpty);
+      expect(baqarah[0].text(true), isNot(baqarah[0].text(false)));
+      expect(repo.rukuOf(2, 8), (2, 2));
+      expect(repo.rukuOf(1, 1), (1, 1));
       var total = 0;
       for (final s in repo.surahs) {
         total += s.ayahs;

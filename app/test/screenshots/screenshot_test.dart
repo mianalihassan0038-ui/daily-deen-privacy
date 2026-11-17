@@ -7,6 +7,7 @@ import 'package:dailydeen/data/routine.dart';
 import 'package:dailydeen/main.dart';
 import 'package:dailydeen/screens/azkar_screen.dart';
 import 'package:dailydeen/screens/more_screen.dart';
+import 'package:dailydeen/screens/quran_reader_screen.dart';
 import 'package:dailydeen/screens/report_screen.dart';
 import 'package:dailydeen/screens/routine_screen.dart';
 import 'package:dailydeen/screens/settings_screen.dart';
@@ -39,6 +40,14 @@ Future<void> _loadFonts() async {
     naskh.addFont(Future.value(ByteData.sublistView(File(f).readAsBytesSync())));
   }
   await naskh.load();
+  final urdu = FontLoader('NotoNastaliqUrdu');
+  for (final f in ['assets/fonts/NotoNastaliqUrdu-Regular.ttf', 'assets/fonts/NotoNastaliqUrdu-Bold.ttf']) {
+    urdu.addFont(Future.value(ByteData.sublistView(File(f).readAsBytesSync())));
+  }
+  await urdu.load();
+  final indoPak = FontLoader('KFGQPCNastaleeq');
+  indoPak.addFont(Future.value(ByteData.sublistView(File('assets/fonts/KFGQPC-Nastaleeq.otf').readAsBytesSync())));
+  await indoPak.load();
   // Serif headings fall back to Naskh's Latin glyphs in tests.
   final serif = FontLoader('serif');
   serif.addFont(Future.value(ByteData.sublistView(File('assets/fonts/NotoNaskhArabic-Bold.ttf').readAsBytesSync())));
@@ -164,6 +173,17 @@ void main() {
     await tester.pumpAndSettle();
     await push(tester, const ReportScreen());
     await shot(tester, '12_daily_plan_urdu');
+  });
+
+  testWidgets('quran reader', (tester) async {
+    for (final urdu in [false, true]) {
+      final state = await setup(tester, urdu: urdu);
+      await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
+      await tester.pumpAndSettle();
+      await push(tester, const QuranReaderScreen(surah: 1));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await shot(tester, urdu ? '14_reader_urdu' : '13_reader');
+    }
   });
 
   testWidgets('urdu home', (tester) async {
