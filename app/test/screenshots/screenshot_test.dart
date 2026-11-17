@@ -5,7 +5,10 @@ import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/data/azkar.dart';
 import 'package:dailydeen/data/routine.dart';
 import 'package:dailydeen/main.dart';
+import 'package:dailydeen/screens/azkar_schedule_screen.dart';
 import 'package:dailydeen/screens/azkar_screen.dart';
+import 'package:dailydeen/screens/chilla_screen.dart';
+import 'package:dailydeen/services/schedule.dart';
 import 'package:dailydeen/screens/more_screen.dart';
 import 'package:dailydeen/screens/quran_reader_screen.dart';
 import 'package:dailydeen/screens/report_screen.dart';
@@ -155,6 +158,22 @@ void main() {
     await shot(tester, '09_more');
     await push(tester, const AzkarDetailScreen(type: AzkarType.morning));
     await shot(tester, '10_morning_azkar');
+  });
+
+  testWidgets('3.1 screens', (tester) async {
+    final state = await setup(tester);
+    state.startChilla(state.today.subtract(const Duration(days: 17)));
+    state.setAzkarSchedule('morning_azkar', const AzkarSchedule.afterPrayer('fajr', offset: 15));
+    await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
+    await tester.pumpAndSettle();
+    await push(tester, const AzkarScheduleEditScreen(id: 'morning_azkar'));
+    await shot(tester, '15_azkar_schedule');
+    await push(tester, const ChillaScreen());
+    await shot(tester, '16_chilla');
+    await push(tester, const SettingsScreen());
+    final notif = find.text('Notifications');
+    if (notif.evaluate().isNotEmpty) await tester.tap(notif.first);
+    await shot(tester, '17_notification_settings');
   });
 
   testWidgets('splash and onboarding', (tester) async {

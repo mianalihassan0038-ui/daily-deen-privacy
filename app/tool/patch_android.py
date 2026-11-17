@@ -41,6 +41,18 @@ receivers = (
 )
 if "ScheduledNotificationReceiver" not in m:
     m = m.replace("    </application>", receivers + "    </application>", 1)
+own_receiver = (
+    '        <receiver android:exported="false" android:name=".RescheduleReceiver">\n'
+    '            <intent-filter>\n'
+    '                <action android:name="android.intent.action.BOOT_COMPLETED"/>\n'
+    '                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>\n'
+    '                <action android:name="android.intent.action.TIME_SET"/>\n'
+    '                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>\n'
+    '            </intent-filter>\n'
+    '        </receiver>\n'
+)
+if "RescheduleReceiver" not in m:
+    m = m.replace("    </application>", own_receiver + "    </application>", 1)
 queries = (
     '    <queries>\n'
     '        <intent>\n'
@@ -82,8 +94,64 @@ main_activity = (
     "    }\n"
     "}\n"
 )
+receiver_kt = """package com.aurialtech.dailydeen
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
+import io.flutter.FlutterInjector
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.plugin.common.MethodChannel
+
+/**
+ * Re-schedules reminders after reboot, time-zone change, manual clock change
+ * and app update. Starts a short-lived headless Flutter engine that runs the
+ * Dart entry point `backgroundReschedule` (lib/main.dart).
+ */
+class RescheduleReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val pending = goAsync()
+        val app = context.applicationContext
+        val main = Handler(Looper.getMainLooper())
+        var finished = false
+        var engine: FlutterEngine? = null
+        fun finish() {
+            if (finished) return
+            finished = true
+            try { engine?.destroy() } catch (ignored: Exception) {}
+            try { pending.finish() } catch (ignored: Exception) {}
+        }
+        main.post {
+            try {
+                val loader = FlutterInjector.instance().flutterLoader()
+                loader.startInitialization(app)
+                loader.ensureInitializationComplete(app, null)
+                val e = FlutterEngine(app)
+                engine = e
+                MethodChannel(e.dartExecutor.binaryMessenger, "dailydeen/bg").setMethodCallHandler { call, result ->
+                    result.success(null)
+                    if (call.method == "done") main.post { finish() }
+                }
+                e.dartExecutor.executeDartEntrypoint(
+                    DartExecutor.DartEntrypoint(loader.findAppBundlePath(), "backgroundReschedule"),
+                    listOf(intent.action ?: "")
+                )
+                // Safety net: broadcasts may only run for a few seconds.
+                main.postDelayed({ finish() }, 9000)
+            } catch (e: Exception) {
+                finish()
+            }
+        }
+    }
+}
+"""
+
 for f in (app / "src/main/kotlin").rglob("MainActivity.kt"):
     f.write_text(main_activity)
+    (f.parent / "RescheduleReceiver.kt").write_text(receiver_kt)
 
 # ---------------- green launch screen ----------------
 launch = (

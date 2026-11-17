@@ -7,6 +7,7 @@ import 'package:dailydeen/data/routine.dart';
 import 'package:dailydeen/screens/qibla_screen.dart';
 import 'package:dailydeen/services/hijri.dart';
 import 'package:dailydeen/services/prayer_times.dart';
+import 'package:dailydeen/services/notifications.dart';
 import 'package:dailydeen/services/report.dart';
 import 'package:dailydeen/services/schedule.dart';
 import 'package:dailydeen/strings.dart';
@@ -669,6 +670,226 @@ void main() {
         'routine', 'optional', 'phase_afterIsha', 'retry', 'sehri', 'iftar', 'exact_alarms']) {
         expect(S.has(k), isTrue, reason: k);
       }
+    });
+  });
+
+  group('Daily Deen 3.1 remaining tasks', () {
+    late AppState state;
+    late DateTime today;
+    late DayPrayerTimes times;
+    DateTime at(PrayerName p, [int minutes = 0]) => times[p].toLocal().add(Duration(minutes: minutes));
+    DateTime clockAt(int h, int m) => DateTime(today.year, today.month, today.day, h, m);
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      state = await AppState.load();
+      today = state.today;
+      times = state.prayerTimes(today);
+    });
+
+    test('azkar mode: after prayer (+offset) is never marked missed', () {
+      state.setAzkarSchedule('morning_azkar', const AzkarSchedule.afterPrayer('fajr', offset: 15));
+      final it = state.itemById('morning_azkar')!;
+      expect(AzkarSchedule.of(it), const AzkarSchedule.afterPrayer('fajr', offset: 15));
+      expect(state.windowOf(it, today).start, at(PrayerName.fajr, 15));
+      expect(state.activityState(it, today, now: at(PrayerName.fajr, 10)), ActivityState.upcoming);
+      expect(state.activityState(it, today, now: at(PrayerName.fajr, 20)), ActivityState.active);
+      expect(state.activityState(it, today, now: lateIn(today)), ActivityState.active, reason: 'no expiry');
+    });
+
+    test('azkar mode: fixed time', () {
+      state.setAzkarSchedule('evening_azkar', const AzkarSchedule.fixed(17 * 60));
+      final it = state.itemById('evening_azkar')!;
+      expect(state.windowOf(it, today).start, clockAt(17, 0));
+      expect(state.activityState(it, today, now: clockAt(16, 59)), ActivityState.upcoming);
+      expect(state.activityState(it, today, now: clockAt(23, 0)), ActivityState.active);
+    });
+
+    test('azkar mode: time window becomes missed only after the window', () {
+      state.setAzkarSchedule('morning_azkar', const AzkarSchedule.window(7 * 60, 10 * 60));
+      final it = state.itemById('morning_azkar')!;
+      final w = state.windowOf(it, today);
+      expect(w.start, clockAt(7, 0));
+      expect(w.end, clockAt(10, 0));
+      expect(state.activityState(it, today, now: clockAt(6, 59)), ActivityState.upcoming);
+      expect(state.activityState(it, today, now: clockAt(9, 59)), ActivityState.active);
+      expect(state.activityState(it, today, now: clockAt(10, 0)), ActivityState.missed);
+      // A window crossing midnight ends the next day.
+      state.setAzkarSchedule('sleep_azkar', const AzkarSchedule.window(22 * 60, 60));
+      final sw = state.windowOf(state.itemById('sleep_azkar')!, today);
+      expect(sw.end, clockAt(1, 0).add(const Duration(days: 1)));
+    });
+
+    test('azkar schedule persists and resets to the default', () async {
+      final def = state.itemById('morning_azkar')!;
+      state.setAzkarSchedule('morning_azkar', const AzkarSchedule.fixed(8 * 60));
+      await state.flush();
+      final reloaded = await AppState.load();
+      expect(AzkarSchedule.of(reloaded.itemById('morning_azkar')!), const AzkarSchedule.fixed(8 * 60));
+      expect(reloaded.itemById('morning_azkar')!.id, 'morning_azkar');
+      reloaded.setAzkarSchedule('morning_azkar', null);
+      final back = reloaded.itemById('morning_azkar')!;
+      expect(AzkarSchedule.of(back), isNull);
+      expect(back.anchor, isNull);
+      expect(back.timeMinutes, def.timeMinutes);
+    });
+
+    test('routine undo restores state, time and score', () {
+      final now = at(PrayerName.fajr, 30);
+      final it = state.itemById('morning_azkar')!;
+      final other = state.itemById('kursi_morning')!;
+      state.toggleItem(today, other, now: now);
+      final before = state.scoreFor(today, now: now);
+      final snap = state.snapshotOf(today, it);
+      expect(state.toggleItem(today, it, now: now), isTrue);
+      expect(state.scoreFor(today, now: now).done, before.done + 1);
+      state.restoreSnapshot(today, snap);
+      expect(state.isDone(today, it), isFalse);
+      expect(state.completedTime(today, it.id), isNull);
+      expect(state.scoreFor(today, now: now).done, before.done);
+      expect(state.isDone(today, other), isTrue, reason: 'undo must not touch other activities');
+      expect(state.day(today).done.where((e) => e == 'kursi_morning').length, 1);
+    });
+
+    test('undo of a prayer restores its previous status', () {
+      final now = at(PrayerName.dhuhr, 10);
+      final dhuhr = state.itemById('dhuhr')!;
+      final snap = state.snapshotOf(today, dhuhr);
+      state.setPrayer(today, 'dhuhr', PrayerStatus.jamaat, now: now);
+      state.restoreSnapshot(today, snap);
+      expect(state.day(today).prayer('dhuhr'), PrayerStatus.none);
+    });
+
+    test('counter-linked undo never changes the counter', () {
+      final now = at(PrayerName.fajr, 30);
+      final it = state.itemById('m_durood')!;
+      for (var i = 0; i < 40; i++) {
+        state.incrementDhikr(today, 'durood@m');
+      }
+      final snap = state.snapshotOf(today, it);
+      expect(state.toggleItem(today, it, now: now), isTrue, reason: 'manual mark');
+      expect(state.isDone(today, it), isTrue);
+      state.restoreSnapshot(today, snap);
+      expect(state.isDone(today, it), isFalse);
+      expect(state.day(today).dhikr['durood@m'], 40);
+      // Completed by the counter: toggling off is refused and changes nothing.
+      for (var i = 0; i < 60; i++) {
+        state.incrementDhikr(today, 'durood@m');
+      }
+      final at0 = state.day(today).completedAt['m_durood'];
+      expect(state.toggleItem(today, it, now: now), isFalse);
+      expect(state.day(today).dhikr['durood@m'], 100);
+      expect(state.day(today).completedAt['m_durood'], at0);
+    });
+
+    test('reports: day / week / month use the scoring service', () {
+      final y = today.subtract(const Duration(days: 1));
+      for (final k in prayerKeys) {
+        state.setPrayer(y, k, k == 'fajr' ? PrayerStatus.qaza : PrayerStatus.jamaat);
+      }
+      state.setDone(y, 'morning_azkar', true);
+      state.day(y).quranPages = state.settings.quranTarget;
+      final week = buildRangeReport(state, state.daysBetween(today.subtract(const Duration(days: 6)), today),
+          now: lateIn(today));
+      expect(week.jamaat, 4);
+      expect(week.qaza, 1);
+      expect(week.morning, 1);
+      expect(week.quranTargetDays, 1);
+      expect(week.perPrayer['dhuhr']!.$1, 1);
+      final ys = state.scoreFor(y);
+      final yr = buildRangeReport(state, [y]);
+      expect(yr.farz, ys.farz);
+      expect(yr.overall, ys.overall);
+      final day = buildRangeReport(state, [today], now: lateIn(today));
+      expect(day.days, 1);
+      final month = buildRangeReport(state, state.daysBetween(DateTime(today.year, today.month, 1), today));
+      expect(month.days, greaterThanOrEqualTo(1));
+    });
+
+    test('chilla: completed, partial, missed days; missed never resets', () {
+      final start = today.subtract(const Duration(days: 3));
+      state.startChilla(start);
+      void complete(DateTime d) {
+        for (final k in prayerKeys) {
+          state.setPrayer(d, k, PrayerStatus.jamaat, now: lateIn(today));
+        }
+        for (final id in [...reportTilawat, ...reportMorning, ...reportEvening]) {
+          state.setDone(d, id, true, now: lateIn(today));
+        }
+      }
+
+      complete(start);
+      state.setPrayer(start.add(const Duration(days: 1)), 'fajr', PrayerStatus.alone);
+      complete(start.add(const Duration(days: 3)));
+      final sum = chillaSummary(state, now: lateIn(today))!;
+      expect(sum.days[0].state, ChillaDayState.completed);
+      expect(sum.days[1].state, ChillaDayState.partial);
+      expect(sum.days[2].state, ChillaDayState.missed);
+      expect(sum.days[3].state, ChillaDayState.completed);
+      expect(sum.days[4].state, ChillaDayState.upcoming);
+      expect(sum.currentDay, 4);
+      expect(sum.completedDays, 2);
+      expect(sum.streak, 1);
+      expect(sum.bestStreak, 1);
+      expect(state.settings.chillaStart, dayKey(start), reason: 'missed day does not reset');
+      expect(sum.end, start.add(const Duration(days: 39)));
+    });
+
+    test('notification plan: azkar schedule, no duplicates, only future', () {
+      state.setAzkarSchedule('morning_azkar', const AzkarSchedule.afterPrayer('fajr', offset: 15));
+      // Also flag it as a routine reminder: it must still be planned once.
+      state.updateRoutineItem(state.itemById('morning_azkar')!.copyWith(reminder: true));
+      final now = at(PrayerName.fajr, -20);
+      final plan = NotificationService.plan(state, now: now);
+      expect(plan.map((r) => r.id).toSet().length, plan.length, reason: 'unique ids');
+      expect(plan.map((r) => '${r.title}|${r.when.toUtc().millisecondsSinceEpoch ~/ 60000}').toSet().length,
+          plan.length, reason: 'no duplicate reminders');
+      expect(plan.every((r) => r.when.isAfter(now)), isTrue);
+      final morning = plan.where((r) => r.id == 1200).single;
+      expect(morning.when, at(PrayerName.fajr, 15));
+      expect(plan.where((r) => r.title == state.s.t('morning_azkar') && r.when == at(PrayerName.fajr, 15)).length, 1);
+      // Rescheduling later drops reminders that are now in the past.
+      final later = NotificationService.plan(state, now: at(PrayerName.fajr, 20));
+      expect(later.any((r) => r.id == 1200), isFalse);
+      expect(later.any((r) => r.id == 0), isFalse, reason: "today's Fajr already passed");
+    });
+
+    test('notifications off plans nothing', () {
+      state.settings.notifications = false;
+      expect(NotificationService.plan(state), isEmpty);
+    });
+
+    test('timezone / clock change on resume triggers a reschedule', () {
+      var calls = 0;
+      state.onScheduleChanged = (_) => calls++;
+      final t = clock();
+      state.onResume(now: t);
+      expect(calls, 0);
+      state.onResume(now: t.add(const Duration(hours: 7)));
+      expect(calls, 1, reason: 'clock moved (TIME_SET) or long background');
+      expect(state.settings.autoTimezone, isTrue);
+      state.settings.autoTimezone = false;
+      state.saveSettings();
+      expect(state.settings.toJson()['autoTz'], isFalse);
+    });
+
+    test('older backups import and keep ids and data', () async {
+      final y = today.subtract(const Duration(days: 1));
+      state.setPrayer(y, 'asr', PrayerStatus.jamaat);
+      state.addRoutineItem(RoutineItem(id: 'custom_walk', en: 'Walk', ur: 'Walk', section: RoutineSection.day));
+      await state.flush();
+      final backup = jsonDecode(jsonEncode(state.exportData())) as Map<String, dynamic>;
+      backup['version'] = 2; // an older backup format
+      final settings = jsonDecode((backup['data'] as Map)['settings'] as String) as Map<String, dynamic>;
+      settings.remove('autoTz');
+      settings.remove('exact');
+      (backup['data'] as Map)['settings'] = jsonEncode(settings);
+      SharedPreferences.setMockInitialValues({});
+      final fresh = await AppState.load();
+      expect(await fresh.importDataSafe(backup), isNull);
+      expect(fresh.day(y).prayer('asr'), PrayerStatus.jamaat);
+      expect(fresh.allItems.map((e) => e.id).toList(), state.allItems.map((e) => e.id).toList());
+      expect(fresh.settings.autoTimezone, isTrue);
     });
   });
 }

@@ -8,6 +8,8 @@ import '../widgets/common.dart';
 import '../widgets/pickers.dart';
 import 'navigation.dart';
 import 'home_screen.dart' show StateChip;
+import '../widgets/date_switcher.dart';
+import '../widgets/azkar_schedule_editor.dart';
 import '../services/schedule.dart';
 
 /// "My Daily Routine" timeline + editor.
@@ -153,30 +155,8 @@ class _TimelineState extends State<_Timeline> {
     final isToday = date == state.today;
 
     final rows = <Widget>[
-      // Day picker: today and the previous 6 days (history / past edits).
-      SizedBox(
-        height: 44,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            for (var i = 0; i < 7; i++)
-              Builder(builder: (c) {
-                final d = DateTime(state.today.year, state.today.month, state.today.day - i);
-                return Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 6),
-                  child: ChoiceChip(
-                    key: Key('routine_day_$i'),
-                    label: Text(i == 0
-                        ? s.t('today')
-                        : '${(urdu ? weekdaysUr : weekdaysEn)[d.weekday - 1].substring(0, urdu ? null : 3)} ${d.day}'),
-                    selected: d == date,
-                    onSelected: (_) => setState(() => _date = d),
-                  ),
-                );
-              }),
-          ],
-        ),
-      ),
+      // Date navigation (history / past edits; no future dates).
+      DateSwitcher(date: date, onChanged: (d) => setState(() => _date = d)),
       if (!isToday)
         Padding(
           padding: const EdgeInsets.only(top: 6),
@@ -336,6 +316,7 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
   bool _optional = false;
   bool _init = false;
   bool _customSchedule = false;
+  AzkarSchedule? _azkar;
   String _anchor = 'fajr';
   int _startOff = 0;
   String _endAnchor = 'dhuhr';
@@ -361,6 +342,7 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
       _reminder = it.reminder;
       _optional = it.optional;
       _customSchedule = it.anchor != null;
+      _azkar = AzkarSchedule.of(it);
       final spec = ScheduleEngine.specOf(it);
       _anchor = spec.anchor;
       _startOff = spec.startOffset;
@@ -369,6 +351,12 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
     }
     _init = true;
   }
+
+  bool get _isAzkar =>
+      widget.item?.prayerKey == null &&
+      (_category == RoutineCategory.azkar ||
+          _category == RoutineCategory.dhikr ||
+          (widget.item?.id.endsWith('_azkar') ?? false));
 
   void _save(AppState state) {
     if (!_form.currentState!.validate()) return;
@@ -394,7 +382,7 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
         startOffset: _customSchedule ? _startOff : 0,
         endAnchor: _customSchedule ? _endAnchor : null,
         endOffset: _customSchedule ? _endOff : 0,
-      ));
+      )._withAzkar(_isAzkar, _azkar, widget.item));
     } else {
       final sameNames = it.en == it.ur;
       state.updateRoutineItem(it.copyWith(
@@ -414,7 +402,7 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
         startOffset: _customSchedule ? _startOff : null,
         endAnchor: _customSchedule ? _endAnchor : null,
         endOffset: _customSchedule ? _endOff : null,
-      ));
+      )._withAzkar(_isAzkar, _azkar, widget.item));
     }
     Navigator.of(context).pop();
   }
@@ -518,7 +506,10 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
                 ),
             ]),
             const SizedBox(height: 12),
+            if (!isPrayer && _isAzkar)
+              AzkarScheduleEditor(value: _azkar, onChanged: (v) => setState(() => _azkar = v)),
             if (!isPrayer) ...[
+              if (!_isAzkar)
               _ScheduleEditor(
                 custom: _customSchedule,
                 anchor: _anchor,
@@ -665,5 +656,22 @@ class _ScheduleEditor extends StatelessWidget {
         ]),
       ),
     );
+  }
+}
+
+
+extension on RoutineItem {
+  /// Azkar activities use the dedicated Azkar scheduler.
+  RoutineItem _withAzkar(bool isAzkar, AzkarSchedule? azkar, RoutineItem? original) {
+    if (!isAzkar) return this;
+    if (azkar != null) return azkar.applyTo(this);
+    // Back to default: a fixed/window schedule had replaced the time, so the
+    // default activity's own time comes back.
+    final previous = original == null ? null : AzkarSchedule.of(original);
+    final def = defaultRoutine.where((e) => e.id == id).firstOrNull;
+    if (previous != null && previous.mode != AzkarMode.afterPrayer && def != null) {
+      return copyWith(clearSchedule: true, timeMinutes: def.timeMinutes, clearTime: def.timeMinutes == null);
+    }
+    return copyWith(clearSchedule: true);
   }
 }

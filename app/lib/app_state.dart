@@ -204,6 +204,7 @@ class AppSettings {
   int prayerReminderBefore; // minutes before prayer time (0 = at the time)
   bool notifVibrate;
   bool exactAlarms;
+  bool autoTimezone;
   int snoozeMinutes;
   int wakeMinutes; // minutes after midnight, default 4:00 AM
   int quranReminderMinutes;
@@ -258,6 +259,7 @@ class AppSettings {
     this.prayerReminderBefore = 0,
     this.notifVibrate = true,
     this.exactAlarms = false,
+    this.autoTimezone = true,
     this.snoozeMinutes = 10,
     this.wakeMinutes = 240,
     this.quranReminderMinutes = 1200,
@@ -323,6 +325,7 @@ class AppSettings {
         'before': prayerReminderBefore,
         'vibrate': notifVibrate,
         'exact': exactAlarms,
+        'autoTz': autoTimezone,
         'snooze': snoozeMinutes,
         'wake': wakeMinutes,
         'quranRemind': quranReminderMinutes,
@@ -409,6 +412,7 @@ class AppSettings {
       prayerReminderBefore: intOr('before', 0),
       notifVibrate: boolOr('vibrate', true),
       exactAlarms: boolOr('exact', false),
+      autoTimezone: boolOr('autoTz', true),
       snoozeMinutes: intOr('snooze', 10),
       wakeMinutes: intOr('wake', 240),
       quranReminderMinutes: intOr('quranRemind', 1200),
@@ -496,10 +500,13 @@ class AppState extends ChangeNotifier {
   void onResume({DateTime? now}) {
     final t = now ?? clock();
     final dayChanged = t.year != _lastSeenDay.year || t.month != _lastSeenDay.month || t.day != _lastSeenDay.day;
-    final tzChanged = t.timeZoneOffset != _lastOffset;
+    final tzChanged = t.timeZoneOffset != _lastOffset && settings.autoTimezone;
+    // Also refresh reminders when the app was in the background for long
+    // (the user may have changed the clock manually: Android TIME_SET).
+    final stale = t.difference(_lastSeenDay).abs() > const Duration(hours: 6);
     _lastSeenDay = t;
     _lastOffset = t.timeZoneOffset;
-    if (dayChanged || tzChanged) {
+    if (dayChanged || tzChanged || stale) {
       _timesCache.clear();
       notifyListeners();
       onScheduleChanged?.call(this);
@@ -784,6 +791,12 @@ class AppState extends ChangeNotifier {
     final rec = day(date);
     final done = isDone(date, item);
     if (!done && !canComplete(item, date, now: now)) return false;
+    if (done && item.prayerKey == null) {
+      // Completed by its counter: undo by reducing / resetting the counter
+      // (checked before anything is changed so no data is touched).
+      final p = countedProgress(item, date);
+      if (p != null && p.$2 > 0 && p.$1 >= p.$2) return false;
+    }
     rec.skipped.remove(item.id);
     if (done) {
       rec.completedAt.remove(item.id);
@@ -794,16 +807,71 @@ class AppState extends ChangeNotifier {
       rec.prayers[item.prayerKey!] = done ? PrayerStatus.none : PrayerStatus.alone;
     } else if (done) {
       rec.done.remove(item.id);
-      if (isDone(date, item)) {
-        // Completed by its counter: undo by reducing / resetting the counter.
-        _saveDay(date);
-        return false;
-      }
     } else {
       rec.done.add(item.id);
     }
     _saveDay(date);
     return true;
+  }
+
+  /// Completion state of one activity, taken before a change so it can be
+  /// undone exactly (counters are never part of it).
+  CompletionSnapshot snapshotOf(DateTime date, RoutineItem item) {
+    final rec = day(date);
+    return CompletionSnapshot(
+      id: item.id,
+      inDone: rec.done.contains(item.id),
+      skipped: rec.skipped.contains(item.id),
+      at: rec.completedAt[item.id],
+      prayerKey: item.prayerKey,
+      prayer: item.prayerKey == null ? null : rec.prayer(item.prayerKey!),
+    );
+  }
+
+  /// Undo: restores exactly the snapshot of that one activity. Other
+  /// activities and Quran / tasbeeh counters are not touched.
+  void restoreSnapshot(DateTime date, CompletionSnapshot snap) {
+    final rec = day(date);
+    if (snap.inDone) {
+      rec.done.add(snap.id);
+    } else {
+      rec.done.remove(snap.id);
+    }
+    if (snap.skipped) {
+      rec.skipped.add(snap.id);
+    } else {
+      rec.skipped.remove(snap.id);
+    }
+    if (snap.at == null) {
+      rec.completedAt.remove(snap.id);
+    } else {
+      rec.completedAt[snap.id] = snap.at!;
+    }
+    if (snap.prayerKey != null && snap.prayer != null) {
+      if (snap.prayer == PrayerStatus.none) {
+        rec.prayers.remove(snap.prayerKey);
+      } else {
+        rec.prayers[snap.prayerKey!] = snap.prayer!;
+      }
+    }
+    _saveDay(date);
+  }
+
+  /// Sets (or with null, resets to the default) the Azkar schedule of an
+  /// activity. The id and all records stay the same.
+  void setAzkarSchedule(String id, AzkarSchedule? schedule) {
+    final item = itemById(id);
+    if (item == null) return;
+    if (schedule != null) {
+      updateRoutineItem(schedule.applyTo(item));
+      return;
+    }
+    final def = defaultRoutine.where((e) => e.id == id).firstOrNull;
+    updateRoutineItem(item.copyWith(
+      clearSchedule: true,
+      timeMinutes: def?.timeMinutes,
+      clearTime: def != null && def.timeMinutes == null,
+    ));
   }
 
   /// Marks / unmarks by id. Marking respects the same lock as [toggleItem].
@@ -853,7 +921,7 @@ class AppState extends ChangeNotifier {
   List<ScheduledActivity> carriedOver({DateTime? now}) {
     final t = now ?? clock();
     final y = DateTime(t.year, t.month, t.day - 1);
-    return scheduleFor(y, now: t).where((e) => e.isOpen).toList();
+    return scheduleFor(y, now: t).where((e) => e.isOpen && e.window.contains(t)).toList();
   }
 
   /// Daily score (Farz / Routine / Optional), see services/scoring.dart.
@@ -1464,6 +1532,24 @@ class AppState extends ChangeNotifier {
 
   /// Compatibility wrapper. Returns true on success.
   Future<bool> importData(Map<String, dynamic> backup) async => (await importDataSafe(backup)) == null;
+}
+
+/// Completion state of a single activity (see [AppState.snapshotOf]).
+class CompletionSnapshot {
+  final String id;
+  final bool inDone;
+  final bool skipped;
+  final String? at;
+  final String? prayerKey;
+  final PrayerStatus? prayer;
+  const CompletionSnapshot({
+    required this.id,
+    required this.inDone,
+    required this.skipped,
+    this.at,
+    this.prayerKey,
+    this.prayer,
+  });
 }
 
 /// An activity placed on the timeline for a given date.

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'azkar_schedule_screen.dart';
+import 'chilla_screen.dart';
+
 import '../app_state.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
@@ -24,6 +27,8 @@ class MoreFeaturesScreen extends StatelessWidget {
 
     final items = <(String, String, IconData, Color, VoidCallback)>[
       (s.t('my_daily_plan'), s.t('chilla'), Icons.assignment_turned_in, AppColors.emerald, () => push(const ReportScreen())),
+      (s.t('my_chilla'), s.t('chilla_40_days'), Icons.workspace_premium, AppColors.gold, () => push(const ChillaScreen())),
+      (s.t('azkar_schedule'), s.t('azkar'), Icons.schedule, const Color(0xFFE09A2D), () => push(const AzkarScheduleScreen())),
       (s.t('dua_library'), s.t('dua_library_sub'), Icons.volunteer_activism, AppColors.gold,
           () => push(HeaderScaffold(title: s.t('dua_library'), body: const AzkarCategoriesList()))),
       (s.t('surah_list'), s.t('surah_list_sub'), Icons.menu_book, AppColors.emeraldMid, () => ShellScope.go(context, Tabs.quran)),

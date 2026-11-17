@@ -663,6 +663,23 @@ class NotificationSettingsScreen extends StatelessWidget {
                 },
               ),
               SwitchListTile(
+                key: const Key('auto_timezone'),
+                secondary: const Icon(Icons.public),
+                title: Text(s.t('timezone_handling')),
+                subtitle: Text(s.t('timezone_handling_sub')),
+                value: st.autoTimezone,
+                onChanged: (v) {
+                  st.autoTimezone = v;
+                  state.saveSettings(reschedule: true);
+                },
+              ),
+              if (st.autoTimezone)
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.check_circle, color: AppColors.onTime),
+                  title: Text(s.t('timezone_auto_note')),
+                ),
+              SwitchListTile(
                 key: const Key('exact_alarms'),
                 secondary: const Icon(Icons.alarm_on),
                 title: Text(s.t('exact_alarms')),

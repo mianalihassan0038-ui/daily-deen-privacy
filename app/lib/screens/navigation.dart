@@ -154,7 +154,12 @@ Future<void> showActivitySheet(BuildContext context, RoutineItem item, DateTime 
 /// Toggles an activity and explains why when it is not allowed
 /// (locked until its time, or completed by its counter).
 void tryToggle(BuildContext context, AppState state, DateTime date, RoutineItem item, {DateTime? now}) {
-  if (state.toggleItem(date, item, now: now)) return;
+  final snap = state.snapshotOf(date, item);
+  final wasDone = state.isDone(date, item);
+  if (state.toggleItem(date, item, now: now)) {
+    if (!wasDone && state.isDone(date, item)) showUndo(context, state, date, item, snap);
+    return;
+  }
   final s = state.s;
   if (state.isDone(date, item)) {
     toast(context, s.t('counter_completed_hint'));
@@ -166,8 +171,42 @@ void tryToggle(BuildContext context, AppState state, DateTime date, RoutineItem 
 
 /// Records a prayer status, explaining when the prayer time has not started.
 void trySetPrayer(BuildContext context, AppState state, DateTime date, String key, PrayerStatus status) {
-  if (state.setPrayer(date, key, status)) return;
   final item = state.itemById(key) ?? defaultRoutine.firstWhere((e) => e.id == key);
+  final snap = state.snapshotOf(date, item);
+  if (state.setPrayer(date, key, status)) {
+    if (status != snap.prayer && isPrayed(status)) showUndo(context, state, date, item, snap);
+    return;
+  }
   final w = state.windowOf(item, date);
   toast(context, '${state.s.t('prayer_locked')} ${formatTime(w.start, urdu: state.settings.urdu)}');
+}
+
+
+/// "Completed — UNDO" snackbar. Undo restores exactly the previous state of
+/// this one activity (completion, skip, time, prayer status); counters and
+/// other activities are untouched, and scores update automatically.
+void showUndo(BuildContext context, AppState state, DateTime date, RoutineItem item, CompletionSnapshot snap) {
+  final s = state.s;
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  if (messenger == null) return;
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(
+      key: const Key('undo_snackbar'),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: AppColors.emerald,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      duration: const Duration(seconds: 4),
+      content: Row(children: [
+        const Icon(Icons.check_circle, color: AppColors.emeraldLight),
+        const SizedBox(width: 10),
+        Expanded(child: Text('${item.name(state.settings.urdu)} ${s.t('marked_complete')}')),
+      ]),
+      action: SnackBarAction(
+        key: const Key('undo_action'),
+        label: s.t('undo').toUpperCase(),
+        textColor: AppColors.goldLight,
+        onPressed: () => state.restoreSnapshot(date, snap),
+      ),
+    ));
 }

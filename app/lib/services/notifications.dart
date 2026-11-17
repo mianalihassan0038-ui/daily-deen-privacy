@@ -180,76 +180,112 @@ class NotificationService {
   }
 
   /// Cancels everything and schedules the next 7 days.
-  Future<void> reschedule(AppState state) async {
-    if (!_ready) return;
-    try {
-      await _plugin.cancelAll();
-      final st = state.settings;
-      lastFailures = 0;
-      if (!st.notifications) return;
-      _exact = st.exactAlarms && await canScheduleExact();
-      final s = state.s;
-      final now = DateTime.now();
-      final nowUtc = now.toUtc();
-      const prayers = [PrayerName.fajr, PrayerName.dhuhr, PrayerName.asr, PrayerName.maghrib, PrayerName.isha];
+  Future<void> _chain = Future.value();
 
-      for (var offset = 0; offset < 7; offset++) {
-        final date = DateTime(now.year, now.month, now.day + offset);
-        final times = state.prayerTimes(date);
-
-        for (var i = 0; i < prayers.length; i++) {
-          final key = prayers[i].name;
-          if (!st.notifOn(key)) continue;
-          final when = times[prayers[i]].subtract(Duration(minutes: st.prayerReminderBefore));
-          if (!when.isAfter(nowUtc)) continue;
-          final name = s.t(key);
-          final title = st.prayerReminderBefore > 0
-              ? '$name ${s.t('in')} ${st.prayerReminderBefore} ${s.t('min_short')}'
-              : '${s.t('notif_title')} $name';
-          await _schedule(state, offset * 100 + i, title, s.t('notif_body'), when, prayer: true);
-        }
-
-        Future<void> at(int base, String key, DateTime when, String title, String body) async {
-          if (!st.notifOn(key) || !when.toUtc().isAfter(nowUtc)) return;
-          await _schedule(state, base + offset, title, body, when, prayer: false);
-        }
-
-        await at(1000, 'tahajjud', date.add(Duration(minutes: st.wakeMinutes)), s.t('tahajjud_notif'), s.t('tahajjud_body'));
-        await at(1100, 'quran', date.add(Duration(minutes: st.quranReminderMinutes)), s.t('quran_notif'), s.t('quran_notif_body'));
-        // Azkar reminders follow the same schedule engine as Home/Routine.
-        final routine = state.routineFor(date);
-        DateTime azkarAt(String id, PrayerName fallback) {
-          final it = routine.where((e) => e.id == id).firstOrNull;
-          return it != null
-              ? state.windowOf(it, date).start
-              : times[fallback].toLocal().add(Duration(minutes: st.azkarAfterMinutes));
-        }
-
-        await at(1200, 'morning_azkar', azkarAt('morning_azkar', PrayerName.fajr), s.t('morning_azkar'),
-            s.t('azkar_notif_body'));
-        await at(1300, 'evening_azkar', azkarAt('evening_azkar', PrayerName.asr), s.t('evening_azkar'),
-            s.t('azkar_notif_body'));
-        await at(1400, 'sleep_azkar', date.add(Duration(minutes: st.sleepMinutes)), s.t('sleep_azkar'), s.t('sleep_notif_body'));
-
-        if (st.notifOn('routine')) {
-          final items = routine.where((it) => it.reminder && it.prayerKey == null).take(90).toList();
-          for (var j = 0; j < items.length; j++) {
-            final RoutineItem it = items[j];
-            final when = state.windowOf(it, date).start;
-            if (!when.toUtc().isAfter(nowUtc)) continue;
-            await _schedule(
-              state,
-              2000 + offset * 100 + j,
-              it.name(st.urdu),
-              it.target(st.urdu).isEmpty ? s.t('routine_notif_body') : it.target(st.urdu),
-              when,
-              prayer: false,
-            );
-          }
-        }
-      }
-    } catch (e) {
+  /// Cancels everything and schedules the next 7 days. Calls are serialised,
+  /// so overlapping triggers (resume + settings change + boot) can never
+  /// leave duplicate reminders behind.
+  Future<void> reschedule(AppState state) {
+    _chain = _chain.then((_) => _reschedule(state)).catchError((Object e) {
       debugPrint('Scheduling failed: $e');
+    });
+    return _chain;
+  }
+
+  Future<void> _reschedule(AppState state) async {
+    if (!_ready) return;
+    await _plugin.cancelAll(); // also removes obsolete reminders
+    final st = state.settings;
+    lastFailures = 0;
+    if (!st.notifications) return;
+    _exact = st.exactAlarms && await canScheduleExact();
+    for (final r in plan(state)) {
+      await _schedule(state, r.id, r.title, r.body, r.when, prayer: r.prayer);
     }
   }
+
+  /// Every reminder for the next [days] days, computed from the schedule
+  /// engine (pure: no plugin calls, so it is unit-tested). Ids are unique and
+  /// two reminders with the same title at the same minute are never planned.
+  static List<PlannedReminder> plan(AppState state, {DateTime? now, int days = 7}) {
+    final st = state.settings;
+    final out = <PlannedReminder>[];
+    if (!st.notifications) return out;
+    final s = state.s;
+    final t = now ?? clock();
+    final nowUtc = t.toUtc();
+    final seen = <String>{};
+    final ids = <int>{};
+    void add(int id, String title, String body, DateTime when, {bool prayer = false}) {
+      if (!when.toUtc().isAfter(nowUtc)) return;
+      final key = '$title|${when.toUtc().millisecondsSinceEpoch ~/ 60000}';
+      if (!seen.add(key) || !ids.add(id)) return;
+      out.add(PlannedReminder(id, title, body, when, prayer));
+    }
+
+    const prayers = [PrayerName.fajr, PrayerName.dhuhr, PrayerName.asr, PrayerName.maghrib, PrayerName.isha];
+    const ownReminder = {'morning_azkar', 'evening_azkar', 'sleep_azkar'};
+    for (var offset = 0; offset < days; offset++) {
+      final date = DateTime(t.year, t.month, t.day + offset);
+      final times = state.prayerTimes(date);
+
+      for (var i = 0; i < prayers.length; i++) {
+        final key = prayers[i].name;
+        if (!st.notifOn(key)) continue;
+        final name = s.t(key);
+        final title = st.prayerReminderBefore > 0
+            ? '$name ${s.t('in')} ${st.prayerReminderBefore} ${s.t('min_short')}'
+            : '${s.t('notif_title')} $name';
+        add(offset * 100 + i, title, s.t('notif_body'),
+            times[prayers[i]].subtract(Duration(minutes: st.prayerReminderBefore)), prayer: true);
+      }
+
+      void at(int base, String key, DateTime when, String title, String body) {
+        if (st.notifOn(key)) add(base + offset, title, body, when);
+      }
+
+      at(1000, 'tahajjud', date.add(Duration(minutes: st.wakeMinutes)), s.t('tahajjud_notif'), s.t('tahajjud_body'));
+      at(1100, 'quran', date.add(Duration(minutes: st.quranReminderMinutes)), s.t('quran_notif'), s.t('quran_notif_body'));
+
+      // Azkar: a user schedule (after prayer / fixed / window) is used when
+      // set; otherwise the previous defaults are kept.
+      final routine = state.routineFor(date);
+      DateTime azkarAt(String id, DateTime fallback) {
+        final it = routine.where((e) => e.id == id).firstOrNull;
+        return it != null && it.anchor != null ? state.windowOf(it, date).start : fallback;
+      }
+
+      at(1200, 'morning_azkar',
+          azkarAt('morning_azkar', times[PrayerName.fajr].toLocal().add(Duration(minutes: st.azkarAfterMinutes))),
+          s.t('morning_azkar'), s.t('azkar_notif_body'));
+      at(1300, 'evening_azkar',
+          azkarAt('evening_azkar', times[PrayerName.asr].toLocal().add(Duration(minutes: st.azkarAfterMinutes))),
+          s.t('evening_azkar'), s.t('azkar_notif_body'));
+      at(1400, 'sleep_azkar', azkarAt('sleep_azkar', date.add(Duration(minutes: st.sleepMinutes))), s.t('sleep_azkar'),
+          s.t('sleep_notif_body'));
+
+      if (st.notifOn('routine')) {
+        final items = routine
+            .where((it) => it.reminder && it.prayerKey == null && !ownReminder.contains(it.id))
+            .take(90)
+            .toList();
+        for (var j = 0; j < items.length; j++) {
+          final RoutineItem it = items[j];
+          add(2000 + offset * 100 + j, it.name(st.urdu),
+              it.target(st.urdu).isEmpty ? s.t('routine_notif_body') : it.target(st.urdu), state.windowOf(it, date).start);
+        }
+      }
+    }
+    return out;
+  }
+}
+
+/// A reminder computed by [NotificationService.plan].
+class PlannedReminder {
+  final int id;
+  final String title;
+  final String body;
+  final DateTime when;
+  final bool prayer;
+  const PlannedReminder(this.id, this.title, this.body, this.when, this.prayer);
 }

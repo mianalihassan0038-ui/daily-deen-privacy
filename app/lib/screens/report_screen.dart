@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'chilla_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -140,6 +142,16 @@ class _ReportScreenState extends State<ReportScreen> {
                   _ChillaGrid(
                     selected: date,
                     onSelect: (d) => setState(() => _date = d),
+                  ),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton.icon(
+                      key: const Key('report_open_chilla'),
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChillaScreen())),
+                      icon: const Icon(Icons.grid_view, size: 18),
+                      label: Text(s.t('chilla_40_view')),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 18),

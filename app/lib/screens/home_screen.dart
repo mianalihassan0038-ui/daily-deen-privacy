@@ -13,6 +13,7 @@ import '../strings.dart';
 import '../widgets/common.dart';
 import '../widgets/islamic_art.dart';
 import 'azkar_screen.dart';
+import 'chilla_screen.dart';
 import 'more_screen.dart';
 import 'navigation.dart';
 import 'report_screen.dart';
@@ -1067,6 +1068,17 @@ class _PlanCard extends StatelessWidget {
                           minHeight: 6,
                           color: AppColors.gold,
                           backgroundColor: Colors.white24,
+                        ),
+                      ),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          key: const Key('open_chilla'),
+                          style: TextButton.styleFrom(foregroundColor: AppColors.goldLight, padding: EdgeInsets.zero),
+                          onPressed: () =>
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChillaScreen())),
+                          icon: const Icon(Icons.grid_view, size: 16),
+                          label: Text(s.t('chilla_40_view')),
                         ),
                       ),
                     ] else

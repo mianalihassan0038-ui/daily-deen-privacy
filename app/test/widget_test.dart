@@ -1,5 +1,7 @@
 import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/main.dart';
+import 'package:dailydeen/screens/azkar_schedule_screen.dart';
+import 'package:dailydeen/screens/chilla_screen.dart';
 import 'package:dailydeen/screens/shell.dart';
 import 'package:dailydeen/services/schedule.dart';
 import 'package:dailydeen/services/prayer_times.dart';
@@ -425,5 +427,91 @@ void main() {
     for (final label in ['Namaz', 'Quran', 'Azkar', 'Progress', 'Home']) {
       await openTab(tester, label);
     }
+  });
+
+  testWidgets('Azkar schedule: choose a time window and save', (tester) async {
+    final state = await pumpApp(tester);
+    await openTab(tester, 'Azkar');
+    await tester.tap(find.byKey(const Key('azkar_schedule')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('azkar_sched_morning_azkar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('azkar_schedule_info')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('azkar_mode_window')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('azkar_window_start')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('azkar_sched_save')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('azkar_sched_save')));
+    await tester.pumpAndSettle();
+    expect(AzkarSchedule.of(state.itemById('morning_azkar')!)?.mode, AzkarMode.window);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Routine completion shows Undo and Undo restores it', (tester) async {
+    final state = await pumpApp(tester);
+    await tester.ensureVisible(find.byKey(const Key('routine_check_morning_azkar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('routine_check_morning_azkar')));
+    await tester.pump();
+    expect(state.isDone(state.today, state.itemById('morning_azkar')!), isTrue);
+    expect(find.byKey(const Key('undo_action')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('undo_action')));
+    await tester.pumpAndSettle();
+    expect(state.isDone(state.today, state.itemById('morning_azkar')!), isFalse);
+    expect(state.completedTime(state.today, 'morning_azkar'), isNull);
+  });
+
+  testWidgets('Reports dashboard: Day, Week and Month filters', (tester) async {
+    await pumpApp(tester);
+    await openTab(tester, 'Progress');
+    for (final tab in [0, 1, 2, 3]) {
+      await tester.tap(find.byKey(Key('header_tab_$tab')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('tile_farz')), findsOneWidget);
+      expect(find.byKey(const Key('prayer_stats_card')), findsOneWidget);
+    }
+    await tester.ensureVisible(find.byKey(const Key('weekly_chart')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Chilla screen: grid, states and selected day', (tester) async {
+    final state = await pumpApp(tester);
+    state.startChilla(state.today.subtract(const Duration(days: 2)));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('open_chilla')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open_chilla')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chilla_overview')), findsOneWidget);
+    expect(find.text('Day 3 of 40'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('chilla_cell_1')));
+    await tester.tap(find.byKey(const Key('chilla_cell_1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chilla_day_detail')), findsOneWidget);
+    expect(state.settings.chillaStart, isNotNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('New screens fit a small screen in Urdu dark mode', (tester) async {
+    final state = await pumpApp(tester);
+    state.settings.urdu = true;
+    state.settings.themeMode = ThemeMode.dark;
+    state.startChilla(state.today);
+    state.saveSettings();
+    tester.view.physicalSize = const Size(720, 1280);
+    tester.view.devicePixelRatio = 2.0;
+    await tester.pumpAndSettle();
+    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+    for (final page in [const ChillaScreen(), const AzkarScheduleScreen(), const AzkarScheduleEditScreen(id: 'morning_azkar')]) {
+      nav.push(MaterialPageRoute(builder: (_) => page));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: '$page');
+      nav.pop();
+      await tester.pumpAndSettle();
+    }
+    await openTab(tester, 'پیش رفت');
+    expect(tester.takeException(), isNull);
   });
 }

@@ -24,6 +24,13 @@ enum DayPhase { earlyMorning, afterFajr, morning, afternoon, afterAsr, afterMagh
 const scheduleAnchors = ['fixed', 'day', 'fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const scheduleEndAnchors = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha', 'midnight', 'next_fajr'];
 
+/// Extra end anchors used by the Azkar scheduler:
+///  * 'clock' – end at a clock time ([ScheduleSpec.endOffset] = minutes after
+///    midnight; an end before the start means the next day),
+///  * 'none'  – no expiry: the activity stays available until midnight and is
+///    never marked missed.
+const extraEndAnchors = ['clock', 'none'];
+
 class ScheduleSpec {
   final String anchor; // see [scheduleAnchors]
   final int startOffset; // minutes
@@ -87,7 +94,9 @@ const Map<String, ScheduleSpec> defaultSchedules = {
 class ActivityWindow {
   final DateTime start; // local time
   final DateTime end; // local time (exclusive)
-  const ActivityWindow(this.start, this.end);
+  /// False for flexible activities without an expiry: they are never missed.
+  final bool expires;
+  const ActivityWindow(this.start, this.end, {this.expires = true});
 
   bool contains(DateTime t) => !t.isBefore(start) && t.isBefore(end);
 
@@ -138,6 +147,13 @@ class ScheduleEngine {
 
     DateTime end;
     switch (spec.endAnchor) {
+      case 'none':
+        return ActivityWindow(start, _midnight(date).isAfter(start) ? _midnight(date) : start.add(const Duration(hours: 1)),
+            expires: false);
+      case 'clock':
+        end = _dayStart(date).add(Duration(minutes: spec.endOffset));
+        if (!end.isAfter(start)) end = end.add(const Duration(days: 1));
+        return ActivityWindow(start, end);
       case 'midnight':
         end = _midnight(date);
       case 'next_fajr':
@@ -165,7 +181,7 @@ class ScheduleEngine {
     if (done) return ActivityState.completed;
     if (skipped) return ActivityState.skipped;
     if (now.isBefore(window.start)) return ActivityState.upcoming;
-    if (!now.isBefore(window.end)) return ActivityState.missed;
+    if (!now.isBefore(window.end) && window.expires) return ActivityState.missed;
     return hasProgress ? ActivityState.inProgress : ActivityState.active;
   }
 
@@ -186,3 +202,75 @@ class ScheduleEngine {
     return DayPhase.afterIsha;
   }
 }
+
+
+// ---------------------------------------------------------------------------
+// Azkar scheduling
+// ---------------------------------------------------------------------------
+
+/// How an Azkar activity is scheduled. Only the timing is stored (on the
+/// routine item); the Azkar content itself is untouched.
+enum AzkarMode { afterPrayer, fixed, window }
+
+const azkarPrayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+class AzkarSchedule {
+  final AzkarMode mode;
+  final String prayer; // afterPrayer
+  final int offset; // afterPrayer: minutes after the prayer (reminder offset)
+  final int start; // fixed / window: minutes after midnight
+  final int end; // window: minutes after midnight (before start = next day)
+  const AzkarSchedule.afterPrayer(this.prayer, {this.offset = 0})
+      : mode = AzkarMode.afterPrayer,
+        start = 0,
+        end = 0;
+  const AzkarSchedule.fixed(this.start)
+      : mode = AzkarMode.fixed,
+        prayer = 'fajr',
+        offset = 0,
+        end = 0;
+  const AzkarSchedule.window(this.start, this.end)
+      : mode = AzkarMode.window,
+        prayer = 'fajr',
+        offset = 0;
+
+  /// The user's Azkar schedule stored on [item], or null when the item uses
+  /// the built-in default schedule.
+  static AzkarSchedule? of(RoutineItem item) {
+    final a = item.anchor;
+    if (a == null) return null;
+    if (item.endAnchor == 'none' && azkarPrayers.contains(a)) return AzkarSchedule.afterPrayer(a, offset: item.startOffset);
+    if (a == 'fixed' && item.endAnchor == 'none' && item.timeMinutes != null) return AzkarSchedule.fixed(item.timeMinutes!);
+    if (a == 'fixed' && item.endAnchor == 'clock' && item.timeMinutes != null) {
+      return AzkarSchedule.window(item.timeMinutes!, item.endOffset);
+    }
+    return null;
+  }
+
+  /// [item] with this schedule applied (id and all other data unchanged).
+  RoutineItem applyTo(RoutineItem item) => switch (mode) {
+        AzkarMode.afterPrayer =>
+          item.copyWith(anchor: prayer, startOffset: offset, endAnchor: 'none', endOffset: 0),
+        AzkarMode.fixed =>
+          item.copyWith(anchor: 'fixed', timeMinutes: start, startOffset: 0, endAnchor: 'none', endOffset: 0),
+        AzkarMode.window =>
+          item.copyWith(anchor: 'fixed', timeMinutes: start, startOffset: 0, endAnchor: 'clock', endOffset: end),
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      other is AzkarSchedule &&
+      other.mode == mode &&
+      other.prayer == prayer &&
+      other.offset == offset &&
+      other.start == start &&
+      other.end == end;
+
+  @override
+  int get hashCode => Object.hash(mode, prayer, offset, start, end);
+}
+
+/// Activities that get the dedicated Azkar scheduler.
+bool isAzkarItem(RoutineItem item) =>
+    item.prayerKey == null &&
+    (item.category == RoutineCategory.azkar || item.category == RoutineCategory.dhikr || item.id.endsWith('_azkar'));

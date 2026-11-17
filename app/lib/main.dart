@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app_state.dart';
@@ -20,6 +21,32 @@ Future<void> main() async {
     await notifications.requestPermission();
   }
   await notifications.reschedule(state);
+}
+
+/// Background entry point started by the native RescheduleReceiver after
+/// BOOT_COMPLETED, TIMEZONE_CHANGED, TIME_SET or an app update. It loads the
+/// saved data (read only: records are never changed here), recalculates prayer
+/// times for the current zone and replaces all scheduled reminders.
+@pragma('vm:entry-point')
+Future<void> backgroundReschedule(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    final state = await AppState.load();
+    final action = args.isEmpty ? '' : args.first;
+    final clockChange = action.endsWith('TIMEZONE_CHANGED') || action.endsWith('TIME_SET');
+    if (clockChange && !state.settings.autoTimezone) {
+      await const MethodChannel('dailydeen/bg').invokeMethod<void>('done');
+      return;
+    }
+    final notifications = NotificationService.instance;
+    await notifications.init();
+    await notifications.reschedule(state);
+  } catch (e) {
+    debugPrint('Background reschedule failed: $e');
+  }
+  try {
+    await const MethodChannel('dailydeen/bg').invokeMethod<void>('done');
+  } catch (_) {}
 }
 
 class DailyDeenApp extends StatelessWidget {

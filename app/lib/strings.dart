@@ -572,6 +572,75 @@ class S {
     'phase_afterMaghrib': ['After Maghrib', 'مغرب کے بعد'],
     'phase_afterIsha': ['After Isha', 'عشاء کے بعد'],
 
+    // ---------------- 3.1: azkar schedule, reports, chilla, timezone ----------------
+    'azkar_schedule': ['Azkar Schedule', 'اذکار کا شیڈول'],
+    'azkar_schedule_hint': [
+      'Choose when each Azkar appears and when it counts as missed. The Azkar text itself is not changed.',
+      'ہر ذکر کب ظاہر ہو اور کب چھوٹا ہوا شمار ہو، یہ منتخب کریں۔ اذکار کا متن تبدیل نہیں ہوتا۔'
+    ],
+    'azkar_when': ['When should this Azkar appear?', 'یہ اذکار کب ظاہر ہوں؟'],
+    'mode_after_prayer': ['After Prayer', 'نماز کے بعد'],
+    'mode_after_prayer_sub': ['Select a prayer', 'نماز منتخب کریں'],
+    'mode_fixed': ['Fixed Time', 'مقررہ وقت'],
+    'mode_fixed_sub': ['Set exact time', 'بالکل درست وقت مقرر کریں'],
+    'mode_window': ['Time Window', 'وقت کی حد'],
+    'mode_window_sub': ['Between start and end time', 'شروع اور ختم کے وقت کے درمیان'],
+    'after_prayer': ['Prayer', 'نماز'],
+    'reminder_offset': ['Reminder', 'یاد دہانی'],
+    'right_after': ['Right after', 'فوراً بعد'],
+    'min_after': ['min after', 'منٹ بعد'],
+    'default_schedule_hint': [
+      'Uses the app\'s default time for this activity.',
+      'اس کام کیلئے ایپ کا طے شدہ وقت استعمال ہوگا۔'
+    ],
+    'explain_after': [
+      'Azkar will be available after {p}{o} and will not be marked missed.',
+      'اذکار {p}{o} کے بعد دستیاب ہوں گے اور چھوٹے ہوئے شمار نہیں ہوں گے۔'
+    ],
+    'explain_fixed': [
+      'Azkar will appear at {t} and will not be marked missed.',
+      'اذکار {t} پر ظاہر ہوں گے اور چھوٹے ہوئے شمار نہیں ہوں گے۔'
+    ],
+    'explain_window': [
+      'Azkar will be available from {a} and will be marked missed if not completed by {b}.',
+      'اذکار {a} سے دستیاب ہوں گے، اگر {b} تک مکمل نہ ہوئے تو چھوٹے ہوئے شمار ہوں گے۔'
+    ],
+    'save_schedule': ['Save Schedule', 'شیڈول محفوظ کریں'],
+    'schedule_saved': ['Schedule saved', 'شیڈول محفوظ ہو گیا'],
+    'marked_complete': ['marked complete!', 'مکمل ہو گیا!'],
+    'reports_analytics': ['Reports & Analytics', 'رپورٹس اور تجزیہ'],
+    'day_tab': ['Day', 'دن'],
+    'week_tab': ['Week', 'ہفتہ'],
+    'month_tab': ['Month', 'مہینہ'],
+    'year_tab': ['Year', 'سال'],
+    'daily_score': ['Daily Score', 'روزانہ اسکور'],
+    'farz_score': ['Farz Score', 'فرض اسکور'],
+    'routine_score': ['Routine Score', 'معمول اسکور'],
+    'daily_completion': ['Completion', 'تکمیل'],
+    'weekly_progress': ['Weekly Progress', 'ہفتہ وار پیش رفت'],
+    'monthly_calendar': ['Monthly Calendar', 'ماہانہ کیلنڈر'],
+    'target_met': ['target met', 'ہدف پورا'],
+    'partial': ['Partial', 'جزوی'],
+    'my_chilla': ['40-Day Chilla', 'چالیس دن کا چلہ'],
+    'current_chilla': ['Current Chilla', 'موجودہ چلہ'],
+    'chilla_40_view': ['40-day view', 'چالیس دن کا منظر'],
+    'chilla_not_started': ['No chilla started yet.', 'ابھی کوئی چلہ شروع نہیں ہوا۔'],
+    'chilla_keep_going': ["Keep going! You're on a great streak.", 'جاری رکھیں! آپ کا تسلسل بہت اچھا ہے۔'],
+    'chilla_missed_hint': [
+      'A missed day does not reset your chilla — just continue tomorrow.',
+      'ایک دن چھوٹنے سے چلہ دوبارہ شروع نہیں ہوتا — کل سے جاری رکھیں۔'
+    ],
+    'start_date': ['Start', 'آغاز'],
+    'end_date': ['End', 'اختتام'],
+    'morning_tasbeehat': ['Morning Tasbeehat', 'صبح کی تسبیحات'],
+    'evening_tasbeehat': ['Evening Tasbeehat', 'شام کی تسبیحات'],
+    'timezone_handling': ['Timezone Handling', 'ٹائم زون'],
+    'timezone_handling_sub': ['Auto-recalculate on timezone change', 'ٹائم زون بدلنے پر خودکار حساب'],
+    'timezone_auto_note': [
+      'Timezone changes will now update schedules automatically.',
+      'ٹائم زون بدلنے پر شیڈول خود بخود اپڈیٹ ہوں گے۔'
+    ],
+
   };
 }
 

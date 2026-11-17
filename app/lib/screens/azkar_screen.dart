@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'azkar_schedule_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -65,6 +67,15 @@ class _AzkarScreenState extends State<AzkarScreen> {
       children: [
         ScreenHeader(
           title: s.t('azkar_tasbeeh'),
+          actions: [
+            IconButton(
+              key: const Key('azkar_schedule'),
+              tooltip: s.t('azkar_schedule'),
+              icon: const Icon(Icons.schedule, color: Colors.white),
+              onPressed: () =>
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AzkarScheduleScreen())),
+            ),
+          ],
           bottom: HeaderTabs(
             labels: [s.t('azkar'), s.t('tasbeeh')],
             index: azkarSubTab.value,
