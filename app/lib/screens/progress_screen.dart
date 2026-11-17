@@ -7,6 +7,7 @@ import '../strings.dart';
 import '../widgets/common.dart';
 import 'home_screen.dart' show statusColor, statusLabel;
 import 'muhasaba_screen.dart';
+import 'navigation.dart' show tryToggle;
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -98,6 +99,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ]),
                 ),
               ),
+              _ScoreHistory(days: days),
               SectionTitle(s.t('todays_summary'),
                   actionLabel: s.t('muhasaba'),
                   onAction: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => MuhasabaScreen(date: today)))),
@@ -407,7 +409,7 @@ Future<void> showDaySummary(BuildContext context, DateTime date) {
                   color: state.isDone(date, it) ? AppColors.onTime : null,
                 ),
                 title: Text(it.name(urdu)),
-                onTap: () => state.toggleItem(date, it),
+                onTap: () => tryToggle(context, state, date, it),
               ),
             if (rec.note.isNotEmpty || rec.muhasaba.isNotEmpty) ...[
               const Divider(),
@@ -461,6 +463,71 @@ class _MissedHistory extends StatelessWidget {
             ],
           ),
       ]),
+    );
+  }
+}
+
+
+/// Separate Farz / Routine / Optional averages for the selected range, plus
+/// prayer statistics (jamaat, alone, qaza, missed) kept apart.
+class _ScoreHistory extends StatelessWidget {
+  final List<DateTime> days;
+  const _ScoreHistory({required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final s = state.s;
+    final theme = Theme.of(context);
+    final today = state.today;
+    var n = 0;
+    var farz = 0.0, routine = 0.0, optional = 0.0;
+    var jamaat = 0, alone = 0, qaza = 0, missed = 0;
+    for (final d in days) {
+      if (d != today && !state.hasRecord(d)) continue; // before the app was used
+      final sc = state.scoreFor(d);
+      n++;
+      farz += sc.farz;
+      routine += sc.routine;
+      optional += sc.optional;
+      jamaat += sc.farzJamaat;
+      alone += sc.farzOnTime;
+      qaza += sc.farzQaza;
+      missed += sc.farzMissed;
+    }
+    String pct(double v) => n == 0 ? '0%' : '${(v / n * 100).round()}%';
+    Widget stat(String label, String value, Color c) => Expanded(
+          child: Column(children: [
+            Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: c)),
+            Text(label, style: theme.textTheme.labelSmall, textAlign: TextAlign.center, maxLines: 2),
+          ]),
+        );
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Card(
+        key: const Key('score_history'),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(s.t('score_history'), style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            Row(children: [
+              stat(s.t('farz'), pct(farz), AppColors.jamaat),
+              stat(s.t('routine'), pct(routine), AppColors.emeraldMid),
+              stat(s.t('optional'), pct(optional), AppColors.gold),
+            ]),
+            const Divider(height: 24),
+            Text(s.t('prayer_stats'), style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            Row(children: [
+              stat(s.t('jamaat'), '$jamaat', AppColors.jamaat),
+              stat(s.t('on_time'), '$alone', AppColors.onTime),
+              stat(s.t('qaza'), '$qaza', AppColors.delayed),
+              stat(s.t('missed'), '$missed', AppColors.missed),
+            ]),
+          ]),
+        ),
+      ),
     );
   }
 }

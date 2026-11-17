@@ -11,6 +11,7 @@ import '../widgets/common.dart';
 import '../widgets/date_switcher.dart';
 import '../widgets/islamic_art.dart';
 import 'home_screen.dart' show prayerVisual, showPrayerStatusSheet, statusColor, statusLabel;
+import 'navigation.dart' show trySetPrayer;
 import 'settings_screen.dart' show PrayerSettingsScreen, editPrayerTime;
 
 class NamazScreen extends StatefulWidget {
@@ -24,13 +25,13 @@ class _NamazScreenState extends State<NamazScreen> {
   int _tab = 0;
   DateTime? _date;
   Timer? _timer;
-  DateTime _now = DateTime.now();
+  DateTime _now = clock();
 
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
+      if (mounted) setState(() => _now = clock());
     });
   }
 
@@ -150,7 +151,9 @@ class _TodayTab extends StatelessWidget {
             CheckboxListTile(
               key: const Key('witr_check'),
               value: state.witrDone(date),
-              onChanged: (_) => state.toggleSunnah(date, 'witr'),
+              onChanged: state.witrDone(date) || state.canComplete(state.itemById('witr') ?? defaultRoutine.firstWhere((e) => e.id == 'witr'), date)
+                  ? (_) => state.toggleSunnah(date, 'witr')
+                  : null,
               secondary: const IconBadge(Icons.nights_stay, color: Color(0xFF5B4BB7), size: 32),
               title: Text(s.t('witr')),
               subtitle: Text(s.t('witr_hint')),
@@ -232,12 +235,17 @@ class _PrayerRow extends StatelessWidget {
     final urdu = state.settings.urdu;
     final theme = Theme.of(context);
     final rec = state.day(date);
-    final status = rec.prayer(prayerKey);
-    final started = !time.isAfter(now.toUtc());
+    final stored = rec.prayer(prayerKey);
+    // Past window never recorded -> shown as Missed (not stored; can be corrected).
+    final status = state.effectivePrayerStatus(date, prayerKey, now: now);
+    final autoMissed = stored == PrayerStatus.none && status == PrayerStatus.missed;
+    final started = state.canRecordPrayer(date, prayerKey, now: now);
     final (icon, color) = prayerVisual(prayerKey);
     final sunnah = rec.sunnah.contains(prayerKey);
 
-    final label = status != PrayerStatus.none ? statusLabel(s, status) : (started ? s.t('pending') : s.t('upcoming'));
+    final label = status != PrayerStatus.none
+        ? statusLabel(s, status) + (autoMissed ? ' • ${s.t('not_recorded')}' : '')
+        : (started ? s.t('pending') : '${s.t('locked')} • ${s.t('starts_at')} ${formatTime(time, urdu: urdu)}');
     final labelColor = status != PrayerStatus.none ? statusColor(status) : (started ? AppColors.pending : theme.colorScheme.outline);
 
     return ExpansionTile(
@@ -256,7 +264,7 @@ class _PrayerRow extends StatelessWidget {
               ? Icons.check_circle
               : status == PrayerStatus.missed
                   ? Icons.cancel
-                  : (started ? Icons.radio_button_unchecked : Icons.hourglass_bottom),
+                  : (started ? Icons.radio_button_unchecked : Icons.lock_clock),
           size: 14,
           color: labelColor,
         ),
@@ -289,9 +297,9 @@ class _PrayerRow extends StatelessWidget {
               ChoiceChip(
                 key: Key('status_${prayerKey}_${o.name}'),
                 label: Text(statusLabel(s, o)),
-                selected: status == o,
+                selected: stored == o,
                 selectedColor: statusColor(o).withValues(alpha: 0.2),
-                onSelected: (sel) => state.setPrayer(date, prayerKey, sel ? o : PrayerStatus.none),
+                onSelected: started ? (sel) => trySetPrayer(context, state, date, prayerKey, sel ? o : PrayerStatus.none) : null,
               ),
           ],
         ),
@@ -300,7 +308,7 @@ class _PrayerRow extends StatelessWidget {
           dense: true,
           controlAffinity: ListTileControlAffinity.leading,
           value: sunnah,
-          onChanged: (_) => state.toggleSunnah(date, prayerKey),
+          onChanged: started || sunnah ? (_) => state.toggleSunnah(date, prayerKey) : null,
           title: Text(s.t('sunnah_nafl')),
         ),
         Wrap(alignment: WrapAlignment.end, children: [

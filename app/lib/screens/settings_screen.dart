@@ -18,9 +18,9 @@ import '../strings.dart';
 import '../widgets/common.dart';
 import '../widgets/pickers.dart';
 import 'routine_screen.dart';
+import '../version.dart';
 
 const privacyPolicyUrl = 'https://mianalihassan0038-ui.github.io/daily-deen-privacy/';
-const appVersion = '2.0.0';
 
 const methodNames = {
   CalcMethod.karachi: 'University of Islamic Sciences, Karachi',
@@ -517,8 +517,7 @@ class TargetsScreen extends StatelessWidget {
                   min: 1,
                   max: 60,
                   onChanged: (v) {
-                    st.quranTarget = v;
-                    state.saveSettings();
+                    state.setQuranTarget(v);
                   },
                 ),
               ),
@@ -663,6 +662,20 @@ class NotificationSettingsScreen extends StatelessWidget {
                   state.saveSettings(reschedule: true);
                 },
               ),
+              SwitchListTile(
+                key: const Key('exact_alarms'),
+                secondary: const Icon(Icons.alarm_on),
+                title: Text(s.t('exact_alarms')),
+                subtitle: Text(s.t('exact_alarms_sub')),
+                value: st.exactAlarms,
+                onChanged: (v) async {
+                  if (v && !await NotificationService.instance.canScheduleExact()) {
+                    await NotificationService.instance.requestExactAlarms();
+                  }
+                  st.exactAlarms = v;
+                  state.saveSettings(reschedule: true);
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.snooze),
                 title: Text(s.t('snooze_duration')),
@@ -741,8 +754,8 @@ class BackupScreen extends StatelessWidget {
       if (data is! Map<String, dynamic>) throw const FormatException();
       if (!context.mounted) return;
       if (!await confirm(context, state, s.t('restore_confirm'), message: s.t('restore_confirm_msg'))) return;
-      final ok = await state.importData(data);
-      if (context.mounted) toast(context, ok ? s.t('restore_done') : s.t('restore_invalid'));
+      final problem = await state.importDataSafe(data);
+      if (context.mounted) toast(context, problem == null ? s.t('restore_done') : '${s.t('restore_invalid')} ($problem)');
     } catch (_) {
       if (context.mounted) toast(context, s.t('restore_invalid'));
     }

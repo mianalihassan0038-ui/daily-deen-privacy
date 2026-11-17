@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'data/cities.dart';
 import 'data/routine.dart';
 import 'services/prayer_times.dart';
+import 'services/schedule.dart';
+import 'services/scoring.dart';
 import 'strings.dart';
 
 /// Stored prayer status. Labels in the UI:
@@ -41,6 +43,9 @@ class DayRecord {
   final Map<String, int> azkar;
   final Map<String, int> habits;
   final Map<String, String> muhasaba;
+
+  /// Completion time (HH:mm, local) per activity / prayer id.
+  final Map<String, String> completedAt;
   String note;
 
   DayRecord({
@@ -53,6 +58,7 @@ class DayRecord {
     Map<String, int>? azkar,
     Map<String, int>? habits,
     Map<String, String>? muhasaba,
+    Map<String, String>? completedAt,
     this.note = '',
   })  : done = done ?? <String>{},
         skipped = skipped ?? <String>{},
@@ -61,7 +67,8 @@ class DayRecord {
         dhikr = dhikr ?? <String, int>{},
         azkar = azkar ?? <String, int>{},
         habits = habits ?? <String, int>{},
-        muhasaba = muhasaba ?? <String, String>{};
+        muhasaba = muhasaba ?? <String, String>{},
+        completedAt = completedAt ?? <String, String>{};
 
   PrayerStatus prayer(String key) => prayers[key] ?? PrayerStatus.none;
 
@@ -79,6 +86,7 @@ class DayRecord {
         'azkar': azkar,
         if (habits.isNotEmpty) 'habits': habits,
         if (muhasaba.isNotEmpty) 'muhasaba': muhasaba,
+        if (completedAt.isNotEmpty) 'at': completedAt,
         'note': note,
       };
 
@@ -101,6 +109,7 @@ class DayRecord {
       azkar: ints(j['azkar']),
       habits: ints(j['habits']),
       muhasaba: (j['muhasaba'] as Map<String, dynamic>? ?? {}).map((k, v) => MapEntry(k, v.toString())),
+      completedAt: (j['at'] as Map<String, dynamic>? ?? {}).map((k, v) => MapEntry(k, v.toString())),
       note: (j['note'] as String?) ?? '',
     );
   }
@@ -194,6 +203,7 @@ class AppSettings {
   Map<String, bool> notif;
   int prayerReminderBefore; // minutes before prayer time (0 = at the time)
   bool notifVibrate;
+  bool exactAlarms;
   int snoozeMinutes;
   int wakeMinutes; // minutes after midnight, default 4:00 AM
   int quranReminderMinutes;
@@ -247,6 +257,7 @@ class AppSettings {
     Map<String, bool>? notif,
     this.prayerReminderBefore = 0,
     this.notifVibrate = true,
+    this.exactAlarms = false,
     this.snoozeMinutes = 10,
     this.wakeMinutes = 240,
     this.quranReminderMinutes = 1200,
@@ -311,6 +322,7 @@ class AppSettings {
         'notif': notif,
         'before': prayerReminderBefore,
         'vibrate': notifVibrate,
+        'exact': exactAlarms,
         'snooze': snoozeMinutes,
         'wake': wakeMinutes,
         'quranRemind': quranReminderMinutes,
@@ -396,6 +408,7 @@ class AppSettings {
       notif: notif,
       prayerReminderBefore: intOr('before', 0),
       notifVibrate: boolOr('vibrate', true),
+      exactAlarms: boolOr('exact', false),
       snoozeMinutes: intOr('snooze', 10),
       wakeMinutes: intOr('wake', 240),
       quranReminderMinutes: intOr('quranRemind', 1200),
@@ -460,6 +473,10 @@ List<RoutineItem> addNewDefaults(List<RoutineItem> routine) {
 int _idCounter = 0;
 
 /// Unique id for user-created records (time + counter, never repeats in a session).
+/// Current time used by the schedule engine. Tests replace it to get a
+/// deterministic time of day.
+DateTime Function() clock = DateTime.now;
+
 String newId(String prefix) => '${prefix}_${DateTime.now().microsecondsSinceEpoch}_${_idCounter++}';
 
 class AppState extends ChangeNotifier {
@@ -469,6 +486,25 @@ class AppState extends ChangeNotifier {
 
   /// Called whenever settings that affect notifications change.
   void Function(AppState state)? onScheduleChanged;
+
+  DateTime _lastSeenDay = clock();
+  Duration _lastOffset = clock().timeZoneOffset;
+
+  /// Called when the app returns to the foreground: if the date or the time
+  /// zone changed, prayer times / schedule are recomputed and reminders are
+  /// rescheduled.
+  void onResume({DateTime? now}) {
+    final t = now ?? clock();
+    final dayChanged = t.year != _lastSeenDay.year || t.month != _lastSeenDay.month || t.day != _lastSeenDay.day;
+    final tzChanged = t.timeZoneOffset != _lastOffset;
+    _lastSeenDay = t;
+    _lastOffset = t.timeZoneOffset;
+    if (dayChanged || tzChanged) {
+      _timesCache.clear();
+      notifyListeners();
+      onScheduleChanged?.call(this);
+    }
+  }
 
   // Quran khatam data
   int khatamPages = 0;
@@ -501,8 +537,18 @@ class AppState extends ChangeNotifier {
     readPages = (prefs.getStringList('readPages') ?? []).map(int.tryParse).whereType<int>().toSet();
     qazaPending = prefs.getInt('qazaPending') ?? 0;
     lastRead = QuranRef.parse(prefs.getString('lastRead') ?? '');
-    bookmarks = (prefs.getStringList('bookmarks') ?? []).map(QuranRef.parse).whereType<QuranRef>().toList();
-    favouriteAyat = (prefs.getStringList('favAyat') ?? []).map(QuranRef.parse).whereType<QuranRef>().toList();
+    bookmarks = (prefs.getStringList('bookmarks') ?? [])
+        .map(QuranRef.parse)
+        .whereType<QuranRef>()
+        .where((r) => validRef(r.surah, r.ayah))
+        .toSet()
+        .toList();
+    favouriteAyat = (prefs.getStringList('favAyat') ?? [])
+        .map(QuranRef.parse)
+        .whereType<QuranRef>()
+        .where((r) => validRef(r.surah, r.ayah))
+        .toSet()
+        .toList();
     try {
       readingHistory = ((jsonDecode(prefs.getString('readHistory') ?? '[]') as List))
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -534,8 +580,26 @@ class AppState extends ChangeNotifier {
       );
 
   // ---------------- persistence ----------------
+  /// Writes are serialised through one queue so they reach disk in order;
+  /// [flush] waits for all of them (called when the app goes to background).
+  Future<void> _queue = Future<void>.value();
+
+  Future<void> _write(Future<bool> Function() op) {
+    _queue = _queue.then((_) async {
+      try {
+        await op();
+      } catch (e) {
+        debugPrint('Save failed: $e');
+      }
+    });
+    return _queue;
+  }
+
+  Future<void> flush() => _queue;
+
   void saveSettings({bool reschedule = false}) {
-    prefs.setString('settings', jsonEncode(settings.toJson()));
+    final json = jsonEncode(settings.toJson());
+    _write(() => prefs.setString('settings', json));
     notifyListeners();
     if (reschedule) onScheduleChanged?.call(this);
   }
@@ -560,12 +624,15 @@ class AppState extends ChangeNotifier {
   void _saveDay(DateTime date) {
     final key = dayKey(date);
     final rec = _cache[key];
-    if (rec != null) prefs.setString('day_$key', jsonEncode(rec.toJson()));
+    if (rec != null) {
+      final json = jsonEncode(rec.toJson());
+      _write(() => prefs.setString('day_$key', json));
+    }
     notifyListeners();
   }
 
   DateTime get today {
-    final n = DateTime.now();
+    final n = clock();
     return DateTime(n.year, n.month, n.day);
   }
 
@@ -573,13 +640,25 @@ class AppState extends ChangeNotifier {
   /// Prayer times for [date]: the user's own fixed time if set, otherwise the
   /// calculated time plus the manual +/- minutes adjustment.
   DayPrayerTimes prayerTimes(DateTime date) {
+    final st = settings;
+    final sig = '${dayKey(date)}|${st.lat}|${st.lng}|${st.method}|${st.hanafiAsr}|${st.prayerOffsets}|'
+        '${st.fixedPrayerTimes}|${DateTime(date.year, date.month, date.day).timeZoneOffset}';
+    final hit = _timesCache[sig];
+    if (hit != null) return hit;
+    if (_timesCache.length > 64) _timesCache.clear();
+    return _timesCache[sig] = _computeTimes(date);
+  }
+
+  final Map<String, DayPrayerTimes> _timesCache = {};
+
+  DayPrayerTimes _computeTimes(DateTime date) {
     final raw = calculator.forDate(date);
     return DayPrayerTimes({
       for (final p in PrayerName.values)
         p: settings.fixedPrayerTimes[p.name] != null
             ? DateTime(date.year, date.month, date.day).add(Duration(minutes: settings.fixedPrayerTimes[p.name]!)).toUtc()
             : raw[p].add(Duration(minutes: settings.prayerOffsets[p.name] ?? 0)),
-    });
+    }, reliable: raw.reliable || settings.fixedPrayerTimes.length >= 5);
   }
 
   bool hasFixedTime(String key) => settings.fixedPrayerTimes.containsKey(key);
@@ -632,37 +711,116 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
+  // ---------------- schedule engine bindings ----------------
+  /// Time window of [item] on [date] (see services/schedule.dart).
+  ActivityWindow windowOf(RoutineItem item, DateTime date) {
+    final d = DateTime(date.year, date.month, date.day);
+    return ScheduleEngine.window(item, d, prayerTimes(d), prayerTimes(DateTime(d.year, d.month, d.day + 1)));
+  }
+
+  /// (count, target) for activities completed by a counter (tasbeeh / Quran pages).
+  (int, int)? countedProgress(RoutineItem item, DateTime date) {
+    final rec = day(date);
+    if (item.dhikrKey != null && item.dhikrTarget > 0) {
+      return (rec.dhikr[item.dhikrKey!] ?? 0, dhikrTarget(item.dhikrKey!, item.dhikrTarget));
+    }
+    if (item.id == 'quran_daily') return (rec.quranPages, settings.quranTarget);
+    return null;
+  }
+
   bool isDone(DateTime date, RoutineItem item) {
     final rec = day(date);
     if (item.prayerKey != null) return isPrayed(rec.prayer(item.prayerKey!));
-    return rec.done.contains(item.id);
+    if (rec.done.contains(item.id)) return true;
+    final p = countedProgress(item, date);
+    return p != null && p.$2 > 0 && p.$1 >= p.$2;
   }
 
   bool isSkipped(DateTime date, RoutineItem item) => day(date).skipped.contains(item.id);
 
-  void toggleItem(DateTime date, RoutineItem item) {
+  ActivityState activityState(RoutineItem item, DateTime date, {DateTime? now}) {
+    final p = countedProgress(item, date);
+    return ScheduleEngine.stateOf(
+      window: windowOf(item, date),
+      now: now ?? clock(),
+      done: isDone(date, item),
+      skipped: isSkipped(date, item),
+      hasProgress: p != null && p.$1 > 0,
+    );
+  }
+
+  /// Whether the user may mark [item] on [date] as completed right now.
+  /// Future dates: never. Past dates: yes (historical correction).
+  /// Today: only once the activity's window has started.
+  bool canComplete(RoutineItem item, DateTime date, {DateTime? now}) {
+    final t = now ?? clock();
+    final d = DateTime(date.year, date.month, date.day);
+    final todayD = DateTime(t.year, t.month, t.day);
+    if (d.isAfter(todayD)) return false;
+    if (d.isBefore(todayD)) return true;
+    return !t.isBefore(windowOf(item, d).start);
+  }
+
+  /// Whether prayer [key] on [date] can be recorded now.
+  bool canRecordPrayer(DateTime date, String key, {DateTime? now}) {
+    final item = itemById(key) ?? defaultRoutine.firstWhere((e) => e.id == key);
+    return canComplete(item, date, now: now);
+  }
+
+  static String _hhmm(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  /// Completion time of an activity (local DateTime) if recorded.
+  DateTime? completedTime(DateTime date, String id) {
+    final v = day(date).completedAt[id];
+    if (v == null) return null;
+    final p = v.split(':');
+    if (p.length != 2) return null;
+    return DateTime(date.year, date.month, date.day, int.tryParse(p[0]) ?? 0, int.tryParse(p[1]) ?? 0);
+  }
+
+  /// Toggles completion. Returns false when the change is not allowed
+  /// (activity locked / future date / completed by its counter).
+  bool toggleItem(DateTime date, RoutineItem item, {DateTime? now}) {
     final rec = day(date);
+    final done = isDone(date, item);
+    if (!done && !canComplete(item, date, now: now)) return false;
     rec.skipped.remove(item.id);
+    if (done) {
+      rec.completedAt.remove(item.id);
+    } else {
+      rec.completedAt[item.id] = _hhmm(now ?? clock());
+    }
     if (item.prayerKey != null) {
-      final current = rec.prayer(item.prayerKey!);
-      rec.prayers[item.prayerKey!] = isPrayed(current) ? PrayerStatus.none : PrayerStatus.alone;
-    } else if (rec.done.contains(item.id)) {
+      rec.prayers[item.prayerKey!] = done ? PrayerStatus.none : PrayerStatus.alone;
+    } else if (done) {
       rec.done.remove(item.id);
+      if (isDone(date, item)) {
+        // Completed by its counter: undo by reducing / resetting the counter.
+        _saveDay(date);
+        return false;
+      }
     } else {
       rec.done.add(item.id);
     }
     _saveDay(date);
+    return true;
   }
 
-  void setDone(DateTime date, String id, bool value) {
+  /// Marks / unmarks by id. Marking respects the same lock as [toggleItem].
+  bool setDone(DateTime date, String id, bool value, {DateTime? now}) {
     final rec = day(date);
+    final item = itemById(id);
+    if (value && item != null && !canComplete(item, date, now: now)) return false;
     if (value) {
       rec.done.add(id);
       rec.skipped.remove(id);
+      rec.completedAt.putIfAbsent(id, () => _hhmm(now ?? clock()));
     } else {
       rec.done.remove(id);
+      rec.completedAt.remove(id);
     }
     _saveDay(date);
+    return true;
   }
 
   void toggleSkip(DateTime date, RoutineItem item) {
@@ -674,16 +832,52 @@ class AppState extends ChangeNotifier {
     _saveDay(date);
   }
 
-  /// Returns (done, total) for the given day. Skipped items are not counted.
-  (int, int) completion(DateTime date) {
-    final items = routineFor(date).where((i) => !isSkipped(date, i)).toList();
-    final done = items.where((i) => isDone(date, i)).length;
-    return (done, items.length);
+  /// All activities of [date] with their window and state, in time order.
+  List<ScheduledActivity> scheduleFor(DateTime date, {DateTime? now}) {
+    final t = now ?? clock();
+    final d = DateTime(date.year, date.month, date.day);
+    final items = routineFor(d);
+    final list = <ScheduledActivity>[
+      for (final it in items) ScheduledActivity(it, d, windowOf(it, d), activityState(it, d, now: t)),
+    ];
+    final order = {for (var i = 0; i < items.length; i++) items[i].id: i};
+    list.sort((a, b) {
+      final c = a.window.start.compareTo(b.window.start);
+      return c != 0 ? c : order[a.item.id]!.compareTo(order[b.item.id]!);
+    });
+    return list;
   }
 
-  double completionRatio(DateTime date) {
-    final (d, t) = completion(date);
-    return t == 0 ? 0 : d / t;
+  /// Yesterday's activities that are still open (e.g. Isha / Witr after
+  /// midnight, before Fajr).
+  List<ScheduledActivity> carriedOver({DateTime? now}) {
+    final t = now ?? clock();
+    final y = DateTime(t.year, t.month, t.day - 1);
+    return scheduleFor(y, now: t).where((e) => e.isOpen).toList();
+  }
+
+  /// Daily score (Farz / Routine / Optional), see services/scoring.dart.
+  DayScore scoreFor(DateTime date, {DateTime? now}) => ScoringService.score(this, date, now: now);
+
+  /// (done, due) of farz prayers + mandatory routine activities whose time has
+  /// started. Optional, skipped and future activities are excluded.
+  (int, int) completion(DateTime date, {DateTime? now}) {
+    final sc = scoreFor(date, now: now);
+    return (sc.done, sc.due);
+  }
+
+  double completionRatio(DateTime date) => scoreFor(date).overall;
+
+  /// Removes manual "done" marks of counted activities whose counter fell
+  /// below target (after reset / decrement / target change).
+  void _recalcCounted(DateTime date, {String? dhikrKey, bool quran = false}) {
+    final rec = day(date);
+    for (final item in allItems) {
+      final matches = (dhikrKey != null && item.dhikrKey == dhikrKey) || (quran && item.id == 'quran_daily');
+      if (!matches) continue;
+      final p = countedProgress(item, date);
+      if (p != null && p.$1 < p.$2) rec.done.remove(item.id);
+    }
   }
 
   void addRoutineItem(RoutineItem item) {
@@ -753,13 +947,39 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------- prayers ----------------
-  void setPrayer(DateTime date, String key, PrayerStatus status) {
-    day(date).prayers[key] = status;
+  /// Records a prayer status. Returns false (and changes nothing) when the
+  /// prayer's time has not started yet or the date is in the future.
+  /// "Not recorded" (none) can always be set to undo a mistake.
+  bool setPrayer(DateTime date, String key, PrayerStatus status, {DateTime? now}) {
+    if (status != PrayerStatus.none && !canRecordPrayer(date, key, now: now)) return false;
+    final rec = day(date);
+    rec.prayers[key] = status;
+    if (isPrayed(status)) {
+      rec.completedAt[key] = _hhmm(now ?? clock());
+    } else {
+      rec.completedAt.remove(key);
+    }
     _saveDay(date);
+    return true;
   }
 
-  void toggleSunnah(DateTime date, String key) {
+  /// Display status of a prayer: a past window that was never recorded shows
+  /// as Missed (it is not stored, so the user can still correct it).
+  PrayerStatus effectivePrayerStatus(DateTime date, String key, {DateTime? now}) {
+    final st = day(date).prayer(key);
+    if (st != PrayerStatus.none) return st;
+    final item = itemById(key) ?? defaultRoutine.firstWhere((e) => e.id == key);
+    final ended = !(now ?? clock()).isBefore(windowOf(item, date).end);
+    return ended ? PrayerStatus.missed : PrayerStatus.none;
+  }
+
+  bool toggleSunnah(DateTime date, String key, {DateTime? now}) {
     final rec = day(date);
+    final has = rec.sunnah.contains(key);
+    if (!has) {
+      final item = itemById(key) ?? defaultRoutine.firstWhere((e) => e.id == key, orElse: () => defaultRoutine.first);
+      if (!canComplete(item, date, now: now)) return false;
+    }
     if (!rec.sunnah.remove(key)) rec.sunnah.add(key);
     // Witr is also a routine item.
     if (key == 'witr') {
@@ -770,6 +990,7 @@ class AppState extends ChangeNotifier {
       }
     }
     _saveDay(date);
+    return true;
   }
 
   bool witrDone(DateTime date) {
@@ -786,29 +1007,45 @@ class AppState extends ChangeNotifier {
   // ---------------- dhikr / azkar ----------------
   int dhikrTarget(String key, int def) => settings.tasbeehTargets[key] ?? def;
 
+  /// Changing a target re-evaluates today's linked activities immediately
+  /// (completion is derived from count >= target).
   void setDhikrTarget(String key, int target) {
     settings.tasbeehTargets[key] = target.clamp(1, 100000).toInt();
+    _recalcCounted(today, dhikrKey: key);
+    _saveDay(today);
     saveSettings();
   }
 
+  /// Linked routine activities complete automatically when the count reaches
+  /// the target and become pending again when it drops below.
   void incrementDhikr(DateTime date, String key, {int by = 1}) {
     final rec = day(date);
-    final v = ((rec.dhikr[key] ?? 0) + by).clamp(0, 10000000).toInt();
+    final before = rec.dhikr[key] ?? 0;
+    final v = (before + by).clamp(0, 10000000).toInt();
     rec.dhikr[key] = v;
+    if (by < 0) _recalcCounted(date, dhikrKey: key);
     for (final item in allItems) {
-      if (item.dhikrKey == key && item.dhikrTarget > 0) {
-        if (v >= dhikrTarget(key, item.dhikrTarget)) {
-          rec.done.add(item.id);
-        } else if (by < 0) {
-          rec.done.remove(item.id);
-        }
-      }
+      if (item.dhikrKey != key || item.dhikrTarget <= 0) continue;
+      final target = dhikrTarget(key, item.dhikrTarget);
+      if (before < target && v >= target) rec.completedAt[item.id] = _hhmm(clock());
+      if (v < target && !rec.done.contains(item.id)) rec.completedAt.remove(item.id);
     }
     _saveDay(date);
   }
 
-  void resetDhikr(DateTime date, String key) {
-    day(date).dhikr[key] = 0;
+  /// Resets a counter and returns the previous value (for Undo).
+  int resetDhikr(DateTime date, String key) {
+    final rec = day(date);
+    final previous = rec.dhikr[key] ?? 0;
+    rec.dhikr[key] = 0;
+    _recalcCounted(date, dhikrKey: key);
+    _saveDay(date);
+    return previous;
+  }
+
+  /// Restores a counter value (Undo after reset).
+  void restoreDhikr(DateTime date, String key, int value) {
+    day(date).dhikr[key] = value < 0 ? 0 : value;
     _saveDay(date);
   }
 
@@ -848,13 +1085,18 @@ class AppState extends ChangeNotifier {
       juzDone.clear();
       readPages.clear();
     }
-    if (rec.quranPages >= settings.quranTarget) {
-      rec.done.add('quran_daily');
-    } else {
-      rec.done.remove('quran_daily');
-    }
+    // "Daily Quran" completes automatically when pages >= target.
+    if (applied < 0) _recalcCounted(date, quran: true);
     _saveQuran();
     _saveDay(date);
+  }
+
+  /// Changes the daily Quran target and re-evaluates today's completion.
+  void setQuranTarget(int pages) {
+    settings.quranTarget = pages.clamp(1, 604).toInt();
+    _recalcCounted(today, quran: true);
+    _saveDay(today);
+    saveSettings();
   }
 
   /// Marks a mushaf page as read/unread (also counts towards today's pages).
@@ -873,12 +1115,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Starts a new khatam cycle (keeps the number of completed khatams).
   void resetKhatam() {
     khatamPages = 0;
     juzDone.clear();
     readPages.clear();
     _saveQuran();
     notifyListeners();
+  }
+
+  /// Full reset: current cycle and completed khatam count (daily page
+  /// history is kept).
+  void resetKhatamFull() {
+    khatamCount = 0;
+    resetKhatam();
   }
 
   void setLastRead(int surah, int ayah) {
@@ -897,16 +1147,22 @@ class AppState extends ChangeNotifier {
   bool isBookmarked(int s, int a) => bookmarks.contains(QuranRef(s, a));
   bool isFavouriteAyah(int s, int a) => favouriteAyat.contains(QuranRef(s, a));
 
+  static bool validRef(int s, int a) => s >= 1 && s <= 114 && a >= 1 && a <= 286;
+
   void toggleBookmark(int s, int a) {
+    if (!validRef(s, a)) return;
     final r = QuranRef(s, a);
     if (!bookmarks.remove(r)) bookmarks.insert(0, r);
+    bookmarks = bookmarks.toSet().toList();
     prefs.setStringList('bookmarks', bookmarks.map((e) => e.key).toList());
     notifyListeners();
   }
 
   void toggleFavouriteAyah(int s, int a) {
+    if (!validRef(s, a)) return;
     final r = QuranRef(s, a);
     if (!favouriteAyat.remove(r)) favouriteAyat.insert(0, r);
+    favouriteAyat = favouriteAyat.toSet().toList();
     prefs.setStringList('favAyat', favouriteAyat.map((e) => e.key).toList());
     notifyListeners();
   }
@@ -1108,40 +1364,117 @@ class AppState extends ChangeNotifier {
   }
 
   // ---------------- backup / restore ----------------
-  static const _backupVersion = 2;
+  static const backupVersion = 3;
 
   Map<String, dynamic> exportData() {
     final data = <String, dynamic>{};
     for (final k in prefs.getKeys()) {
       data[k] = prefs.get(k);
     }
-    return {'app': 'dailydeen', 'version': _backupVersion, 'created': DateTime.now().toIso8601String(), 'data': data};
+    return {
+      'app': 'dailydeen',
+      'version': backupVersion,
+      'created': DateTime.now().toIso8601String(),
+      'data': data,
+    };
   }
 
-  /// Replaces all local data with [backup]. Returns false if the file is invalid.
-  Future<bool> importData(Map<String, dynamic> backup) async {
-    if (backup['app'] != 'dailydeen' || backup['data'] is! Map) return false;
-    final data = Map<String, dynamic>.from(backup['data'] as Map);
+  /// Checks a backup without touching local data. Returns null when valid,
+  /// otherwise a short reason.
+  static String? validateBackup(Map<String, dynamic> backup) {
+    if (backup['app'] != 'dailydeen') return 'not a Daily Deen backup';
+    final v = backup['version'];
+    if (v is! int || v < 1 || v > backupVersion) return 'unsupported backup version';
+    final data = backup['data'];
+    if (data is! Map) return 'missing data';
+    for (final e in data.entries) {
+      final val = e.value;
+      if (e.key is! String) return 'invalid key';
+      if (val is! bool && val is! num && val is! String && val is! List) return 'invalid value for ${e.key}';
+      if (e.key == 'settings') {
+        try {
+          AppSettings.fromJson(jsonDecode(val as String) as Map<String, dynamic>);
+        } catch (_) {
+          return 'invalid settings';
+        }
+      }
+      if ((e.key as String).startsWith('day_')) {
+        try {
+          DayRecord.fromJson(jsonDecode(val as String) as Map<String, dynamic>);
+        } catch (_) {
+          return 'invalid record ${e.key}';
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> _writeAll(Map<String, dynamic> data) async {
     await prefs.clear();
     for (final e in data.entries) {
       final v = e.value;
+      bool ok;
       if (v is bool) {
-        await prefs.setBool(e.key, v);
+        ok = await prefs.setBool(e.key, v);
       } else if (v is int) {
-        await prefs.setInt(e.key, v);
+        ok = await prefs.setInt(e.key, v);
       } else if (v is double) {
-        await prefs.setDouble(e.key, v);
+        ok = await prefs.setDouble(e.key, v);
       } else if (v is String) {
-        await prefs.setString(e.key, v);
+        ok = await prefs.setString(e.key, v);
       } else if (v is List) {
-        await prefs.setStringList(e.key, v.map((x) => x.toString()).toList());
+        ok = await prefs.setStringList(e.key, v.map((x) => x.toString()).toList());
+      } else {
+        ok = true;
       }
+      if (!ok) throw StateError('write failed for ${e.key}');
+    }
+  }
+
+  /// Restores [backup] safely:
+  /// 1. validates it (nothing is touched if invalid),
+  /// 2. keeps an in-memory copy of the current data,
+  /// 3. writes the backup and verifies every key,
+  /// 4. rolls back to the previous data if anything fails.
+  /// Returns null on success, otherwise the reason.
+  Future<String?> importDataSafe(Map<String, dynamic> backup) async {
+    final problem = validateBackup(backup);
+    if (problem != null) return problem;
+    await flush();
+    final data = Map<String, dynamic>.from(backup['data'] as Map);
+    final previous = <String, dynamic>{for (final k in prefs.getKeys()) k: prefs.get(k)};
+    try {
+      await _writeAll(data);
+      for (final k in data.keys) {
+        if (!prefs.containsKey(k)) throw StateError('verification failed for $k');
+      }
+    } catch (e) {
+      try {
+        await _writeAll(previous);
+      } catch (_) {}
+      _loadAll();
+      notifyListeners();
+      return 'restore failed: $e';
     }
     _loadAll();
     notifyListeners();
     onScheduleChanged?.call(this);
-    return true;
+    return null;
   }
+
+  /// Compatibility wrapper. Returns true on success.
+  Future<bool> importData(Map<String, dynamic> backup) async => (await importDataSafe(backup)) == null;
+}
+
+/// An activity placed on the timeline for a given date.
+class ScheduledActivity {
+  final RoutineItem item;
+  final DateTime date;
+  final ActivityWindow window;
+  final ActivityState state;
+  const ScheduledActivity(this.item, this.date, this.window, this.state);
+
+  bool get isOpen => state == ActivityState.active || state == ActivityState.inProgress;
 }
 
 /// Makes [AppState] available to the widget tree.

@@ -96,6 +96,39 @@ class NotificationService {
     }
   }
 
+  /// Whether exact alarms may be scheduled (Android 12+ special permission).
+  Future<bool> canScheduleExact() async {
+    if (!_ready) return false;
+    try {
+      return await _plugin
+              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+              ?.canScheduleExactNotifications() ??
+          false;
+    } catch (e) {
+      debugPrint('Exact alarm check failed: $e');
+      return false;
+    }
+  }
+
+  /// Opens the system screen to allow exact alarms. Returns the result.
+  Future<bool> requestExactAlarms() async {
+    if (!_ready) return false;
+    try {
+      return await _plugin
+              .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+              ?.requestExactAlarmsPermission() ??
+          false;
+    } catch (e) {
+      debugPrint('Exact alarm request failed: $e');
+      return false;
+    }
+  }
+
+  bool _exact = false;
+
+  /// Number of reminders that failed to schedule in the last run.
+  int lastFailures = 0;
+
   Future<void> showTest(AppState state) async {
     if (!_ready) return;
     final s = state.s;
@@ -129,15 +162,21 @@ class NotificationService {
       'z': st.snoozeMinutes,
       'l': snoozeLabel,
     });
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(when.toUtc(), tz.UTC),
-      NotificationDetails(android: _androidDetails(prayer: prayer, vibrate: st.notifVibrate, snoozeLabel: snoozeLabel)),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      payload: payload,
-    );
+    // Each reminder is isolated: one failure never stops the rest.
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tz.TZDateTime.from(when.toUtc(), tz.UTC),
+        NotificationDetails(android: _androidDetails(prayer: prayer, vibrate: st.notifVibrate, snoozeLabel: snoozeLabel)),
+        androidScheduleMode: _exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: payload,
+      );
+    } catch (e) {
+      lastFailures++;
+      debugPrint('Reminder $id failed: $e');
+    }
   }
 
   /// Cancels everything and schedules the next 7 days.
@@ -146,7 +185,9 @@ class NotificationService {
     try {
       await _plugin.cancelAll();
       final st = state.settings;
+      lastFailures = 0;
       if (!st.notifications) return;
+      _exact = st.exactAlarms && await canScheduleExact();
       final s = state.s;
       final now = DateTime.now();
       final nowUtc = now.toUtc();
@@ -175,17 +216,26 @@ class NotificationService {
 
         await at(1000, 'tahajjud', date.add(Duration(minutes: st.wakeMinutes)), s.t('tahajjud_notif'), s.t('tahajjud_body'));
         await at(1100, 'quran', date.add(Duration(minutes: st.quranReminderMinutes)), s.t('quran_notif'), s.t('quran_notif_body'));
-        await at(1200, 'morning_azkar', times[PrayerName.fajr].toLocal().add(Duration(minutes: st.azkarAfterMinutes)),
-            s.t('morning_azkar'), s.t('azkar_notif_body'));
-        await at(1300, 'evening_azkar', times[PrayerName.asr].toLocal().add(Duration(minutes: st.azkarAfterMinutes)),
-            s.t('evening_azkar'), s.t('azkar_notif_body'));
+        // Azkar reminders follow the same schedule engine as Home/Routine.
+        final routine = state.routineFor(date);
+        DateTime azkarAt(String id, PrayerName fallback) {
+          final it = routine.where((e) => e.id == id).firstOrNull;
+          return it != null
+              ? state.windowOf(it, date).start
+              : times[fallback].toLocal().add(Duration(minutes: st.azkarAfterMinutes));
+        }
+
+        await at(1200, 'morning_azkar', azkarAt('morning_azkar', PrayerName.fajr), s.t('morning_azkar'),
+            s.t('azkar_notif_body'));
+        await at(1300, 'evening_azkar', azkarAt('evening_azkar', PrayerName.asr), s.t('evening_azkar'),
+            s.t('azkar_notif_body'));
         await at(1400, 'sleep_azkar', date.add(Duration(minutes: st.sleepMinutes)), s.t('sleep_azkar'), s.t('sleep_notif_body'));
 
         if (st.notifOn('routine')) {
-          final items = state.routineFor(date).where((it) => it.reminder && it.timeMinutes != null).take(90).toList();
+          final items = routine.where((it) => it.reminder && it.prayerKey == null).take(90).toList();
           for (var j = 0; j < items.length; j++) {
             final RoutineItem it = items[j];
-            final when = date.add(Duration(minutes: it.timeMinutes!));
+            final when = state.windowOf(it, date).start;
             if (!when.toUtc().isAfter(nowUtc)) continue;
             await _schedule(
               state,

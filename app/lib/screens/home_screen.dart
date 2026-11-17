@@ -20,6 +20,8 @@ import '../services/report.dart';
 import 'routine_screen.dart';
 import 'settings_screen.dart';
 import 'shell.dart';
+import '../services/schedule.dart';
+import '../services/scoring.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,21 +30,54 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Timer? _timer;
-  DateTime _now = DateTime.now();
-  bool _showCompleted = false;
+  DateTime _now = clock();
+  bool _showEarlier = false;
+  bool _resumed = true;
+
+  bool get _visible => shellTab.value == Tabs.home && _resumed;
+
+  /// Ticks every second only while Home is visible and the app is in the
+  /// foreground (for countdowns); otherwise no timer runs.
+  void _syncTimer() {
+    if (_visible) {
+      _timer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() => _now = clock());
+      });
+    } else {
+      _timer?.cancel();
+      _timer = null;
+    }
+  }
+
+  void _onTab() {
+    _syncTimer();
+    if (_visible && mounted) setState(() => _now = clock());
+  }
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
-    });
+    WidgetsBinding.instance.addObserver(this);
+    shellTab.addListener(_onTab);
+    _syncTimer();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    _resumed = s == AppLifecycleState.resumed;
+    _syncTimer();
+    if (_resumed && mounted) {
+      setState(() => _now = clock());
+      AppScope.of(context).onResume();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    shellTab.removeListener(_onTab);
     _timer?.cancel();
     super.dispose();
   }
@@ -51,20 +86,41 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final s = state.s;
-    final today = state.today;
     final theme = Theme.of(context);
-    final (done, total) = state.completion(today);
-    final ratio = total == 0 ? 0.0 : done / total;
-    final items = state.routineFor(today);
-    final pending = items.where((i) => !state.isDone(today, i) && !state.isSkipped(today, i)).toList();
-    final completed = items.where((i) => state.isDone(today, i)).toList();
-    final skipped = items.where((i) => state.isSkipped(today, i)).toList();
+    final now = _now;
+    final today = DateTime(now.year, now.month, now.day);
+    final entries = state.scheduleFor(today, now: now);
+    final open = [...state.carriedOver(now: now), ...entries.where((e) => e.isOpen)];
+    final upcoming = entries.where((e) => e.state == ActivityState.upcoming).toList();
+    final earlier = entries
+        .where((e) =>
+            e.state == ActivityState.completed || e.state == ActivityState.missed || e.state == ActivityState.skipped)
+        .toList()
+        .reversed
+        .toList();
+
+    // Current focus: an open prayer first, then the earliest open mandatory
+    // activity, then optional; otherwise the next upcoming activity (locked).
+    ScheduledActivity? current;
+    for (final e in open) {
+      if (e.item.prayerKey != null) {
+        current = e;
+        break;
+      }
+    }
+    current ??= open.where((e) => !e.item.optional).firstOrNull ?? open.firstOrNull;
+    final isUpcoming = current == null && upcoming.isNotEmpty;
+    current ??= upcoming.firstOrNull;
+    final otherOpen = open.where((e) => e != current).toList();
+    final nextUp = upcoming.where((e) => e != current).take(4).toList();
+    final completedCount = earlier.where((e) => e.state == ActivityState.completed).length;
+    final missedCount = earlier.where((e) => e.state == ActivityState.missed).length;
 
     return ListView(
       key: const Key('home_list'),
       padding: EdgeInsets.zero,
       children: [
-        _Header(now: _now),
+        _Header(now: now),
         Transform.translate(
           offset: const Offset(0, -26),
           child: Padding(
@@ -72,25 +128,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _ProgressCard(ratio: ratio, done: done, total: total),
+                _ScoreCard(score: state.scoreFor(today, now: now)),
                 const SizedBox(height: 12),
-                const _PlanCard(),
-                const SizedBox(height: 12),
-                _NextPrayerCard(now: _now),
-                const SizedBox(height: 4),
-                SectionTitle(s.t('todays_prayers'),
-                    actionLabel: s.t('view_all'), onAction: () => ShellScope.go(context, Tabs.namaz)),
-                _TodayPrayers(now: _now),
-                SectionTitle(s.t('quick_track')),
-                _QuickGrid(),
-                SectionTitle(s.t('dua_of_day')),
-                const _DuaOfDayCard(),
-                SectionTitle(
-                  '${s.t('daily_routine')}  ($done/$total)',
-                  actionLabel: s.t('plan'),
-                  onAction: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RoutineScreen())),
-                ),
-                if (pending.isEmpty && total > 0)
+                if (!state.prayerTimes(today).reliable) ...[
+                  Card(
+                    color: AppColors.delayed.withValues(alpha: 0.15),
+                    child: ListTile(
+                      leading: const Icon(Icons.warning_amber, color: AppColors.delayed),
+                      title: Text(s.t('times_unreliable')),
+                      onTap: () =>
+                          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrayerSettingsScreen())),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (current != null) _NowCard(entry: current, upcoming: isUpcoming, now: now),
+                if (current == null && entries.isNotEmpty)
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -101,36 +154,62 @@ class _HomeScreenState extends State<HomeScreen> {
                       ]),
                     ),
                   ),
-                if (pending.isNotEmpty) ...[
-                  _ListLabel('${s.t('pending')} (${pending.length})', AppColors.pending),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-                    child: Text(s.t('routine_hint'), style: theme.textTheme.bodySmall),
-                  ),
+                if (otherOpen.isNotEmpty) ...[
+                  _ListLabel('${s.t('now_available')} (${otherOpen.length})', AppColors.onTime),
                   Card(
+                    key: const Key('now_section'),
                     child: Column(children: [
-                      for (var i = 0; i < pending.length; i++) ...[
-                        RoutineTile(item: pending[i], date: today),
-                        if (i < pending.length - 1) const Divider(indent: 60),
+                      for (var i = 0; i < otherOpen.length; i++) ...[
+                        RoutineTile(item: otherOpen[i].item, date: otherOpen[i].date, now: now),
+                        if (i < otherOpen.length - 1) const Divider(indent: 60),
                       ],
                     ]),
                   ),
                 ],
-                if (completed.isNotEmpty || skipped.isNotEmpty) ...[
-                  InkWell(
-                    onTap: () => setState(() => _showCompleted = !_showCompleted),
-                    child: Row(children: [
-                      Expanded(child: _ListLabel('${s.t('completed')} (${completed.length})', AppColors.onTime)),
-                      Icon(_showCompleted ? Icons.expand_less : Icons.expand_more),
+                if (nextUp.isNotEmpty) ...[
+                  SectionTitle(
+                    s.t('coming_up'),
+                    actionLabel: s.t('full_schedule'),
+                    onAction: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RoutineScreen())),
+                  ),
+                  Card(
+                    key: const Key('upcoming_section'),
+                    child: Column(children: [
+                      for (final e in nextUp) RoutineTile(item: e.item, date: e.date, now: now),
                     ]),
                   ),
-                  if (_showCompleted)
+                ],
+                if (earlier.isNotEmpty) ...[
+                  InkWell(
+                    key: const Key('earlier_toggle'),
+                    onTap: () => setState(() => _showEarlier = !_showEarlier),
+                    child: Row(children: [
+                      Expanded(
+                        child: _ListLabel(
+                          '${s.t('earlier_today')}  ✓ $completedCount   ✗ $missedCount',
+                          theme.colorScheme.outline,
+                        ),
+                      ),
+                      Icon(_showEarlier ? Icons.expand_less : Icons.expand_more),
+                    ]),
+                  ),
+                  if (_showEarlier)
                     Card(
+                      key: const Key('earlier_section'),
                       child: Column(children: [
-                        for (final it in [...completed, ...skipped]) RoutineTile(item: it, date: today),
+                        for (final e in earlier) RoutineTile(item: e.item, date: e.date, now: now),
                       ]),
                     ),
                 ],
+                const SizedBox(height: 12),
+                const _PlanCard(),
+                SectionTitle(s.t('todays_prayers'),
+                    actionLabel: s.t('view_all'), onAction: () => ShellScope.go(context, Tabs.namaz)),
+                _TodayPrayers(now: now),
+                SectionTitle(s.t('quick_track')),
+                _QuickGrid(),
+                SectionTitle(s.t('dua_of_day')),
+                const _DuaOfDayCard(),
                 const SizedBox(height: 16),
                 Row(children: [
                   Expanded(
@@ -154,17 +233,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   key: const Key('more_features'),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MoreFeaturesScreen())),
+                  onPressed: () =>
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MoreFeaturesScreen())),
                   icon: const Icon(Icons.apps),
                   label: Text(s.t('more_features')),
                   style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  s.t('streak_hint'),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall,
-                ),
+                Text(s.t('score_hint'), textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
               ],
             ),
           ),
@@ -262,123 +338,247 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _ProgressCard extends StatelessWidget {
-  final double ratio;
-  final int done;
-  final int total;
-  const _ProgressCard({required this.ratio, required this.done, required this.total});
+class _ScoreCard extends StatelessWidget {
+  final DayScore score;
+  const _ScoreCard({required this.score});
 
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final s = state.s;
     final theme = Theme.of(context);
+    Widget bar(String label, double v, String detail, Color c) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(children: [
+            SizedBox(width: 72, child: Text(label, style: theme.textTheme.bodySmall, overflow: TextOverflow.ellipsis)),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                    value: v, minHeight: 7, color: c, backgroundColor: c.withValues(alpha: 0.14)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 48,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerEnd,
+                child: Text(detail, style: theme.textTheme.labelSmall),
+              ),
+            ),
+          ]),
+        );
     return Card(
+      key: const Key('score_card'),
       elevation: 3,
       shadowColor: Colors.black26,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => ShellScope.go(context, Tabs.progress),
         child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.t('your_daily_progress'), style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 6),
-                    Text('${(ratio * 100).round()}%',
-                        key: const Key('home_percent'),
-                        style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: theme.colorScheme.primary)),
-                    Text('$done ${s.t('of')} $total ${s.t('tasks')}', style: theme.textTheme.bodySmall),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(value: ratio, minHeight: 8),
-                    ),
-                  ],
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              ProgressRing(
+                value: score.overall,
+                size: 76,
+                stroke: 8,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('${(score.overall * 100).round()}%',
+                      key: const Key('home_percent'),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
                 ),
               ),
-              const SizedBox(width: 18),
-              ProgressRing(
-                value: ratio,
-                size: 84,
-                stroke: 9,
-                child: Icon(Icons.mosque, color: theme.colorScheme.primary, size: 34),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(s.t('your_daily_progress'),
+                      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  Wrap(spacing: 10, runSpacing: 4, children: [
+                    _Count(Icons.check_circle, AppColors.onTime, '${score.done}', s.t('completed')),
+                    _Count(Icons.timelapse, AppColors.pending, '${score.active}', s.t('remaining')),
+                    _Count(Icons.cancel, AppColors.missed, '${score.missed}', s.t('missed')),
+                  ]),
+                ]),
               ),
-            ],
-          ),
+            ]),
+            const SizedBox(height: 10),
+            bar(s.t('farz'), score.farz, '${score.farzDone}/${score.farzDue}', AppColors.jamaat),
+            bar(s.t('routine'), score.routine, '${score.routineDone}/${score.routineDue}', AppColors.emeraldLight),
+            bar(s.t('optional'), score.optional, '${score.optionalDone}/${score.optionalDue}', AppColors.gold),
+          ]),
         ),
       ),
     );
   }
 }
 
-class _NextPrayerCard extends StatelessWidget {
+class _Count extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+  const _Count(this.icon, this.color, this.value, this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 14, color: color),
+      const SizedBox(width: 3),
+      Text('$value $label', style: Theme.of(context).textTheme.labelSmall),
+    ]);
+  }
+}
+
+/// The activity the user should focus on now (or the next one, locked).
+class _NowCard extends StatelessWidget {
+  final ScheduledActivity entry;
+  final bool upcoming;
   final DateTime now;
-  const _NextPrayerCard({required this.now});
+  const _NowCard({required this.entry, required this.upcoming, required this.now});
 
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final s = state.s;
     final urdu = state.settings.urdu;
+    final theme = Theme.of(context);
+    final item = entry.item;
+    final w = entry.window;
+    final progress = state.countedProgress(item, entry.date);
+    final remaining = (upcoming ? w.start : w.end).difference(now);
+    final (icon, color) = categoryVisual(item.category);
+    final yesterday = entry.date.isBefore(DateTime(now.year, now.month, now.day));
     final next = state.nextPrayer(now);
-    final remaining = next.value.difference(now.toUtc());
+    final toNext = next.value.difference(now.toUtc());
+
+    String cta;
+    VoidCallback? onCta;
+    if (upcoming) {
+      cta = '${s.t('locked_until')} ${formatTime(w.start, urdu: urdu)}';
+    } else if (item.prayerKey != null) {
+      cta = s.t('mark_prayed');
+      onCta = () => showPrayerStatusSheet(context, state, entry.date, item.prayerKey!);
+    } else if (progress != null) {
+      cta = progress.$1 > 0 ? '${s.t('continue')} (${progress.$1}/${progress.$2})' : s.t('start_now');
+      onCta = () => openActivity(context, item, entry.date);
+    } else if (hasOwnScreen(item)) {
+      cta = s.t('start_now');
+      onCta = () => openActivity(context, item, entry.date);
+    } else {
+      cta = s.t('mark_completed');
+      onCta = () => tryToggle(context, state, entry.date, item);
+    }
+
     return Card(
+      key: const Key('now_card'),
       clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          const Positioned(
-            right: 0,
-            bottom: 0,
-            width: 170,
-            height: 90,
-            child: CustomPaint(painter: MosqueSkylinePainter(color: Color(0x33C9A44C))),
+      child: Container(
+        decoration: BoxDecoration(
+          border: BorderDirectional(
+            start: BorderSide(color: upcoming ? theme.colorScheme.outline : AppColors.emeraldLight, width: 5),
           ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(s.t('next_prayer_title'), style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 6),
-                Row(children: [
-                  Icon(Icons.schedule, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(s.t(next.key.name),
-                        overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(formatTime(next.value, urdu: urdu), style: Theme.of(context).textTheme.bodyMedium),
-                ]),
-                const SizedBox(height: 4),
-                Text(
-                  formatDuration(remaining.isNegative ? Duration.zero : remaining),
-                  key: const Key('countdown'),
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8)),
-                  onPressed: () => ShellScope.go(context, Tabs.namaz),
-                  child: Text(s.t('view_details')),
-                ),
-              ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(
+              child: Text(upcoming ? s.t('next_activity') : s.t('current_activity'),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.outline)),
+            ),
+            StateChip(state: upcoming ? ActivityState.upcoming : entry.state),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            IconBadge(icon, color: color, size: 40),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(item.name(urdu) + (yesterday ? ' (${s.t('yesterday')})' : ''),
+                    key: const Key('now_title'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                Text('${formatTime(w.start, urdu: urdu)} – ${formatTime(w.end, urdu: urdu)}',
+                    style: theme.textTheme.bodySmall),
+              ]),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              '${upcoming ? s.t('starts_in') : s.t('time_left')}  ${formatDuration(remaining.isNegative ? Duration.zero : remaining)}',
+              key: const Key('countdown'),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: theme.colorScheme.primary),
             ),
           ),
-        ],
+          if (progress != null && !upcoming) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress.$2 == 0 ? 0 : (progress.$1 / progress.$2).clamp(0.0, 1.0).toDouble(),
+                minHeight: 7,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const Key('now_cta'),
+              onPressed: onCta,
+              child: FittedBox(fit: BoxFit.scaleDown, child: Text(cta)),
+            ),
+          ),
+          if (item.prayerKey == null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${s.t('next_prayer_title')}: ${s.t(next.key.name)} ${formatTime(next.value, urdu: urdu)} • '
+              '${formatDuration(toNext.isNegative ? Duration.zero : toNext)}',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ]),
       ),
     );
   }
 }
+
+/// Small coloured label for an activity state.
+class StateChip extends StatelessWidget {
+  final ActivityState state;
+  const StateChip({super.key, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context).s;
+    final (label, color, icon) = stateVisual(s, state, Theme.of(context).colorScheme.outline);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(12)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+      ]),
+    );
+  }
+}
+
+(String, Color, IconData) stateVisual(S s, ActivityState st, Color neutral) => switch (st) {
+      ActivityState.upcoming => (s.t('upcoming'), neutral, Icons.lock_clock),
+      ActivityState.active => (s.t('active'), AppColors.onTime, Icons.play_circle_outline),
+      ActivityState.inProgress => (s.t('in_progress'), AppColors.pending, Icons.timelapse),
+      ActivityState.completed => (s.t('completed'), AppColors.onTime, Icons.check_circle),
+      ActivityState.missed => (s.t('missed'), AppColors.missed, Icons.warning_amber),
+      ActivityState.skipped => (s.t('skipped'), AppColors.delayed, Icons.skip_next),
+    };
 
 /// Icon + colour per prayer.
 (IconData, Color) prayerVisual(String key) => switch (key) {
@@ -409,8 +609,8 @@ class _TodayPrayers extends StatelessWidget {
           for (final key in prayerKeys)
             Builder(builder: (context) {
               final p = PrayerName.values.firstWhere((e) => e.name == key);
-              final status = rec.prayer(key);
-              final started = !times[p].isAfter(now.toUtc());
+              final status = state.effectivePrayerStatus(today, key, now: now);
+              final started = state.canRecordPrayer(today, key, now: now);
               final (icon, color) = prayerVisual(key);
               return ListTile(
                 key: Key('home_prayer_$key'),
@@ -422,7 +622,7 @@ class _TodayPrayers extends StatelessWidget {
                   if (status != PrayerStatus.none)
                     Text(statusLabel(s, status), style: TextStyle(fontSize: 11, color: statusColor(status)))
                   else
-                    Text(started ? s.t('pending') : s.t('upcoming'),
+                    Text(started ? s.t('pending') : s.t('locked'),
                         style: TextStyle(fontSize: 11, color: started ? AppColors.pending : theme.colorScheme.outline)),
                   const SizedBox(width: 6),
                   Icon(
@@ -430,17 +630,11 @@ class _TodayPrayers extends StatelessWidget {
                         ? Icons.check_circle
                         : status == PrayerStatus.missed
                             ? Icons.cancel
-                            : Icons.radio_button_unchecked,
+                            : (started ? Icons.radio_button_unchecked : Icons.lock_clock),
                     color: isPrayed(status) || status == PrayerStatus.missed ? statusColor(status) : theme.colorScheme.outline,
                   ),
                 ]),
-                onTap: () {
-                  if (status == PrayerStatus.none && !started) {
-                    toast(context, s.t('not_started_yet'));
-                    return;
-                  }
-                  state.setPrayer(today, key, isPrayed(status) ? PrayerStatus.none : PrayerStatus.alone);
-                },
+                onTap: () => trySetPrayer(context, state, today, key, isPrayed(status) ? PrayerStatus.none : PrayerStatus.alone),
                 onLongPress: () => showPrayerStatusSheet(context, state, today, key),
               );
             }),
@@ -474,19 +668,25 @@ Future<void> showPrayerStatusSheet(BuildContext context, AppState state, DateTim
     showDragHandle: true,
     builder: (c) {
       final current = state.day(date).prayer(key);
+      final canRecord = state.canRecordPrayer(date, key);
       return SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(s.t(key), style: Theme.of(c).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            if (date.isBefore(state.today))
+              Text(s.t('editing_past_day'), style: Theme.of(c).textTheme.bodySmall?.copyWith(color: AppColors.delayed)),
+            if (!canRecord) Text(s.t('not_started_yet'), style: Theme.of(c).textTheme.bodySmall),
             const SizedBox(height: 8),
             for (final st in [PrayerStatus.jamaat, PrayerStatus.alone, PrayerStatus.qaza, PrayerStatus.missed, PrayerStatus.none])
               ListTile(
+                key: Key('sheet_status_${st.name}'),
+                enabled: canRecord || st == PrayerStatus.none,
                 leading: Icon(st == current ? Icons.radio_button_checked : Icons.radio_button_off, color: statusColor(st)),
-                title: Text(statusLabel(s, st)),
+                title: Text(st == PrayerStatus.none ? s.t('not_recorded') : statusLabel(s, st)),
                 onTap: () {
-                  state.setPrayer(date, key, st);
                   Navigator.pop(c);
+                  trySetPrayer(context, state, date, key, st);
                 },
               ),
           ],
@@ -698,61 +898,75 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-/// One routine checklist row: the circle toggles completion, the row opens
-/// the related screen, long-press offers skip.
+/// One routine checklist row, aware of the schedule state: upcoming items
+/// are locked, missed ones are flagged, completed ones show their time. The
+/// check button toggles completion, the row opens the related screen and a
+/// long-press offers skip / edit.
 class RoutineTile extends StatelessWidget {
   final RoutineItem item;
   final DateTime date;
-  const RoutineTile({super.key, required this.item, required this.date});
+  final DateTime? now;
+  const RoutineTile({super.key, required this.item, required this.date, this.now});
 
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final urdu = state.settings.urdu;
     final s = state.s;
-    final done = state.isDone(date, item);
-    final skipped = state.isSkipped(date, item);
+    final t = now ?? clock();
+    final st = state.activityState(item, date, now: t);
+    final done = st == ActivityState.completed;
+    final skipped = st == ActivityState.skipped;
+    final missed = st == ActivityState.missed;
+    final locked = st == ActivityState.upcoming;
     final theme = Theme.of(context);
-    final rec = state.day(date);
+    final w = state.windowOf(item, date);
 
-    var subtitle = [item.time(urdu), item.target(urdu), if (item.optional) s.t('optional')]
+    String timing;
+    if (done) {
+      final at = state.completedTime(date, item.id);
+      timing = at == null ? s.t('completed') : '${s.t('completed_at')} ${formatTime(at, urdu: urdu)}';
+    } else if (locked) {
+      final d = w.start.difference(t);
+      timing = '${formatTime(w.start, urdu: urdu)} • ${s.t('starts_in')} ${formatDuration(d.isNegative ? Duration.zero : d)}';
+    } else if (missed) {
+      timing = '${s.t('missed')} • ${formatTime(w.start, urdu: urdu)} – ${formatTime(w.end, urdu: urdu)}';
+    } else if (skipped) {
+      timing = s.t('skipped');
+    } else {
+      timing = '${s.t('until')} ${formatTime(w.end, urdu: urdu)}';
+    }
+    final subtitle = [timing, item.target(urdu), if (item.optional) s.t('optional')]
         .where((e) => e.isNotEmpty)
         .join(' • ');
-    // Counted tasks: progress + automatic completion when the target is reached.
-    int? count, target;
-    if (item.dhikrKey != null) {
-      count = rec.dhikr[item.dhikrKey!] ?? 0;
-      target = state.dhikrTarget(item.dhikrKey!, item.dhikrTarget);
-    } else if (item.id == 'quran_daily') {
-      count = rec.quranPages;
-      target = state.settings.quranTarget;
-    }
+    final progress = state.countedProgress(item, date);
     final (icon, color) = categoryVisual(item.category);
+    final faded = done || skipped || locked;
 
     return ListTile(
       key: Key('routine_${item.id}'),
       contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 4),
       onTap: () => openActivity(context, item, date),
       onLongPress: () => showActivitySheet(context, item, date),
-      leading: IconBadge(icon, color: color, size: 38),
+      leading: IconBadge(locked ? Icons.lock_clock : icon, color: missed ? AppColors.missed : color, size: 38),
       title: Text(
         item.name(urdu),
         style: TextStyle(
           fontWeight: FontWeight.w600,
           decoration: done || skipped ? TextDecoration.lineThrough : null,
-          color: done || skipped ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : null,
+          color: faded ? theme.colorScheme.onSurface.withValues(alpha: 0.55) : (missed ? AppColors.missed : null),
         ),
       ),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-        if (subtitle.isNotEmpty) Text(subtitle, style: theme.textTheme.bodySmall),
-        if (count != null && target != null && !done) ...[
+        Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(color: missed ? AppColors.missed : null)),
+        if (progress != null && !done && !locked) ...[
           const SizedBox(height: 4),
           Row(children: [
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: target == 0 ? 0 : (count / target).clamp(0.0, 1.0).toDouble(),
+                  value: progress.$2 == 0 ? 0 : (progress.$1 / progress.$2).clamp(0.0, 1.0).toDouble(),
                   minHeight: 5,
                   color: color,
                   backgroundColor: color.withValues(alpha: 0.14),
@@ -760,27 +974,29 @@ class RoutineTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Text('$count/$target', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text('${progress.$1}/${progress.$2}',
+                style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700)),
           ]),
         ],
-        if (skipped) Text(s.t('skipped'), style: TextStyle(color: theme.colorScheme.outline, fontSize: 12)),
       ]),
       trailing: IconButton(
         key: Key('routine_check_${item.id}'),
-        tooltip: done ? s.t('mark_not_done') : s.t('mark_done'),
+        tooltip: locked ? s.t('locked') : (done ? s.t('mark_not_done') : s.t('mark_done')),
         iconSize: 32,
-        onPressed: () => state.toggleItem(date, item),
+        onPressed: () => tryToggle(context, state, date, item),
         icon: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: done
               ? const Icon(Icons.check_circle, key: ValueKey('done'), color: AppColors.onTime)
-              : Icon(Icons.radio_button_unchecked, key: const ValueKey('todo'), color: theme.colorScheme.outline),
+              : locked
+                  ? Icon(Icons.lock_outline, key: const ValueKey('locked'), color: theme.colorScheme.outline)
+                  : Icon(Icons.radio_button_unchecked,
+                      key: const ValueKey('todo'), color: missed ? AppColors.missed : theme.colorScheme.outline),
         ),
       ),
     );
   }
 }
-
 
 /// "My Chilla" card: day x/40 and today's chilla tasks.
 class _PlanCard extends StatelessWidget {

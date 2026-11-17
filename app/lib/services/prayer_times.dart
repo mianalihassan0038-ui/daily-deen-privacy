@@ -26,7 +26,11 @@ const Map<CalcMethod, MethodParams> methodParams = {
 /// call `.toLocal()` to show them in the device time zone.
 class DayPrayerTimes {
   final Map<PrayerName, DateTime> times;
-  const DayPrayerTimes(this.times);
+
+  /// False when the sun does not rise/set (polar regions) and times had to be
+  /// estimated; the UI asks the user to set times manually in that case.
+  final bool reliable;
+  const DayPrayerTimes(this.times, {this.reliable = true});
 
   DateTime operator [](PrayerName p) => times[p]!;
 }
@@ -111,6 +115,7 @@ class PrayerCalculator {
     }
 
     var fajr = 5.0, sunrise = 6.0, dhuhr = 12.0, asr = 13.0, maghrib = 18.0, isha = 18.0;
+    var reliable = true;
     for (var i = 0; i < 2; i++) {
       final nf = sunAngleTime(params.fajrAngle, fajr / 24, ccw: true);
       final ns = sunAngleTime(0.833, sunrise / 24, ccw: true);
@@ -118,6 +123,7 @@ class PrayerCalculator {
       final na = asrTime(hanafiAsr ? 2 : 1, asr / 24);
       final nm = sunAngleTime(0.833, maghrib / 24);
       final ni = params.ishaMinutes > 0 ? double.nan : sunAngleTime(params.ishaAngle, isha / 24);
+      if (i == 1 && (ns.isNaN || nm.isNaN || na.isNaN)) reliable = false;
       fajr = nf.isNaN ? fajr : nf;
       sunrise = ns.isNaN ? sunrise : ns;
       dhuhr = nd;
@@ -153,7 +159,7 @@ class PrayerCalculator {
       PrayerName.asr: toInstant(asr),
       PrayerName.maghrib: toInstant(maghrib),
       PrayerName.isha: toInstant(isha),
-    });
+    }, reliable: reliable);
   }
 
   /// Next upcoming prayer (sunrise excluded) after [now].

@@ -39,6 +39,16 @@ class RoutineItem {
   final bool enabled;
   final RoutineCategory category;
 
+  /// Schedule (see services/schedule.dart). Null = use the built-in default
+  /// for this activity id, or a fixed-time / all-day schedule for custom items.
+  /// Anchors: fixed, day, fajr, sunrise, dhuhr, asr, maghrib, isha.
+  final String? anchor;
+  final int startOffset;
+
+  /// End anchors: fajr, sunrise, dhuhr, asr, maghrib, isha, midnight, next_fajr.
+  final String? endAnchor;
+  final int endOffset;
+
   const RoutineItem({
     required this.id,
     required this.en,
@@ -59,6 +69,10 @@ class RoutineItem {
     this.reminder = false,
     this.enabled = true,
     this.category = RoutineCategory.other,
+    this.anchor,
+    this.startOffset = 0,
+    this.endAnchor,
+    this.endOffset = 0,
   });
 
   String name(bool urdu) => urdu ? ur : en;
@@ -90,6 +104,11 @@ class RoutineItem {
     bool? enabled,
     RoutineCategory? category,
     bool? optional,
+    String? anchor,
+    int? startOffset,
+    String? endAnchor,
+    int? endOffset,
+    bool clearSchedule = false,
   }) {
     return RoutineItem(
       id: id,
@@ -111,6 +130,10 @@ class RoutineItem {
       reminder: reminder ?? this.reminder,
       enabled: enabled ?? this.enabled,
       category: category ?? this.category,
+      anchor: clearSchedule ? null : (anchor ?? this.anchor),
+      startOffset: clearSchedule ? 0 : (startOffset ?? this.startOffset),
+      endAnchor: clearSchedule ? null : (endAnchor ?? this.endAnchor),
+      endOffset: clearSchedule ? 0 : (endOffset ?? this.endOffset),
     );
   }
 
@@ -135,6 +158,10 @@ class RoutineItem {
         'reminder': reminder,
         'enabled': enabled,
         'cat': category.index,
+        if (anchor != null) 'anchor': anchor,
+        if (startOffset != 0) 'startOff': startOffset,
+        if (endAnchor != null) 'endAnchor': endAnchor,
+        if (endOffset != 0) 'endOff': endOffset,
       };
 
   static RoutineItem fromJson(Map<String, dynamic> j) {
@@ -165,6 +192,10 @@ class RoutineItem {
       reminder: j['reminder'] as bool? ?? false,
       enabled: j['enabled'] as bool? ?? true,
       category: RoutineCategory.values[idx('cat', RoutineCategory.values.length, RoutineCategory.other.index)],
+      anchor: j['anchor'] as String?,
+      startOffset: (j['startOff'] as num?)?.toInt() ?? 0,
+      endAnchor: j['endAnchor'] as String?,
+      endOffset: (j['endOff'] as num?)?.toInt() ?? 0,
     );
   }
 

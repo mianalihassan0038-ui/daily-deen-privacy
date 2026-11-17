@@ -9,6 +9,8 @@ import 'muhasaba_screen.dart';
 import 'quran_reader_screen.dart';
 import 'routine_screen.dart';
 import 'shell.dart';
+import '../strings.dart';
+import '../widgets/common.dart';
 
 (IconData, Color) categoryVisual(RoutineCategory c) => switch (c) {
       RoutineCategory.prayer => (Icons.mosque, AppColors.emeraldMid),
@@ -40,6 +42,17 @@ const Map<String, AzkarType> _azkarItems = {
   'evening_azkar': AzkarType.evening,
   'sleep_azkar': AzkarType.sleep,
 };
+
+/// Whether [item] opens a dedicated screen (azkar, Quran, tasbeeh, ...).
+bool hasOwnScreen(RoutineItem item) =>
+    item.prayerKey != null ||
+    item.id == 'witr' ||
+    _azkarItems.containsKey(item.id) ||
+    _quranTargets.containsKey(item.id) ||
+    item.id == 'quran_daily' ||
+    item.id.startsWith('tilawat') ||
+    item.dhikrKey != null ||
+    item.id == 'muhasaba';
 
 /// Opens the screen that belongs to a routine activity.
 void openActivity(BuildContext context, RoutineItem item, DateTime date) {
@@ -105,8 +118,8 @@ Future<void> showActivitySheet(BuildContext context, RoutineItem item, DateTime 
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () {
-                  state.toggleItem(date, item);
                   Navigator.pop(c);
+                  tryToggle(context, state, date, item);
                 },
                 icon: Icon(done ? Icons.undo : Icons.check),
                 label: Text(done ? s.t('mark_not_done') : s.t('mark_done')),
@@ -135,4 +148,26 @@ Future<void> showActivitySheet(BuildContext context, RoutineItem item, DateTime 
       );
     },
   );
+}
+
+
+/// Toggles an activity and explains why when it is not allowed
+/// (locked until its time, or completed by its counter).
+void tryToggle(BuildContext context, AppState state, DateTime date, RoutineItem item, {DateTime? now}) {
+  if (state.toggleItem(date, item, now: now)) return;
+  final s = state.s;
+  if (state.isDone(date, item)) {
+    toast(context, s.t('counter_completed_hint'));
+  } else {
+    final w = state.windowOf(item, date);
+    toast(context, '${s.t('locked_until')} ${formatTime(w.start, urdu: state.settings.urdu)}');
+  }
+}
+
+/// Records a prayer status, explaining when the prayer time has not started.
+void trySetPrayer(BuildContext context, AppState state, DateTime date, String key, PrayerStatus status) {
+  if (state.setPrayer(date, key, status)) return;
+  final item = state.itemById(key) ?? defaultRoutine.firstWhere((e) => e.id == key);
+  final w = state.windowOf(item, date);
+  toast(context, '${state.s.t('prayer_locked')} ${formatTime(w.start, urdu: state.settings.urdu)}');
 }

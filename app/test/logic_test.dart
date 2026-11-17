@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/data/azkar.dart';
@@ -7,9 +8,14 @@ import 'package:dailydeen/screens/qibla_screen.dart';
 import 'package:dailydeen/services/hijri.dart';
 import 'package:dailydeen/services/prayer_times.dart';
 import 'package:dailydeen/services/report.dart';
+import 'package:dailydeen/services/schedule.dart';
 import 'package:dailydeen/strings.dart';
+import 'package:dailydeen/version.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// A time late in [d] when every activity of the day has started.
+DateTime lateIn(DateTime d) => DateTime(d.year, d.month, d.day, 23, 59);
 
 void main() {
   group('Prayer times (Karachi, 16 Nov 2026, Hanafi)', () {
@@ -136,24 +142,24 @@ void main() {
     test('toggle routine item and completion', () {
       final today = state.today;
       final item = state.itemById('wudu')!;
-      final (d0, total) = state.completion(today);
+      final (d0, total) = state.completion(today, now: lateIn(today));
       expect(d0, 0);
       expect(total, greaterThan(20));
-      state.toggleItem(today, item);
+      state.toggleItem(today, item, now: lateIn(today));
       expect(state.isDone(today, item), isTrue);
-      expect(state.completion(today).$1, 1);
-      state.toggleItem(today, item);
+      expect(state.completion(today, now: lateIn(today)).$1, 1);
+      state.toggleItem(today, item, now: lateIn(today));
       expect(state.isDone(today, item), isFalse);
     });
 
     test('skipped items are not counted', () {
       final today = state.today;
       final item = state.itemById('wudu')!;
-      final total = state.completion(today).$2;
+      final total = state.completion(today, now: lateIn(today)).$2;
       state.toggleSkip(today, item);
       expect(state.isSkipped(today, item), isTrue);
-      expect(state.completion(today).$2, total - 1);
-      state.toggleItem(today, item); // completing un-skips
+      expect(state.completion(today, now: lateIn(today)).$2, total - 1);
+      state.toggleItem(today, item, now: lateIn(today)); // completing un-skips
       expect(state.isSkipped(today, item), isFalse);
       expect(state.isDone(today, item), isTrue);
     });
@@ -161,11 +167,11 @@ void main() {
     test('prayer routine item maps to prayer status', () {
       final today = state.today;
       final fajr = state.itemById('fajr')!;
-      state.toggleItem(today, fajr);
+      state.toggleItem(today, fajr, now: lateIn(today));
       expect(state.day(today).prayer('fajr'), PrayerStatus.alone);
-      state.setPrayer(today, 'fajr', PrayerStatus.jamaat);
+      state.setPrayer(today, 'fajr', PrayerStatus.jamaat, now: lateIn(today));
       expect(state.isDone(today, fajr), isTrue);
-      state.setPrayer(today, 'fajr', PrayerStatus.missed);
+      state.setPrayer(today, 'fajr', PrayerStatus.missed, now: lateIn(today));
       expect(state.isDone(today, fajr), isFalse);
     });
 
@@ -178,10 +184,10 @@ void main() {
 
     test('witr toggles the witr routine item', () {
       final today = state.today;
-      state.toggleSunnah(today, 'witr');
+      state.toggleSunnah(today, 'witr', now: lateIn(today));
       expect(state.witrDone(today), isTrue);
       expect(state.isDone(today, state.itemById('witr')!), isTrue);
-      state.toggleSunnah(today, 'witr');
+      state.toggleSunnah(today, 'witr', now: lateIn(today));
       expect(state.witrDone(today), isFalse);
     });
 
@@ -190,18 +196,18 @@ void main() {
       for (var i = 0; i < 99; i++) {
         state.incrementDhikr(today, 'durood@m');
       }
-      expect(state.day(today).done.contains('m_durood'), isFalse);
+      expect(state.isDone(today, state.itemById('m_durood')!), isFalse);
       state.incrementDhikr(today, 'durood@m');
-      expect(state.day(today).done.contains('m_durood'), isTrue);
-      expect(state.day(today).done.contains('e_durood'), isFalse, reason: 'evening is counted separately');
+      expect(state.isDone(today, state.itemById('m_durood')!), isTrue);
+      expect(state.isDone(today, state.itemById('e_durood')!), isFalse, reason: 'evening is counted separately');
       state.incrementDhikr(today, 'durood@m', by: -1);
-      expect(state.day(today).done.contains('m_durood'), isFalse);
+      expect(state.isDone(today, state.itemById('m_durood')!), isFalse);
     });
 
     test('quran pages, target and khatam rollover', () {
       final today = state.today;
       state.addPages(today, 4);
-      expect(state.day(today).done.contains('quran_daily'), isTrue);
+      expect(state.isDone(today, state.itemById('quran_daily')!), isTrue);
       state.addPages(today, 600);
       expect(state.khatamCount, 1);
       expect(state.khatamPages, 0);
@@ -229,7 +235,7 @@ void main() {
 
     test('data persists across reload', () async {
       final today = state.today;
-      state.setPrayer(today, 'isha', PrayerStatus.jamaat);
+      state.setPrayer(today, 'isha', PrayerStatus.jamaat, now: lateIn(today));
       state.settings.urdu = true;
       state.settings.userName = 'Hassan';
       state.saveSettings();
@@ -256,7 +262,7 @@ void main() {
       }
       expect(state.currentStreak(), 3);
       for (final k in prayerKeys) {
-        state.setPrayer(today, k, PrayerStatus.jamaat);
+        state.setPrayer(today, k, PrayerStatus.jamaat, now: lateIn(today));
       }
       expect(state.currentStreak(), 4);
       expect(state.bestStreak(), 4);
@@ -345,9 +351,9 @@ void main() {
       final today = state.today;
       state.startChilla(today);
       for (final k in prayerKeys) {
-        state.setPrayer(today, k, PrayerStatus.jamaat);
+        state.setPrayer(today, k, PrayerStatus.jamaat, now: lateIn(today));
       }
-      state.setDone(today, 'yaseen', true);
+      state.setDone(today, 'yaseen', true, now: lateIn(today));
       for (var i = 0; i < 100; i++) {
         state.incrementDhikr(today, 'kalima3@e');
       }
@@ -374,9 +380,9 @@ void main() {
     test('category stats', () {
       final today = state.today;
       for (final k in prayerKeys) {
-        state.setPrayer(today, k, PrayerStatus.alone);
+        state.setPrayer(today, k, PrayerStatus.alone, now: lateIn(today));
       }
-      state.setDone(today, 'morning_azkar', true);
+      state.setDone(today, 'morning_azkar', true, now: lateIn(today));
       final st = state.categoryStats([today]);
       expect(st['namaz'], 1.0);
       expect(st['azkar'], 0.5);
@@ -384,7 +390,7 @@ void main() {
 
     test('backup export / import round trip', () async {
       final today = state.today;
-      state.setPrayer(today, 'fajr', PrayerStatus.jamaat);
+      state.setPrayer(today, 'fajr', PrayerStatus.jamaat, now: lateIn(today));
       state.addSadaqah(today, 20, 'x');
       final backup = jsonDecode(jsonEncode(state.exportData())) as Map<String, dynamic>;
 
@@ -446,5 +452,219 @@ void main() {
     expect(rec.prayer('fajr'), PrayerStatus.jamaat);
     expect(rec.quranPages, 3);
     expect(rec.note, 'old note');
+  });
+
+  group('Daily Deen 3.0 schedule engine', () {
+    late AppState state;
+    late DateTime today;
+    late DayPrayerTimes times;
+    DateTime at(PrayerName p, [int minutes = 0]) => times[p].toLocal().add(Duration(minutes: minutes));
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      state = await AppState.load();
+      today = state.today;
+      times = state.prayerTimes(today);
+    });
+
+    test('prayer windows follow the next boundary', () {
+      ActivityWindow w(String id) => state.windowOf(state.itemById(id)!, today);
+      expect(w('fajr').start, at(PrayerName.fajr));
+      expect(w('fajr').end, at(PrayerName.sunrise));
+      expect(w('dhuhr').end, at(PrayerName.asr));
+      expect(w('asr').end, at(PrayerName.maghrib));
+      expect(w('maghrib').end, at(PrayerName.isha));
+      final next = state.prayerTimes(today.add(const Duration(days: 1)))[PrayerName.fajr].toLocal();
+      expect(w('isha').end, next);
+      expect(w('morning_azkar').start, at(PrayerName.fajr));
+      expect(w('evening_azkar').start, at(PrayerName.asr));
+      expect(w('ishraq').start, at(PrayerName.sunrise, 20));
+    });
+
+    test('future prayers are locked, current one can be recorded', () {
+      final now = at(PrayerName.dhuhr, 10);
+      expect(state.canRecordPrayer(today, 'dhuhr', now: now), isTrue);
+      expect(state.canRecordPrayer(today, 'asr', now: now), isFalse);
+      expect(state.setPrayer(today, 'asr', PrayerStatus.jamaat, now: now), isFalse);
+      expect(state.day(today).prayer('asr'), PrayerStatus.none);
+      expect(state.setPrayer(today, 'dhuhr', PrayerStatus.jamaat, now: now), isTrue);
+      // A future date is always locked; a past date is editable.
+      final tomorrow = today.add(const Duration(days: 1));
+      expect(state.setPrayer(tomorrow, 'fajr', PrayerStatus.alone, now: now), isFalse);
+      final yesterday = today.subtract(const Duration(days: 1));
+      expect(state.setPrayer(yesterday, 'isha', PrayerStatus.qaza, now: now), isTrue);
+    });
+
+    test('states: upcoming, active, in progress, completed, missed, skipped', () {
+      final morning = state.itemById('morning_azkar')!;
+      final durood = state.itemById('m_durood')!;
+      expect(state.activityState(morning, today, now: at(PrayerName.fajr, -5)), ActivityState.upcoming);
+      expect(state.toggleItem(today, morning, now: at(PrayerName.fajr, -5)), isFalse);
+      expect(state.activityState(morning, today, now: at(PrayerName.fajr, 5)), ActivityState.active);
+      expect(state.activityState(morning, today, now: at(PrayerName.dhuhr, 1)), ActivityState.missed);
+      state.incrementDhikr(today, 'durood@m');
+      expect(state.activityState(durood, today, now: at(PrayerName.fajr, 5)), ActivityState.inProgress);
+      expect(state.toggleItem(today, morning, now: at(PrayerName.fajr, 5)), isTrue);
+      expect(state.activityState(morning, today, now: at(PrayerName.dhuhr, 1)), ActivityState.completed);
+      final yaseen = state.itemById('yaseen')!;
+      state.toggleSkip(today, yaseen);
+      expect(state.activityState(yaseen, today, now: at(PrayerName.dhuhr, 1)), ActivityState.skipped);
+    });
+
+    test('unrecorded past prayer counts as missed', () {
+      final yesterday = today.subtract(const Duration(days: 1));
+      expect(state.effectivePrayerStatus(yesterday, 'fajr'), PrayerStatus.missed);
+      expect(state.scoreFor(yesterday).farzMissed, 5);
+    });
+
+    test('score: only started items count; optional never lowers farz/routine', () {
+      final now = at(PrayerName.fajr, 30);
+      final s0 = state.scoreFor(today, now: now);
+      expect(s0.farzDue, 1, reason: 'only Fajr has started');
+      state.setPrayer(today, 'fajr', PrayerStatus.jamaat, now: now);
+      final s1 = state.scoreFor(today, now: now);
+      expect(s1.farz, 1.0);
+      expect(s1.farzJamaat, 1);
+      final tasbeeh = state.itemById('tasbeeh_100')!;
+      expect(tasbeeh.optional, isTrue);
+      // Missing an optional activity changes neither Farz nor Routine.
+      expect(s1.routineDue, s0.routineDue);
+      expect(s1.optionalDone, 0);
+      for (var i = 0; i < 100; i++) {
+        state.incrementDhikr(today, 'subhanallah');
+      }
+      final s2 = state.scoreFor(today, now: now);
+      expect(s2.optionalDone, 1);
+      expect(s2.farz, s1.farz);
+      expect(s2.routine, s1.routine);
+    });
+
+    test('qaza is tracked separately from on-time prayers', () {
+      final yesterday = today.subtract(const Duration(days: 1));
+      state.setPrayer(yesterday, 'fajr', PrayerStatus.qaza);
+      state.setPrayer(yesterday, 'dhuhr', PrayerStatus.jamaat);
+      state.setPrayer(yesterday, 'asr', PrayerStatus.alone);
+      final sc = state.scoreFor(yesterday);
+      expect(sc.farzQaza, 1);
+      expect(sc.farzJamaat, 1);
+      expect(sc.farzOnTime, 1);
+      expect(sc.farzMissed, 2);
+    });
+
+    test('dhikr target change, reset and undo recalculate completion', () {
+      final item = state.itemById('m_istighfar')!;
+      for (var i = 0; i < 50; i++) {
+        state.incrementDhikr(today, item.dhikrKey!);
+      }
+      expect(state.isDone(today, item), isFalse);
+      state.setDhikrTarget(item.dhikrKey!, 50);
+      expect(state.isDone(today, item), isTrue);
+      final prev = state.resetDhikr(today, item.dhikrKey!);
+      expect(prev, 50);
+      expect(state.isDone(today, item), isFalse);
+      state.restoreDhikr(today, item.dhikrKey!, prev);
+      expect(state.isDone(today, item), isTrue);
+    });
+
+    test('quran target change recalculates and khatam full reset', () {
+      final item = state.itemById('quran_daily')!;
+      state.addPages(today, 3);
+      state.setQuranTarget(3);
+      expect(state.isDone(today, item), isTrue);
+      state.setQuranTarget(5);
+      expect(state.isDone(today, item), isFalse);
+      state.addPages(today, 604);
+      expect(state.khatamCount, 1);
+      state.resetKhatam();
+      expect(state.khatamCount, 1);
+      state.resetKhatamFull();
+      expect(state.khatamCount, 0);
+      expect(state.khatamPages, 0);
+    });
+
+    test('duplicate bookmarks are not stored', () {
+      state.toggleBookmark(2, 255);
+      state.toggleBookmark(2, 255);
+      state.toggleBookmark(2, 255);
+      expect(state.isBookmarked(2, 255), isTrue);
+    });
+
+    test('invalid backup is rejected and data is kept', () async {
+      state.setPrayer(today.subtract(const Duration(days: 1)), 'fajr', PrayerStatus.jamaat);
+      final good = jsonDecode(jsonEncode(state.exportData())) as Map<String, dynamic>;
+      expect(AppState.validateBackup(good), isNull);
+      final bad = jsonDecode(jsonEncode(good)) as Map<String, dynamic>;
+      (bad['data'] as Map)['settings'] = '{not json';
+      expect(await state.importDataSafe(bad), isNotNull);
+      expect(state.day(today.subtract(const Duration(days: 1))).prayer('fajr'), PrayerStatus.jamaat);
+      final future = Map<String, dynamic>.of(good)..['version'] = AppState.backupVersion + 1;
+      expect(await state.importDataSafe(future), isNotNull);
+      expect(await state.importDataSafe(good), isNull);
+    });
+
+    test('old routine data (v2) migrates and keeps ids', () async {
+      final old = [
+        for (final it in defaultRoutine.take(10)) {...it.toJson()}..remove('anchor'),
+        {'id': 'custom_1', 'en': 'Walk', 'ur': 'Walk', 'section': 1, 'time': 7 * 60, 'custom': true},
+      ];
+      SharedPreferences.setMockInitialValues({
+        'settings': jsonEncode({'routine': old, 'rv': 2, 'onboarded': true}),
+      });
+      final migrated = await AppState.load();
+      expect(migrated.itemById('custom_1'), isNotNull);
+      expect(migrated.itemById('m_kalima3'), isNotNull, reason: 'new defaults added');
+      final w = migrated.windowOf(migrated.itemById('custom_1')!, migrated.today);
+      expect(w.start, migrated.today.add(const Duration(hours: 7)));
+    });
+
+    test('custom prayer-relative schedule is used and persisted', () async {
+      final item = state.itemById('yaseen')!;
+      state.updateRoutineItem(item.copyWith(anchor: 'maghrib', startOffset: 5, endAnchor: 'isha', endOffset: -5));
+      final w = state.windowOf(state.itemById('yaseen')!, today);
+      expect(w.start, at(PrayerName.maghrib, 5));
+      expect(w.end, at(PrayerName.isha, -5));
+      final reloaded = await AppState.load();
+      expect(reloaded.itemById('yaseen')!.anchor, 'maghrib');
+      expect(reloaded.itemById('yaseen')!.endOffset, -5);
+    });
+
+    test('yesterday\'s Isha is carried over before Fajr', () {
+      final yesterday = today.subtract(const Duration(days: 1));
+      final early = at(PrayerName.fajr, -20);
+      final carried = state.carriedOver(now: early).map((e) => e.item.id).toList();
+      expect(carried, contains('isha'));
+      expect(state.setPrayer(yesterday, 'isha', PrayerStatus.alone, now: early), isTrue);
+      expect(state.carriedOver(now: early).map((e) => e.item.id), isNot(contains('isha')));
+      expect(state.carriedOver(now: at(PrayerName.fajr, 10)), isEmpty);
+    });
+
+    test('day change on resume notifies and reschedules', () {
+      var calls = 0;
+      state.onScheduleChanged = (_) => calls++;
+      state.onResume(now: DateTime.now());
+      expect(calls, 0);
+      state.onResume(now: DateTime.now().add(const Duration(days: 1)));
+      expect(calls, 1);
+    });
+
+    test('schedule phases are in day order', () {
+      expect(ScheduleEngine.phaseOf(at(PrayerName.fajr, -30), times), DayPhase.earlyMorning);
+      expect(ScheduleEngine.phaseOf(at(PrayerName.fajr, 5), times), DayPhase.afterFajr);
+      expect(ScheduleEngine.phaseOf(at(PrayerName.asr, 5), times), DayPhase.afterAsr);
+      expect(ScheduleEngine.phaseOf(at(PrayerName.isha, 5), times), DayPhase.afterIsha);
+    });
+
+    test('version shown in the app matches pubspec', () {
+      final pub = File('pubspec.yaml').readAsStringSync();
+      final m = RegExp(r'^version:\s*([0-9.]+)', multiLine: true).firstMatch(pub)!;
+      expect(appVersion, m.group(1));
+    });
+
+    test('all new 3.0 strings exist', () {
+      for (final k in ['locked_until', 'prayer_locked', 'counter_completed_hint', 'not_recorded', 'starts_in', 'farz',
+        'routine', 'optional', 'phase_afterIsha', 'retry', 'sehri', 'iftar', 'exact_alarms']) {
+        expect(S.has(k), isTrue, reason: k);
+      }
+    });
   });
 }

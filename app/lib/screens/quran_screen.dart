@@ -22,6 +22,11 @@ class _QuranScreenState extends State<QuranScreen> {
   @override
   void initState() {
     super.initState();
+    _load();
+  }
+
+  void _load() {
+    if (_error) setState(() => _error = false);
     repo.ensureLoaded().then((_) {
       if (mounted) setState(() {});
     }, onError: (_) {
@@ -52,7 +57,7 @@ class _QuranScreenState extends State<QuranScreen> {
         ),
         Expanded(
           child: _error
-              ? EmptyState(icon: Icons.error_outline, text: s.t('quran_load_error'))
+              ? RetryState(text: s.t('quran_load_error'), onRetry: _load)
               : !repo.isLoaded
                   ? const Center(child: CircularProgressIndicator())
                   : CustomScrollView(
@@ -202,8 +207,7 @@ class _TargetCard extends StatelessWidget {
       ),
     );
     if (v != null) {
-      state.settings.quranTarget = v;
-      state.saveSettings();
+      state.setQuranTarget(v);
     }
   }
 }
@@ -419,12 +423,21 @@ class _KhatamTracker extends StatelessWidget {
                     ),
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
-                    child: TextButton(
-                      onPressed: () async {
-                        if (await confirm(context, state, s.t('reset_khatam'))) state.resetKhatam();
-                      },
-                      child: Text(s.t('reset_khatam')),
-                    ),
+                    child: Wrap(alignment: WrapAlignment.end, children: [
+                      TextButton(
+                        onPressed: () async {
+                          if (await confirm(context, state, s.t('reset_khatam'))) state.resetKhatam();
+                        },
+                        child: Text(s.t('reset_khatam')),
+                      ),
+                      TextButton(
+                        key: const Key('reset_khatam_full'),
+                        onPressed: () async {
+                          if (await confirm(context, state, s.t('reset_khatam_full_msg'))) state.resetKhatamFull();
+                        },
+                        child: Text(s.t('reset_khatam_full'), style: const TextStyle(color: AppColors.missed)),
+                      ),
+                    ]),
                   ),
                 ],
               ),
@@ -522,11 +535,20 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       _ayahs = const [];
     });
     final t = ++_token;
-    if (q.trim().length < 3 || RegExp(r'^\d+(:\d+)?$').hasMatch(q.trim())) return;
+    if (q.trim().length < 3 || RegExp(r'^\d+(:\d+)?$').hasMatch(q.trim())) {
+      // Short / numeric query: cancel any running search and its spinner.
+      if (_searching) setState(() => _searching = false);
+      return;
+    }
     await Future<void>.delayed(const Duration(milliseconds: 350));
     if (t != _token) return;
     setState(() => _searching = true);
-    final res = await QuranRepository.instance.searchText(q);
+    List<Ayah> res;
+    try {
+      res = await QuranRepository.instance.searchText(q);
+    } catch (_) {
+      res = const [];
+    }
     if (!mounted || t != _token) return;
     setState(() {
       _ayahs = res;

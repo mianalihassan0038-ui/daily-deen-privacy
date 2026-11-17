@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../core/theme.dart';
 import '../services/hijri.dart';
+import '../services/prayer_times.dart';
 import '../strings.dart';
 import '../widgets/common.dart';
 
@@ -130,6 +131,31 @@ class _IslamicCalendarScreenState extends State<IslamicCalendarScreen> {
           ),
           const SizedBox(height: 8),
           Text(s.t('white_days_hint'), style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
+          SectionTitle('${s.t('sehri')} / ${s.t('iftar')}'),
+          Card(
+            key: const Key('sehri_iftar'),
+            child: Column(children: [
+              for (final d in month.month == 9
+                  ? [for (var i = 0; i < length; i++) DateTime(first.year, first.month, first.day + i)]
+                  : [today])
+                Builder(builder: (c) {
+                  final t = state.prayerTimes(d);
+                  final isToday = d == today;
+                  return ListTile(
+                    dense: month.month == 9,
+                    selected: isToday,
+                    leading: month.month == 9
+                        ? CircleAvatar(radius: 14, child: Text('${HijriDate.fromGregorian(d, adjustDays: adj).day}', style: const TextStyle(fontSize: 11)))
+                        : const Icon(Icons.wb_twilight, color: AppColors.gold),
+                    title: Text(isToday ? s.t('today') : '${d.day} ${(urdu ? monthsUr : monthsEn)[d.month - 1]}'),
+                    trailing: Text(
+                      '${s.t('sehri')} ${formatTime(t[PrayerName.fajr], urdu: urdu)}   ${s.t('iftar')} ${formatTime(t[PrayerName.maghrib], urdu: urdu)}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  );
+                }),
+            ]),
+          ),
           SectionTitle(s.t('upcoming_dates')),
           Card(
             child: Column(children: [

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../app_state.dart';
 import '../core/theme.dart';
 import 'islamic_art.dart';
 
@@ -242,6 +243,35 @@ class IconBadge extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(color: color.withValues(alpha: 0.14), shape: BoxShape.circle),
       child: Icon(icon, color: color, size: size * 0.55),
+    );
+  }
+}
+
+/// Error message with a Retry button.
+class RetryState extends StatelessWidget {
+  final String text;
+  final VoidCallback onRetry;
+  const RetryState({super.key, required this.text, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context).s;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.outline),
+          const SizedBox(height: 12),
+          Text(text, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            key: const Key('retry'),
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: Text(s.t('retry')),
+          ),
+        ]),
+      ),
     );
   }
 }

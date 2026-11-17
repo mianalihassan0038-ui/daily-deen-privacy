@@ -13,6 +13,7 @@ import '../widgets/pickers.dart';
 import '../data/azkar.dart';
 import 'azkar_screen.dart';
 import 'home_screen.dart' show showPrayerStatusSheet;
+import 'navigation.dart' show tryToggle;
 import 'quran_reader_screen.dart';
 
 /// Daily report in the chilla format (prayers, tilawat, morning/evening tasbeehat),
@@ -48,7 +49,7 @@ class _ReportScreenState extends State<ReportScreen> {
       } else if (_surahs.containsKey(id)) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuranReaderScreen(surah: _surahs[id]!)));
       } else {
-        state.toggleItem(date, it);
+        tryToggle(context, state, date, it);
       }
     }
 
@@ -201,7 +202,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                   key: Key('report_$id'),
                                   borderRadius: BorderRadius.circular(16),
                                   onTap: () => openItem(id),
-                                  onLongPress: () => state.toggleItem(date, it),
+                                  onLongPress: () => tryToggle(context, state, date, it),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
                                     child: Column(children: [
@@ -239,7 +240,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                                                   minimumSize: const Size(0, 34),
                                                 ),
-                                                onPressed: () => state.toggleItem(date, it),
+                                                onPressed: () => tryToggle(context, state, date, it),
                                                 icon: const Icon(Icons.check_circle, size: 16),
                                                 label: FittedBox(child: Text(s.t('read'))),
                                               )
@@ -251,7 +252,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                                                   minimumSize: const Size(0, 34),
                                                 ),
-                                                onPressed: () => state.toggleItem(date, it),
+                                                onPressed: () => tryToggle(context, state, date, it),
                                                 icon: const Icon(Icons.radio_button_unchecked, size: 16),
                                                 label: FittedBox(child: Text(s.t('tap_when_read'))),
                                               ),
@@ -622,7 +623,7 @@ class _TasbeehCard extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       icon: Icon(done ? Icons.check_circle : Icons.radio_button_unchecked,
                           color: done ? AppColors.onTime : Theme.of(context).colorScheme.outline),
-                      onPressed: () => state.toggleItem(date, it),
+                      onPressed: () => tryToggle(context, state, date, it),
                     ),
                     Expanded(
                       child: Text(reportItemName(it, urdu),

@@ -63,7 +63,13 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
         ),
       ],
       body: _error != null
-          ? EmptyState(icon: Icons.error_outline, text: s.t('quran_load_error'))
+          ? RetryState(
+              text: s.t('quran_load_error'),
+              onRetry: () {
+                setState(() => _error = null);
+                _load();
+              },
+            )
           : ayahs == null
               ? const Center(child: CircularProgressIndicator())
               : _buildList(context, state, info!, ayahs),

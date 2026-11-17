@@ -1,16 +1,29 @@
 import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/main.dart';
 import 'package:dailydeen/screens/shell.dart';
+import 'package:dailydeen/services/schedule.dart';
+import 'package:dailydeen/services/prayer_times.dart';
 import 'package:dailydeen/services/quran_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  Future<AppState> pumpApp(WidgetTester tester, {bool onboarded = true, bool splash = false}) async {
+  /// Fixes the app clock at [after] + [minutes] today so the schedule state
+  /// is deterministic (default: 30 minutes after Fajr).
+  void setClock(AppState state, {PrayerName after = PrayerName.fajr, int minutes = 30}) {
+    clock = DateTime.now;
+    final t = state.prayerTimes(state.today)[after].toLocal().add(Duration(minutes: minutes));
+    clock = () => t;
+  }
+
+  tearDown(() => clock = DateTime.now);
+
+  Future<AppState> pumpApp(WidgetTester tester, {bool onboarded = true, bool splash = false, PrayerName after = PrayerName.fajr, int minutes = 30}) async {
     await tester.runAsync(() => QuranRepository.instance.ensureLoaded());
     SharedPreferences.setMockInitialValues({});
     final state = await AppState.load();
+    setClock(state, after: after, minutes: minutes);
     state.settings.onboarded = onboarded;
     state.settings.userName = 'Hassan';
     tester.view.physicalSize = const Size(1080, 2400);
@@ -58,25 +71,92 @@ void main() {
     expect(find.textContaining('Ali'), findsWidgets);
   });
 
-  testWidgets('Home shows greeting, progress, next prayer and checklist', (tester) async {
-    await pumpApp(tester);
+  testWidgets('Home shows greeting, score, current activity and sections', (tester) async {
+    final state = await pumpApp(tester);
     expect(find.textContaining('Assalamu Alaikum, Hassan'), findsOneWidget);
-    expect(find.text('Next Prayer'), findsOneWidget);
+    expect(find.byKey(const Key('score_card')), findsOneWidget);
+    expect(find.byKey(const Key('now_card')), findsOneWidget);
     expect(find.byKey(const Key('countdown')), findsOneWidget);
+    // 30 min after Fajr: Fajr is the current activity.
+    expect(find.descendant(of: find.byKey(const Key('now_card')), matching: find.text('Fajr')), findsOneWidget);
     expect(find.byKey(const Key('home_prayer_fajr')), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const Key('routine_wudu')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('routine_wudu')), findsOneWidget);
+    // Morning azkar is available now, evening azkar is not shown as open.
+    expect(find.descendant(of: find.byKey(const Key('now_section')), matching: find.byKey(const Key('routine_morning_azkar'))),
+        findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('now_section')), matching: find.byKey(const Key('routine_evening_azkar'))),
+        findsNothing);
+    expect(state.activityState(state.itemById('morning_azkar')!, state.today), ActivityState.active);
   });
 
-  testWidgets('Tapping a routine check marks it done and updates progress', (tester) async {
+  testWidgets('After Dhuhr: missed morning items are in the collapsible Earlier section', (tester) async {
+    final state = await pumpApp(tester, after: PrayerName.dhuhr, minutes: 30);
+    expect(state.activityState(state.itemById('morning_azkar')!, state.today), ActivityState.missed);
+    await tester.ensureVisible(find.byKey(const Key('earlier_toggle')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('routine_morning_azkar')), findsNothing);
+    await tester.tap(find.byKey(const Key('earlier_toggle')));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('earlier_section')), matching: find.byKey(const Key('routine_morning_azkar'))),
+        findsOneWidget);
+  });
+
+  testWidgets('Tapping a routine check marks it done and updates the score', (tester) async {
     final state = await pumpApp(tester);
-    await tester.ensureVisible(find.byKey(const Key('routine_check_wudu')));
+    final before = state.scoreFor(state.today).done;
+    await tester.ensureVisible(find.byKey(const Key('routine_check_morning_azkar')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('routine_check_wudu')));
+    await tester.tap(find.byKey(const Key('routine_check_morning_azkar')));
     await tester.pumpAndSettle();
-    expect(state.day(state.today).done.contains('wudu'), isTrue);
-    expect(state.completion(state.today).$1, 1);
+    expect(state.isDone(state.today, state.itemById('morning_azkar')!), isTrue);
+    expect(state.scoreFor(state.today).done, before + 1);
+    expect(state.completedTime(state.today, 'morning_azkar'), isNotNull);
+  });
+
+  testWidgets('Upcoming activities are locked and cannot be completed', (tester) async {
+    final state = await pumpApp(tester);
+    final evening = state.itemById('evening_azkar')!;
+    expect(state.activityState(evening, state.today), ActivityState.upcoming);
+    expect(state.toggleItem(state.today, evening), isFalse);
+    expect(state.isDone(state.today, evening), isFalse);
+    await tester.ensureVisible(find.byKey(const Key('upcoming_section')));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('upcoming_section')), matching: find.byIcon(Icons.lock_outline)),
+        findsWidgets);
+  });
+
+  testWidgets('Locked prayer cannot be recorded before its time', (tester) async {
+    final state = await pumpApp(tester);
+    await openTab(tester, 'Namaz');
+    await tester.ensureVisible(find.byKey(const Key('prayer_asr')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('prayer_asr')));
+    await tester.pumpAndSettle();
+    final chip = find.byKey(const Key('status_asr_jamaat'));
+    if (chip.evaluate().isNotEmpty) {
+      await tester.tap(chip, warnIfMissed: false);
+      await tester.pumpAndSettle();
+    }
+    expect(state.day(state.today).prayer('asr'), PrayerStatus.none);
+    expect(state.setPrayer(state.today, 'asr', PrayerStatus.jamaat), isFalse);
+  });
+
+  testWidgets('Evening: morning azkar missed, evening azkar active', (tester) async {
+    final state = await pumpApp(tester, after: PrayerName.asr, minutes: 20);
+    expect(state.activityState(state.itemById('morning_azkar')!, state.today), ActivityState.missed);
+    expect(state.activityState(state.itemById('evening_azkar')!, state.today), ActivityState.active);
+    expect(find.descendant(of: find.byKey(const Key('now_section')), matching: find.byKey(const Key('routine_evening_azkar'))),
+        findsOneWidget);
+  });
+
+  testWidgets('Urdu RTL and dark mode render the home screen', (tester) async {
+    final state = await pumpApp(tester);
+    state.settings.urdu = true;
+    state.settings.themeMode = ThemeMode.dark;
+    state.saveSettings();
+    await tester.pumpAndSettle();
+    expect(Directionality.of(tester.element(find.byKey(const Key('now_card')))), TextDirection.rtl);
+    expect(Theme.of(tester.element(find.byKey(const Key('now_card')))).brightness, Brightness.dark);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Counted tasks complete automatically and show progress', (tester) async {

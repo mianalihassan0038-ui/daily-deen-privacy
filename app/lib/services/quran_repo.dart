@@ -47,7 +47,12 @@ class QuranRepository {
   List<List<int>> get juzStarts => _juzStarts;
   List<List<int>> get pageStarts => _pageStarts;
 
-  Future<void> ensureLoaded() => _loading ??= _load();
+  /// Loads the index once. A failed load is forgotten so the next call
+  /// retries instead of returning the same failed Future forever.
+  Future<void> ensureLoaded() => _loading ??= _load().catchError((Object e) {
+        _loading = null;
+        throw e;
+      });
 
   Future<void> _load() async {
     final raw = await _loadText('assets/quran/index.json');

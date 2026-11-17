@@ -117,6 +117,8 @@ class _MuhasabaScreenState extends State<MuhasabaScreen> {
               if (item != null && v.trim().isNotEmpty && !state.isDone(_date, item)) state.setDone(_date, 'muhasaba', true);
             },
           ),
+          const SizedBox(height: 12),
+          _PeriodReview(date: _date),
           const SizedBox(height: 8),
           Row(children: [
             Icon(Icons.lock_outline, size: 16, color: theme.colorScheme.outline),
@@ -132,4 +134,94 @@ class _MuhasabaScreenState extends State<MuhasabaScreen> {
         padding: const EdgeInsets.symmetric(vertical: 3),
         child: Row(children: [Icon(icon, size: 18, color: AppColors.gold), const SizedBox(width: 8), Text(text)]),
       );
+}
+
+
+/// Weekly / monthly reflection: an automatic summary of the period plus a
+/// free-text review stored on the period's first day.
+class _PeriodReview extends StatefulWidget {
+  final DateTime date;
+  const _PeriodReview({required this.date});
+
+  @override
+  State<_PeriodReview> createState() => _PeriodReviewState();
+}
+
+class _PeriodReviewState extends State<_PeriodReview> {
+  bool _monthly = false;
+  final _ctrl = TextEditingController();
+  String? _loadedKey;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final s = state.s;
+    final d = widget.date;
+    final start = _monthly ? DateTime(d.year, d.month, 1) : DateTime(d.year, d.month, d.day - (d.weekday - 1));
+    final end = _monthly ? DateTime(d.year, d.month + 1, 1) : DateTime(start.year, start.month, start.day + 7);
+    final field = _monthly ? 'month_review' : 'week_review';
+    final key = '${start.toIso8601String()}|$field';
+    if (_loadedKey != key) {
+      _ctrl.text = state.day(start).muhasaba[field] ?? '';
+      _loadedKey = key;
+    }
+    final today = state.today;
+    var days = 0, prayers = 0, pages = 0, ratingSum = 0, rated = 0;
+    var score = 0.0;
+    for (var x = start; x.isBefore(end) && !x.isAfter(today); x = DateTime(x.year, x.month, x.day + 1)) {
+      days++;
+      final rec = state.day(x);
+      prayers += rec.farzPrayed;
+      pages += rec.quranPages;
+      score += state.scoreFor(x).overall;
+      final r = int.tryParse(rec.muhasaba['rating'] ?? '');
+      if (r != null) {
+        ratingSum += r;
+        rated++;
+      }
+    }
+    final avg = days == 0 ? 0 : (score / days * 100).round();
+    return Card(
+      key: const Key('period_review'),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(value: false, label: Text(s.t('weekly_review'))),
+              ButtonSegment(value: true, label: Text(s.t('monthly_review'))),
+            ],
+            selected: {_monthly},
+            onSelectionChanged: (v) => setState(() => _monthly = v.first),
+          ),
+          const SizedBox(height: 10),
+          Wrap(spacing: 14, runSpacing: 6, children: [
+            Text('${s.t('score_history')}: $avg%'),
+            Text('${s.t('prayers')}: $prayers/${days * 5}'),
+            Text('${s.t('quran')}: $pages ${s.t('pages')}'),
+            if (rated > 0) Text('★ ${(ratingSum / rated).toStringAsFixed(1)}'),
+          ]),
+          const SizedBox(height: 10),
+          TextField(
+            key: Key('review_$field'),
+            controller: _ctrl,
+            minLines: 2,
+            maxLines: 6,
+            maxLength: 3000,
+            decoration: InputDecoration(
+              labelText: _monthly ? s.t('monthly_review') : s.t('weekly_review'),
+              alignLabelWithHint: true,
+            ),
+            onChanged: (v) => state.setMuhasaba(start, field, v),
+          ),
+        ]),
+      ),
+    );
+  }
 }

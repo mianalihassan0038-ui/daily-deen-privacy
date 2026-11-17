@@ -8,6 +8,8 @@ import '../strings.dart';
 import '../widgets/common.dart';
 import '../widgets/pickers.dart';
 import 'navigation.dart';
+import 'home_screen.dart' show StateChip;
+import '../services/schedule.dart';
 
 /// "My Daily Routine" timeline + editor.
 class RoutineScreen extends StatefulWidget {
@@ -119,97 +121,137 @@ class _RoutineScreenState extends State<RoutineScreen> {
   }
 }
 
-class _Timeline extends StatelessWidget {
+class _Timeline extends StatefulWidget {
   const _Timeline();
+
+  @override
+  State<_Timeline> createState() => _TimelineState();
+}
+
+class _TimelineState extends State<_Timeline> {
+  late DateTime _date = AppScope.of(context).today;
+  bool _dateInit = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_dateInit) {
+      _date = AppScope.of(context).today;
+      _dateInit = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final s = state.s;
     final urdu = state.settings.urdu;
-    final today = state.today;
-    final items = state.routineFor(today);
-    final times = state.prayerTimes(today);
+    final now = clock();
+    final date = _date;
+    final entries = state.scheduleFor(date, now: now);
+    final times = state.prayerTimes(date);
     final theme = Theme.of(context);
-    if (items.isEmpty) return EmptyState(icon: Icons.event_note, text: s.t('no_activities'));
+    final isToday = date == state.today;
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
-      itemCount: items.length,
-      itemBuilder: (c, i) {
-        final it = items[i];
-        final done = state.isDone(today, it);
-        final skipped = state.isSkipped(today, it);
-        final (icon, color) = categoryVisual(it.category);
-        String time = it.time(urdu);
-        if (it.prayerKey != null) {
-          final p = PrayerName.values.firstWhere((e) => e.name == it.prayerKey);
-          time = formatTime(times[p], urdu: urdu);
-        }
-        return IntrinsicHeight(
-          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            SizedBox(
-              width: 40,
-              child: Column(children: [
-                Expanded(child: Container(width: 2, color: i == 0 ? Colors.transparent : theme.dividerColor)),
-                GestureDetector(
-                  onTap: () => state.toggleItem(today, it),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: done ? AppColors.onTime : color.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: done ? AppColors.onTime : color, width: 1.5),
-                    ),
-                    child: Icon(done ? Icons.check : icon, size: 16, color: done ? Colors.white : color),
+    final rows = <Widget>[
+      // Day picker: today and the previous 6 days (history / past edits).
+      SizedBox(
+        height: 44,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            for (var i = 0; i < 7; i++)
+              Builder(builder: (c) {
+                final d = DateTime(state.today.year, state.today.month, state.today.day - i);
+                return Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 6),
+                  child: ChoiceChip(
+                    key: Key('routine_day_$i'),
+                    label: Text(i == 0
+                        ? s.t('today')
+                        : '${(urdu ? weekdaysUr : weekdaysEn)[d.weekday - 1].substring(0, urdu ? null : 3)} ${d.day}'),
+                    selected: d == date,
+                    onSelected: (_) => setState(() => _date = d),
                   ),
-                ),
-                Expanded(child: Container(width: 2, color: i == items.length - 1 ? Colors.transparent : theme.dividerColor)),
-              ]),
-            ),
-            Expanded(
-              child: InkWell(
-                key: Key('timeline_${it.id}'),
-                borderRadius: BorderRadius.circular(14),
-                onTap: () => openActivity(context, it, today),
-                onLongPress: () => showActivitySheet(context, it, today),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Text(time.isEmpty ? '—' : time, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                      if (it.reminder) ...[
-                        const SizedBox(width: 6),
-                        const Icon(Icons.notifications_active, size: 14, color: AppColors.gold),
-                      ],
-                      const Spacer(),
-                      if (skipped) Text(s.t('skipped'), style: TextStyle(color: theme.colorScheme.outline, fontSize: 12)),
-                      IconButton(
-                        key: Key('timeline_check_${it.id}'),
-                        visualDensity: VisualDensity.compact,
-                        tooltip: done ? s.t('mark_not_done') : s.t('mark_done'),
-                        onPressed: () => state.toggleItem(today, it),
-                        icon: Icon(done ? Icons.check_circle : Icons.radio_button_unchecked,
-                            color: done ? AppColors.onTime : theme.colorScheme.outline, size: 28),
-                      ),
-                    ]),
-                    Text(
-                      it.name(urdu),
-                      style: TextStyle(
-                        decoration: done || skipped ? TextDecoration.lineThrough : null,
-                        color: done || skipped ? theme.colorScheme.outline : null,
-                      ),
+                );
+              }),
+          ],
+        ),
+      ),
+      if (!isToday)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(s.t('editing_past_day'), style: theme.textTheme.bodySmall?.copyWith(color: AppColors.delayed)),
+        ),
+    ];
+    if (entries.isEmpty) {
+      rows.add(EmptyState(icon: Icons.event_note, text: s.t('no_activities')));
+    }
+    DayPhase? last;
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      final it = e.item;
+      final phase = ScheduleEngine.phaseOf(e.window.start, times);
+      if (phase != last) {
+        last = phase;
+        rows.add(Padding(
+          padding: const EdgeInsets.fromLTRB(4, 16, 4, 6),
+          child: Text(s.t('phase_${phase.name}'),
+              key: Key('phase_${phase.name}'),
+              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, color: theme.colorScheme.primary)),
+        ));
+      }
+      final st = e.state;
+      final done = st == ActivityState.completed;
+      final locked = st == ActivityState.upcoming;
+      final (icon, color) = categoryVisual(it.category);
+      final range = '${formatTime(e.window.start, urdu: urdu)} – ${formatTime(e.window.end, urdu: urdu)}';
+      rows.add(Card(
+        margin: const EdgeInsets.symmetric(vertical: 3),
+        child: InkWell(
+          key: Key('timeline_${it.id}'),
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => openActivity(context, it, date),
+          onLongPress: () => showActivitySheet(context, it, date),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 4, 8),
+            child: Row(children: [
+              IconBadge(locked ? Icons.lock_clock : icon, color: st == ActivityState.missed ? AppColors.missed : color, size: 36),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    it.name(urdu),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      decoration: done || st == ActivityState.skipped ? TextDecoration.lineThrough : null,
+                      color: done || locked ? theme.colorScheme.outline : null,
                     ),
-                    if (it.target(urdu).isNotEmpty) Text(it.target(urdu), style: theme.textTheme.bodySmall),
+                  ),
+                  const SizedBox(height: 2),
+                  Wrap(spacing: 6, runSpacing: 2, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Text(range, style: theme.textTheme.bodySmall),
+                    if (it.reminder) const Icon(Icons.notifications_active, size: 13, color: AppColors.gold),
+                    StateChip(state: st),
                   ]),
+                ]),
+              ),
+              IconButton(
+                key: Key('timeline_check_${it.id}'),
+                tooltip: locked ? s.t('locked') : (done ? s.t('mark_not_done') : s.t('mark_done')),
+                onPressed: () => tryToggle(context, state, date, it, now: now),
+                icon: Icon(
+                  done ? Icons.check_circle : (locked ? Icons.lock_outline : Icons.radio_button_unchecked),
+                  color: done ? AppColors.onTime : theme.colorScheme.outline,
+                  size: 28,
                 ),
               ),
-            ),
-          ]),
-        );
-      },
-    );
+            ]),
+          ),
+        ),
+      ));
+    }
+    return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 96), children: rows);
   }
 }
 
@@ -294,6 +336,11 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
   bool _reminder = false;
   bool _optional = false;
   bool _init = false;
+  bool _customSchedule = false;
+  String _anchor = 'fajr';
+  int _startOff = 0;
+  String _endAnchor = 'dhuhr';
+  int _endOff = 0;
 
   @override
   void dispose() {
@@ -314,6 +361,12 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
       _days = it.fridayOnly && it.days.isEmpty ? {5} : Set<int>.of(it.days);
       _reminder = it.reminder;
       _optional = it.optional;
+      _customSchedule = it.anchor != null;
+      final spec = ScheduleEngine.specOf(it);
+      _anchor = spec.anchor;
+      _startOff = spec.startOffset;
+      _endAnchor = spec.endAnchor;
+      _endOff = spec.endOffset;
     }
     _init = true;
   }
@@ -335,9 +388,13 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
         category: _category,
         timeMinutes: _time,
         days: _days.length == 7 ? <int>{} : _days,
-        reminder: _reminder && _time != null,
+        reminder: _reminder,
         optional: _optional,
         custom: true,
+        anchor: _customSchedule ? _anchor : null,
+        startOffset: _customSchedule ? _startOff : 0,
+        endAnchor: _customSchedule ? _endAnchor : null,
+        endOffset: _customSchedule ? _endOff : 0,
       ));
     } else {
       final sameNames = it.en == it.ur;
@@ -351,8 +408,13 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
         timeMinutes: _time,
         clearTime: _time == null,
         days: _days.length == 7 ? <int>{} : _days,
-        reminder: _reminder && _time != null,
+        reminder: _reminder,
         optional: _optional,
+        clearSchedule: !_customSchedule,
+        anchor: _customSchedule ? _anchor : null,
+        startOffset: _customSchedule ? _startOff : null,
+        endAnchor: _customSchedule ? _endAnchor : null,
+        endOffset: _customSchedule ? _endOff : null,
       ));
     }
     Navigator.of(context).pop();
@@ -456,14 +518,31 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
                 ),
             ]),
             const SizedBox(height: 12),
-            if (!isPrayer)
+            if (!isPrayer) ...[
+              _ScheduleEditor(
+                custom: _customSchedule,
+                anchor: _anchor,
+                startOffset: _startOff,
+                endAnchor: _endAnchor,
+                endOffset: _endOff,
+                hasTime: _time != null,
+                onChanged: (custom, a, so, e, eo) => setState(() {
+                  _customSchedule = custom;
+                  _anchor = a;
+                  _startOff = so;
+                  _endAnchor = e;
+                  _endOff = eo;
+                }),
+              ),
               SwitchListTile(
+                key: const Key('activity_reminder'),
                 contentPadding: EdgeInsets.zero,
                 title: Text(s.t('reminder')),
-                subtitle: Text(_time == null ? s.t('reminder_needs_time') : s.t('reminder_at_time')),
-                value: _reminder && _time != null,
-                onChanged: _time == null ? null : (v) => setState(() => _reminder = v),
+                subtitle: Text(s.t('reminder_at_time')),
+                value: _reminder,
+                onChanged: (v) => setState(() => _reminder = v),
               ),
+            ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(s.t('optional')),
@@ -492,6 +571,98 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+/// Prayer-relative schedule editor: start anchor + offset, end anchor + offset.
+class _ScheduleEditor extends StatelessWidget {
+  final bool custom;
+  final String anchor;
+  final int startOffset;
+  final String endAnchor;
+  final int endOffset;
+  final bool hasTime;
+  final void Function(bool custom, String anchor, int startOffset, String endAnchor, int endOffset) onChanged;
+  const _ScheduleEditor({
+    required this.custom,
+    required this.anchor,
+    required this.startOffset,
+    required this.endAnchor,
+    required this.endOffset,
+    required this.hasTime,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context).s;
+    String label(String a) => switch (a) {
+          'fixed' => s.t('anchor_fixed'),
+          'day' => s.t('anchor_day'),
+          'midnight' => s.t('midnight'),
+          'next_fajr' => s.t('anchor_next_fajr'),
+          _ => s.t(a),
+        };
+    final anchors = [for (final a in scheduleAnchors) if (a != 'fixed' || hasTime) a];
+    final a = anchors.contains(anchor) ? anchor : 'day';
+    Widget offset(Key key, int value, void Function(int) set) => SizedBox(
+          width: 92,
+          child: TextFormField(
+            key: key,
+            initialValue: '$value',
+            keyboardType: const TextInputType.numberWithOptions(signed: true),
+            decoration: InputDecoration(labelText: s.t('offset_min'), isDense: true),
+            onChanged: (v) => set((int.tryParse(v.trim()) ?? 0).clamp(-600, 600).toInt()),
+          ),
+        );
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          SwitchListTile(
+            key: const Key('schedule_custom'),
+            contentPadding: EdgeInsets.zero,
+            secondary: const Icon(Icons.schedule),
+            title: Text(s.t('schedule')),
+            subtitle: Text(custom ? '' : s.t('use_default_schedule')),
+            value: custom,
+            onChanged: (v) => onChanged(v, a, startOffset, endAnchor, endOffset),
+          ),
+          if (custom) ...[
+            Row(children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  key: const Key('schedule_anchor'),
+                  initialValue: a,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: s.t('starts_with')),
+                  items: [for (final x in anchors) DropdownMenuItem(value: x, child: Text(label(x)))],
+                  onChanged: (v) => onChanged(true, v ?? a, startOffset, endAnchor, endOffset),
+                ),
+              ),
+              const SizedBox(width: 10),
+              offset(const Key('schedule_start_off'), startOffset, (v) => onChanged(true, a, v, endAnchor, endOffset)),
+            ]),
+            const SizedBox(height: 8),
+            Row(children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  key: const Key('schedule_end'),
+                  initialValue: scheduleEndAnchors.contains(endAnchor) ? endAnchor : 'midnight',
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: s.t('ends_with')),
+                  items: [for (final x in scheduleEndAnchors) DropdownMenuItem(value: x, child: Text(label(x)))],
+                  onChanged: (v) => onChanged(true, a, startOffset, v ?? endAnchor, endOffset),
+                ),
+              ),
+              const SizedBox(width: 10),
+              offset(const Key('schedule_end_off'), endOffset, (v) => onChanged(true, a, startOffset, endAnchor, v)),
+            ]),
+          ],
+        ]),
       ),
     );
   }

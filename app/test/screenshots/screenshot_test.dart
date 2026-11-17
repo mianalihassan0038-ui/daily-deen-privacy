@@ -12,6 +12,7 @@ import 'package:dailydeen/screens/report_screen.dart';
 import 'package:dailydeen/screens/routine_screen.dart';
 import 'package:dailydeen/screens/settings_screen.dart';
 import 'package:dailydeen/screens/shell.dart';
+import 'package:dailydeen/services/prayer_times.dart';
 import 'package:dailydeen/services/quran_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,6 +71,11 @@ void main() {
       ..onboarded = true
       ..userName = 'Hassan'
       ..cityIndex = 1;
+    // Deterministic time: 20 minutes after Asr.
+    clock = DateTime.now;
+    final at = state.prayerTimes(state.today)[PrayerName.asr].toLocal().add(const Duration(minutes: 20));
+    clock = () => at;
+    addTearDown(() => clock = DateTime.now);
     final today = state.today;
     for (var i = 1; i <= 20; i++) {
       final d = today.subtract(Duration(days: i));

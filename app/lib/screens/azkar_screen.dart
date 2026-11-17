@@ -509,7 +509,17 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
                 onPressed: count == 0
                     ? null
                     : () async {
-                        if (await confirm(context, state, s.t('reset_counter'))) state.resetDhikr(today, d.key);
+                        if (await confirm(context, state, s.t('reset_counter'), message: s.t('reset_counter_msg'))) {
+                          final prev = state.resetDhikr(today, d.key);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(SnackBar(
+                                content: Text(s.t('counter_reset')),
+                                action: SnackBarAction(label: s.t('undo'), onPressed: () => state.restoreDhikr(today, d.key, prev)),
+                              ));
+                          }
+                        }
                       },
                 icon: const Icon(Icons.refresh),
                 label: Text(s.t('reset')),

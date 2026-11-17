@@ -21,6 +21,7 @@ perms = (
     '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n'
     '    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>\n'
     '    <uses-permission android:name="android.permission.VIBRATE"/>\n'
+    '    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>\n'
     '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n'
 )
 if "POST_NOTIFICATIONS" not in m:
@@ -53,6 +54,36 @@ if "<queries>" not in m:
 elif 'android:scheme="https"' not in m:
     m = m.replace("<queries>", queries.strip().replace("<queries>", "<queries>", 1).replace("</queries>", "").rstrip(), 1)
 manifest.write_text(m)
+
+# ---------------- MainActivity: magnetic declination channel ----------------
+main_activity = (
+    "package com.aurialtech.dailydeen\n\n"
+    "import android.hardware.GeomagneticField\n"
+    "import io.flutter.embedding.android.FlutterActivity\n"
+    "import io.flutter.embedding.engine.FlutterEngine\n"
+    "import io.flutter.plugin.common.MethodChannel\n\n"
+    "class MainActivity : FlutterActivity() {\n"
+    "    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {\n"
+    "        super.configureFlutterEngine(flutterEngine)\n"
+    "        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, \"dailydeen/geo\").setMethodCallHandler { call, result ->\n"
+    "            if (call.method == \"declination\") {\n"
+    "                try {\n"
+    "                    val lat = (call.argument<Double>(\"lat\") ?: 0.0).toFloat()\n"
+    "                    val lng = (call.argument<Double>(\"lng\") ?: 0.0).toFloat()\n"
+    "                    val field = GeomagneticField(lat, lng, 0f, System.currentTimeMillis())\n"
+    "                    result.success(field.declination.toDouble())\n"
+    "                } catch (e: Exception) {\n"
+    "                    result.error(\"geo\", e.message, null)\n"
+    "                }\n"
+    "            } else {\n"
+    "                result.notImplemented()\n"
+    "            }\n"
+    "        }\n"
+    "    }\n"
+    "}\n"
+)
+for f in (app / "src/main/kotlin").rglob("MainActivity.kt"):
+    f.write_text(main_activity)
 
 # ---------------- green launch screen ----------------
 launch = (

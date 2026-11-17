@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../app_state.dart';
@@ -55,8 +56,34 @@ class _QiblaScreenState extends State<QiblaScreen> {
   StreamSubscription<MagnetometerEvent>? _magSub;
   List<double>? _g;
   List<double>? _m;
-  double? _heading;
+  double? _heading; // magnetic heading
+  double _declination = 0; // true north = magnetic + declination
+  bool _hasDeclination = false;
   bool _sensorError = false;
+  DateTime _lastPaint = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const _geo = MethodChannel('dailydeen/geo');
+
+  Future<void> _loadDeclination() async {
+    try {
+      final st = AppScope.of(context).settings;
+      final d = await _geo.invokeMethod<double>('declination', {'lat': st.lat, 'lng': st.lng});
+      if (d != null && mounted) {
+        setState(() {
+          _declination = d;
+          _hasDeclination = true;
+        });
+      }
+    } catch (_) {
+      // Not available (tests / other platforms): magnetic heading is used.
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasDeclination) _loadDeclination();
+  }
 
   @override
   void initState() {
@@ -64,7 +91,9 @@ class _QiblaScreenState extends State<QiblaScreen> {
     try {
       _accSub = accelerometerEventStream(samplingPeriod: SensorInterval.uiInterval).listen(
         (e) => _g = _lowPass([e.x, e.y, e.z], _g),
-        onError: (_) => setState(() => _sensorError = true),
+        onError: (_) {
+          if (mounted) setState(() => _sensorError = true);
+        },
         cancelOnError: true,
       );
       _magSub = magnetometerEventStream(samplingPeriod: SensorInterval.uiInterval).listen(
@@ -72,10 +101,20 @@ class _QiblaScreenState extends State<QiblaScreen> {
           _m = _lowPass([e.x, e.y, e.z], _m);
           if (_g != null && _m != null) {
             final h = headingFrom(_g!, _m!);
-            if (h != null && mounted) setState(() => _heading = h);
+            // Throttle repaints (~12 fps) and ignore sub-degree jitter.
+            final now = DateTime.now();
+            if (h != null &&
+                mounted &&
+                now.difference(_lastPaint).inMilliseconds >= 80 &&
+                (_heading == null || ((h - _heading! + 540) % 360 - 180).abs() >= 0.5)) {
+              _lastPaint = now;
+              setState(() => _heading = h);
+            }
           }
         },
-        onError: (_) => setState(() => _sensorError = true),
+        onError: (_) {
+          if (mounted) setState(() => _sensorError = true);
+        },
         cancelOnError: true,
       );
     } catch (_) {
@@ -103,7 +142,7 @@ class _QiblaScreenState extends State<QiblaScreen> {
     final theme = Theme.of(context);
     final st = state.settings;
     final bearing = qiblaBearing(st.lat, st.lng);
-    final heading = _heading;
+    final heading = _heading == null ? null : (_heading! + _declination + 360) % 360;
     final diff = heading == null ? null : ((bearing - heading + 540) % 360) - 180;
     final facing = diff != null && diff.abs() <= 5;
 
@@ -164,7 +203,10 @@ class _QiblaScreenState extends State<QiblaScreen> {
                   color: facing ? AppColors.onTime : theme.colorScheme.primary,
                 ),
               ),
-              Text('${s.t('heading')}: ${heading.round()}°', style: theme.textTheme.bodySmall),
+              Text(
+                '${s.t('heading')}: ${heading.round()}° ${_hasDeclination ? s.t('true_north') : s.t('magnetic_north')}',
+                style: theme.textTheme.bodySmall,
+              ),
             ]),
           const SizedBox(height: 20),
           Card(
