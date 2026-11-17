@@ -175,7 +175,7 @@ void main() {
       expect(baqarah.length, 286);
       expect(baqarah[254].indoPak, isNotEmpty);
       expect(baqarah[0].text(true), isNot(baqarah[0].text(false)));
-      expect(repo.rukuOf(2, 8), (2, 2));
+      expect(repo.rukuOf(2, 8), (2, 3)); // 2nd ruku of Baqarah, 3rd ruku of Para 1
       expect(repo.rukuOf(1, 1), (1, 1));
       var total = 0;
       for (final s in repo.surahs) {
