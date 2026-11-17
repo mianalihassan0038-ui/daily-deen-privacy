@@ -432,6 +432,7 @@ class _RoutineEditScreenState extends State<RoutineEditScreen> {
       body: Form(
         key: _form,
         child: ListView(
+          cacheExtent: 4000,
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
             TextFormField(

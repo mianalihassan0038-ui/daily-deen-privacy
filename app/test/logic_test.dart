@@ -239,6 +239,7 @@ void main() {
       state.settings.urdu = true;
       state.settings.userName = 'Hassan';
       state.saveSettings();
+      await state.flush();
       final reloaded = await AppState.load();
       expect(reloaded.day(today).prayer('isha'), PrayerStatus.jamaat);
       expect(reloaded.settings.urdu, isTrue);
@@ -392,6 +393,7 @@ void main() {
       final today = state.today;
       state.setPrayer(today, 'fajr', PrayerStatus.jamaat, now: lateIn(today));
       state.addSadaqah(today, 20, 'x');
+      await state.flush();
       final backup = jsonDecode(jsonEncode(state.exportData())) as Map<String, dynamic>;
 
       SharedPreferences.setMockInitialValues({});
@@ -591,6 +593,7 @@ void main() {
 
     test('invalid backup is rejected and data is kept', () async {
       state.setPrayer(today.subtract(const Duration(days: 1)), 'fajr', PrayerStatus.jamaat);
+      await state.flush();
       final good = jsonDecode(jsonEncode(state.exportData())) as Map<String, dynamic>;
       expect(AppState.validateBackup(good), isNull);
       final bad = jsonDecode(jsonEncode(good)) as Map<String, dynamic>;
@@ -620,6 +623,7 @@ void main() {
     test('custom prayer-relative schedule is used and persisted', () async {
       final item = state.itemById('yaseen')!;
       state.updateRoutineItem(item.copyWith(anchor: 'maghrib', startOffset: 5, endAnchor: 'isha', endOffset: -5));
+      await state.flush();
       final w = state.windowOf(state.itemById('yaseen')!, today);
       expect(w.start, at(PrayerName.maghrib, 5));
       expect(w.end, at(PrayerName.isha, -5));

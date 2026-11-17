@@ -148,8 +148,8 @@ class _IslamicCalendarScreenState extends State<IslamicCalendarScreen> {
                         ? CircleAvatar(radius: 14, child: Text('${HijriDate.fromGregorian(d, adjustDays: adj).day}', style: const TextStyle(fontSize: 11)))
                         : const Icon(Icons.wb_twilight, color: AppColors.gold),
                     title: Text(isToday ? s.t('today') : '${d.day} ${(urdu ? monthsUr : monthsEn)[d.month - 1]}'),
-                    trailing: Text(
-                      '${s.t('sehri')} ${formatTime(t[PrayerName.fajr], urdu: urdu)}   ${s.t('iftar')} ${formatTime(t[PrayerName.maghrib], urdu: urdu)}',
+                    subtitle: Text(
+                      '${s.t('sehri')} ${formatTime(t[PrayerName.fajr], urdu: urdu)}  •  ${s.t('iftar')} ${formatTime(t[PrayerName.maghrib], urdu: urdu)}',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   );

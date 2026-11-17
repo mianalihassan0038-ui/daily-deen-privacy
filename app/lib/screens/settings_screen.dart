@@ -729,6 +729,7 @@ class BackupScreen extends StatelessWidget {
   Future<void> _backup(BuildContext context, AppState state) async {
     final s = state.s;
     try {
+      await state.flush();
       final json = const JsonEncoder.withIndent(' ').convert(state.exportData());
       final now = DateTime.now();
       final name = 'daily-deen-backup-${dayKey(now)}.json';

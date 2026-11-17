@@ -81,7 +81,6 @@ class ScoringService {
           onTime++;
         case PrayerStatus.jamaat:
           farzDone++;
-          onTime++;
           jamaat++;
         case PrayerStatus.qaza:
           farzDone++;

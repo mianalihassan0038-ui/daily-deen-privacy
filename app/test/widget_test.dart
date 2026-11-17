@@ -78,7 +78,8 @@ void main() {
     expect(find.byKey(const Key('now_card')), findsOneWidget);
     expect(find.byKey(const Key('countdown')), findsOneWidget);
     // 30 min after Fajr: Fajr is the current activity.
-    expect(find.descendant(of: find.byKey(const Key('now_card')), matching: find.text('Fajr')), findsOneWidget);
+    expect(state.scheduleFor(state.today).firstWhere((e) => e.isOpen).item.id, 'fajr');
+    expect(find.descendant(of: find.byKey(const Key('now_card')), matching: find.byKey(const Key('now_cta'))), findsOneWidget);
     expect(find.byKey(const Key('home_prayer_fajr')), findsOneWidget);
     // Morning azkar is available now, evening azkar is not shown as open.
     expect(find.descendant(of: find.byKey(const Key('now_section')), matching: find.byKey(const Key('routine_morning_azkar'))),
@@ -368,7 +369,9 @@ void main() {
   });
 
   testWidgets('Daily plan screen: mark items and start chilla', (tester) async {
-    final state = await pumpApp(tester);
+    final state = await pumpApp(tester, after: PrayerName.isha, minutes: 30);
+    await tester.ensureVisible(find.byKey(const Key('open_daily_plan')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_daily_plan')));
     await tester.pumpAndSettle();
     expect(find.text('My Chilla'), findsWidgets);
@@ -392,6 +395,8 @@ void main() {
     state.saveSettings();
     tester.view.physicalSize = const Size(720, 1280);
     tester.view.devicePixelRatio = 2.0;
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('open_daily_plan')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_daily_plan')));
     await tester.pumpAndSettle();

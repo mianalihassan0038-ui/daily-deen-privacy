@@ -68,9 +68,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState s) {
     _resumed = s == AppLifecycleState.resumed;
     _syncTimer();
-    if (_resumed && mounted) {
+    if (!mounted) return;
+    final state = AppScope.of(context);
+    if (_resumed) {
       setState(() => _now = clock());
-      AppScope.of(context).onResume();
+      state.onResume();
+    } else if (s == AppLifecycleState.paused || s == AppLifecycleState.inactive) {
+      state.flush(); // make sure pending writes reach disk
     }
   }
 
@@ -262,7 +266,9 @@ class _ListLabel extends StatelessWidget {
       child: Row(children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontWeight: FontWeight.w700)),
+        Flexible(
+          child: Text(text, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
+        ),
       ]),
     );
   }
