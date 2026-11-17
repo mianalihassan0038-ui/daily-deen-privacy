@@ -103,6 +103,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 if (pending.isNotEmpty) ...[
                   _ListLabel('${s.t('pending')} (${pending.length})', AppColors.pending),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+                    child: Text(s.t('routine_hint'), style: theme.textTheme.bodySmall),
+                  ),
                   Card(
                     child: Column(children: [
                       for (var i = 0; i < pending.length; i++) ...[
@@ -711,36 +715,26 @@ class RoutineTile extends StatelessWidget {
     final theme = Theme.of(context);
     final rec = state.day(date);
 
-    var subtitle = [item.time(urdu), item.target(urdu)].where((e) => e.isNotEmpty).join(' • ');
+    var subtitle = [item.time(urdu), item.target(urdu), if (item.optional) s.t('optional')]
+        .where((e) => e.isNotEmpty)
+        .join(' • ');
+    // Counted tasks: progress + automatic completion when the target is reached.
+    int? count, target;
     if (item.dhikrKey != null) {
-      final c = rec.dhikr[item.dhikrKey!] ?? 0;
-      subtitle = '$subtitle  ($c/${item.dhikrTarget})';
-    }
-    if (item.id == 'quran_daily') {
-      subtitle = '$subtitle  (${rec.quranPages}/${state.settings.quranTarget} ${s.t('pages')})';
+      count = rec.dhikr[item.dhikrKey!] ?? 0;
+      target = state.dhikrTarget(item.dhikrKey!, item.dhikrTarget);
+    } else if (item.id == 'quran_daily') {
+      count = rec.quranPages;
+      target = state.settings.quranTarget;
     }
     final (icon, color) = categoryVisual(item.category);
 
     return ListTile(
       key: Key('routine_${item.id}'),
+      contentPadding: const EdgeInsetsDirectional.only(start: 16, end: 4),
       onTap: () => openActivity(context, item, date),
-      onLongPress: () => state.toggleSkip(date, item),
-      leading: InkWell(
-        key: Key('routine_check_${item.id}'),
-        customBorder: const CircleBorder(),
-        onTap: () => state.toggleItem(date, item),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: done ? theme.colorScheme.primary : color.withValues(alpha: 0.12),
-            border: Border.all(color: done ? theme.colorScheme.primary : color.withValues(alpha: 0.5), width: 1.5),
-          ),
-          child: Icon(done ? Icons.check : icon, size: 17, color: done ? Colors.white : color),
-        ),
-      ),
+      onLongPress: () => showActivitySheet(context, item, date),
+      leading: IconBadge(icon, color: color, size: 38),
       title: Text(
         item.name(urdu),
         style: TextStyle(
@@ -749,12 +743,40 @@ class RoutineTile extends StatelessWidget {
           color: done || skipped ? theme.colorScheme.onSurface.withValues(alpha: 0.5) : null,
         ),
       ),
-      subtitle: subtitle.isEmpty ? null : Text(subtitle, style: theme.textTheme.bodySmall),
-      trailing: skipped
-          ? Text(s.t('skipped'), style: TextStyle(color: theme.colorScheme.outline, fontSize: 12))
-          : item.optional
-              ? Text(s.t('optional'), style: TextStyle(color: AppColors.gold, fontSize: 11))
-              : const Icon(Icons.chevron_right, size: 18),
+      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+        if (subtitle.isNotEmpty) Text(subtitle, style: theme.textTheme.bodySmall),
+        if (count != null && target != null && !done) ...[
+          const SizedBox(height: 4),
+          Row(children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: target == 0 ? 0 : (count / target).clamp(0.0, 1.0).toDouble(),
+                  minHeight: 5,
+                  color: color,
+                  backgroundColor: color.withValues(alpha: 0.14),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text('$count/$target', style: theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700)),
+          ]),
+        ],
+        if (skipped) Text(s.t('skipped'), style: TextStyle(color: theme.colorScheme.outline, fontSize: 12)),
+      ]),
+      trailing: IconButton(
+        key: Key('routine_check_${item.id}'),
+        tooltip: done ? s.t('mark_not_done') : s.t('mark_done'),
+        iconSize: 32,
+        onPressed: () => state.toggleItem(date, item),
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: done
+              ? const Icon(Icons.check_circle, key: ValueKey('done'), color: AppColors.onTime)
+              : Icon(Icons.radio_button_unchecked, key: const ValueKey('todo'), color: theme.colorScheme.outline),
+        ),
+      ),
     );
   }
 }

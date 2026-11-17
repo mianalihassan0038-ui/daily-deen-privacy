@@ -104,6 +104,10 @@ class S {
     'dua_of_day': ['Dua of the Day', 'آج کی دعا'],
     'daily_routine': ['Daily Routine', 'روزانہ کے معمولات'],
     'plan': ['Planner', 'منصوبہ'],
+    'routine_hint': [
+      'Tap ◯ when a task is done. Tasbeeh and Quran pages tick automatically when the target is reached. Long-press for skip / edit.',
+      'کام مکمل ہونے پر ◯ دبائیں۔ تسبیح اور قرآن کے صفحات ہدف پورا ہونے پر خود مکمل ہو جاتے ہیں۔ چھوڑنے یا ترمیم کے لیے دبا کر رکھیں۔'
+    ],
     'all_done': ['MashaAllah! All done today.', 'ماشاءاللہ! آج کے سب معمولات مکمل۔'],
     'tap_to_mark': ['Tap to mark', 'نشان لگانے کے لیے ٹیپ کریں'],
     'not_started_yet': ['This prayer time has not started yet.', 'اس نماز کا وقت ابھی شروع نہیں ہوا۔'],

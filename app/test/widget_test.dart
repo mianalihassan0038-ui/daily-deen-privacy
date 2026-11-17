@@ -79,6 +79,25 @@ void main() {
     expect(state.completion(state.today).$1, 1);
   });
 
+  testWidgets('Counted tasks complete automatically and show progress', (tester) async {
+    final state = await pumpApp(tester);
+    final today = state.today;
+    for (var i = 0; i < 50; i++) {
+      state.incrementDhikr(today, 'durood@m');
+    }
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('routine_m_durood')));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('routine_m_durood')), matching: find.text('50/100')), findsOneWidget);
+    for (var i = 0; i < 50; i++) {
+      state.incrementDhikr(today, 'durood@m');
+    }
+    state.addPages(today, state.settings.quranTarget);
+    await tester.pumpAndSettle();
+    expect(state.isDone(today, state.itemById('m_durood')!), isTrue);
+    expect(state.isDone(today, state.itemById('quran_daily')!), isTrue);
+  });
+
   testWidgets('Quick card opens morning azkar', (tester) async {
     await pumpApp(tester);
     await tester.ensureVisible(find.byKey(const Key('quick_morning')));

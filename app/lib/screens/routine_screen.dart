@@ -185,6 +185,14 @@ class _Timeline extends StatelessWidget {
                       ],
                       const Spacer(),
                       if (skipped) Text(s.t('skipped'), style: TextStyle(color: theme.colorScheme.outline, fontSize: 12)),
+                      IconButton(
+                        key: Key('timeline_check_${it.id}'),
+                        visualDensity: VisualDensity.compact,
+                        tooltip: done ? s.t('mark_not_done') : s.t('mark_done'),
+                        onPressed: () => state.toggleItem(today, it),
+                        icon: Icon(done ? Icons.check_circle : Icons.radio_button_unchecked,
+                            color: done ? AppColors.onTime : theme.colorScheme.outline, size: 28),
+                      ),
                     ]),
                     Text(
                       it.name(urdu),
