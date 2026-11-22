@@ -91,17 +91,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     final start = (widget.ayah.clamp(1, ayahs.length).toInt()) - 1;
     final before = ayahs.sublist(0, start).reversed.toList();
     final after = ayahs.sublist(start);
+    final top = start == 0; // opening at ayah 1: show the surah header first
     return CustomScrollView(
       center: _centerKey,
       slivers: [
         SliverList.builder(
-          itemCount: before.length + 1,
+          itemCount: before.length + (top ? 0 : 1),
           itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _AyahCard(ayah: before[i]),
         ),
         SliverList.builder(
           key: _centerKey,
-          itemCount: after.length + 1,
+          itemCount: after.length + 1 + (top ? 1 : 0),
           itemBuilder: (c, i) {
+            if (top) {
+              if (i == 0) return _SurahHeader(info: info);
+              i--;
+            }
             if (i == after.length) return _footer(context, state, info);
             return _AyahCard(ayah: after[i]);
           },
@@ -123,18 +128,23 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     final startBlock = blocks.indexWhere((b) => b.last.number >= startAyah);
     final before = blocks.sublist(0, startBlock).reversed.toList();
     final after = blocks.sublist(startBlock);
+    final top = startBlock == 0;
     return CustomScrollView(
       key: const Key('mushaf_view'),
       center: _centerKey,
       slivers: [
         SliverList.builder(
-          itemCount: before.length + 1,
+          itemCount: before.length + (top ? 0 : 1),
           itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _MushafBlock(ayahs: before[i]),
         ),
         SliverList.builder(
           key: _centerKey,
-          itemCount: after.length + 2,
+          itemCount: after.length + 2 + (top ? 1 : 0),
           itemBuilder: (c, i) {
+            if (top) {
+              if (i == 0) return _SurahHeader(info: info);
+              i--;
+            }
             if (i == after.length) return _footer(context, state, info);
             if (i == after.length + 1) {
               return Padding(
@@ -550,6 +560,16 @@ class _PageDivider extends StatelessWidget {
 }
 
 
+/// Ayah text without a trailing ayah number that some scripts embed (the
+/// mushaf view draws its own medallion).
+/// Indo-Pak text ends with " <number><waqf/ruku sign>"; the number is removed
+/// and the sign is kept.
+String mushafText(String t) => t.replaceFirstMapped(
+    RegExp(r'\s*[\u0660-\u0669\u06F0-\u06F9]+(\s*[\uFD00-\uFDFF]?)\s*$'), (m) => m.group(1)!.trim().isEmpty ? '' : ' ${m.group(1)!.trim()}');
+
+/// True if the ayah text already carries the ruku sign (Indo-Pak script).
+bool hasRukuSign(String t) => t.trimRight().endsWith('\uFD92');
+
 /// Arabic-Indic digits for ayah numbers.
 String arabicNumber(int n) => n.toString().split('').map((c) => '٠١٢٣٤٥٦٧٨٩'[int.parse(c)]).join();
 
@@ -617,7 +637,7 @@ class _MushafBlockState extends State<_MushafBlock> {
       _taps.add(tap);
       final isLast = lastRead?.surah == a.surah && lastRead?.ayah == a.number;
       spans.add(TextSpan(
-        text: a.text(st.indoPakScript),
+        text: mushafText(a.text(st.indoPakScript)),
         recognizer: tap,
         style: isLast ? TextStyle(backgroundColor: AppColors.gold.withValues(alpha: 0.22)) : null,
       ));
@@ -628,7 +648,7 @@ class _MushafBlockState extends State<_MushafBlock> {
           child: _AyahMarker(number: a.number, bookmarked: state.isBookmarked(a.surah, a.number)),
         ),
       ));
-      if (repo.isRukuEnd(a.surah, a.number)) {
+      if (repo.isRukuEnd(a.surah, a.number) && !hasRukuSign(a.text(st.indoPakScript))) {
         spans.add(const WidgetSpan(
           alignment: PlaceholderAlignment.top,
           child: Padding(
