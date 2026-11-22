@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -56,6 +57,15 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       title: title,
       actions: [
         IconButton(
+          key: const Key('reader_mode'),
+          tooltip: state.settings.quranMushaf ? s.t('translation_view') : s.t('mushaf_view'),
+          icon: Icon(state.settings.quranMushaf ? Icons.translate : Icons.chrome_reader_mode, color: Colors.white),
+          onPressed: () {
+            state.settings.quranMushaf = !state.settings.quranMushaf;
+            state.saveSettings();
+          },
+        ),
+        IconButton(
           key: const Key('reader_settings'),
           tooltip: s.t('display'),
           icon: const Icon(Icons.text_fields, color: Colors.white),
@@ -77,6 +87,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   Widget _buildList(BuildContext context, AppState state, SurahInfo info, List<Ayah> ayahs) {
+    if (state.settings.quranMushaf) return _buildMushaf(context, state, info, ayahs);
     final start = (widget.ayah.clamp(1, ayahs.length).toInt()) - 1;
     final before = ayahs.sublist(0, start).reversed.toList();
     final after = ayahs.sublist(start);
@@ -93,6 +104,46 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           itemBuilder: (c, i) {
             if (i == after.length) return _footer(context, state, info);
             return _AyahCard(ayah: after[i]);
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Mushaf view: the surah as flowing Arabic text, one block per ruku, with
+  /// ayah-number medallions and the ع ruku sign — like a printed Quran. Tap
+  /// any ayah to read its translation and use bookmark / copy.
+  Widget _buildMushaf(BuildContext context, AppState state, SurahInfo info, List<Ayah> ayahs) {
+    final blocks = <List<Ayah>>[];
+    for (final a in ayahs) {
+      if (blocks.isEmpty || repo.isRukuStart(a.surah, a.number)) blocks.add([]);
+      blocks.last.add(a);
+    }
+    final startAyah = widget.ayah.clamp(1, ayahs.length).toInt();
+    final startBlock = blocks.indexWhere((b) => b.last.number >= startAyah);
+    final before = blocks.sublist(0, startBlock).reversed.toList();
+    final after = blocks.sublist(startBlock);
+    return CustomScrollView(
+      key: const Key('mushaf_view'),
+      center: _centerKey,
+      slivers: [
+        SliverList.builder(
+          itemCount: before.length + 1,
+          itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _MushafBlock(ayahs: before[i]),
+        ),
+        SliverList.builder(
+          key: _centerKey,
+          itemCount: after.length + 2,
+          itemBuilder: (c, i) {
+            if (i == after.length) return _footer(context, state, info);
+            if (i == after.length + 1) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: Text(state.s.t('mushaf_tap_hint'),
+                    textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+              );
+            }
+            return _MushafBlock(ayahs: after[i]);
           },
         ),
       ],
@@ -137,6 +188,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
           final st = state.settings;
           return SafeArea(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: SegmentedButton<bool>(
+                  key: const Key('view_toggle'),
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(value: true, icon: const Icon(Icons.chrome_reader_mode), label: Text(s.t('mushaf_view'))),
+                    ButtonSegment(value: false, icon: const Icon(Icons.translate), label: Text(s.t('translation_view'))),
+                  ],
+                  selected: {st.quranMushaf},
+                  onSelectionChanged: (v) {
+                    st.quranMushaf = v.first;
+                    state.saveSettings();
+                  },
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(children: [
@@ -226,7 +293,9 @@ class _SurahHeader extends StatelessWidget {
         Text(info.arabicName,
             style: quranStyle(context, indoPak: AppScope.of(context).settings.indoPakScript, size: 28, color: AppColors.goldLight)),
         Text(info.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
-        Text('${urdu ? info.meaningUr : info.meaningEn} • ${info.ayahs} ${s.t('ayat')} • ${info.meccan ? s.t('makki') : s.t('madani')}',
+        Text(
+            '${urdu ? info.meaningUr : info.meaningEn} • ${info.meccan ? s.t('makki') : s.t('madani')} • '
+            '${info.ayahs} ${s.t('ayat')} • ${QuranRepository.instance.rukuCount(info.number)} ${s.t('rukus')}',
             textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
         // Al-Fatihah includes the Basmala as ayah 1; At-Tawbah has none.
         if (info.number != 1 && info.number != 9) ...[
@@ -243,7 +312,9 @@ class _SurahHeader extends StatelessWidget {
 
 class _AyahCard extends StatelessWidget {
   final Ayah ayah;
-  const _AyahCard({required this.ayah});
+  /// In the mushaf tap sheet a translation is always shown.
+  final bool forceTranslation;
+  const _AyahCard({required this.ayah, this.forceTranslation = false});
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +333,9 @@ class _AyahCard extends StatelessWidget {
     final ruku = repo.rukuOf(ayah.surah, ayah.number);
     final juz = repo.juzOf(ayah.surah, ayah.number);
     final text = ayah.text(st.indoPakScript);
+    final noTranslation = !st.showUrdu && !st.showEnglish;
+    final showUr = st.showUrdu || (forceTranslation && noTranslation && urdu);
+    final showEn = st.showEnglish || (forceTranslation && noTranslation && !urdu);
 
     // Info line under the ayah, like a printed mushaf index.
     final infoParts = urdu
@@ -311,12 +385,12 @@ class _AyahCard extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: AppColors.emeraldMid)),
                   ),
-                if (st.showUrdu)
+                if (showUr)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
                     child: Text(ayah.ur, textDirection: TextDirection.rtl, textAlign: TextAlign.right, style: urduStyle(context)),
                   ),
-                if (st.showEnglish)
+                if (showEn)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: Text(ayah.en, textDirection: TextDirection.ltr, style: theme.textTheme.bodyMedium),
@@ -471,6 +545,157 @@ class _PageDivider extends StatelessWidget {
         ),
         const Expanded(child: Divider(color: AppColors.gold)),
       ]),
+    );
+  }
+}
+
+
+/// Arabic-Indic digits for ayah numbers.
+String arabicNumber(int n) => n.toString().split('').map((c) => '٠١٢٣٤٥٦٧٨٩'[int.parse(c)]).join();
+
+/// One ruku as continuous mushaf text.
+class _MushafBlock extends StatefulWidget {
+  final List<Ayah> ayahs;
+  const _MushafBlock({required this.ayahs});
+
+  @override
+  State<_MushafBlock> createState() => _MushafBlockState();
+}
+
+class _MushafBlockState extends State<_MushafBlock> {
+  final List<TapGestureRecognizer> _taps = [];
+
+  void _clear() {
+    for (final t in _taps) {
+      t.dispose();
+    }
+    _taps.clear();
+  }
+
+  @override
+  void dispose() {
+    _clear();
+    super.dispose();
+  }
+
+  void _open(BuildContext context, AppState state, Ayah a) {
+    state.setLastRead(a.surah, a.number);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (c) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.55,
+        maxChildSize: 0.92,
+        builder: (c, ctrl) => SingleChildScrollView(
+          controller: ctrl,
+          padding: const EdgeInsets.only(bottom: 24),
+          child: _AyahCard(ayah: a, forceTranslation: true),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final st = state.settings;
+    final urdu = st.urdu;
+    final repo = QuranRepository.instance;
+    final theme = Theme.of(context);
+    final first = widget.ayahs.first;
+    final ruku = repo.rukuOf(first.surah, first.number);
+    final juz = repo.juzOf(first.surah, first.number);
+    final base = quranStyle(context, indoPak: st.indoPakScript, size: st.arabicSize);
+    final lastRead = state.lastRead;
+    _clear();
+
+    final spans = <InlineSpan>[];
+    for (final a in widget.ayahs) {
+      final tap = TapGestureRecognizer()..onTap = () => _open(context, state, a);
+      _taps.add(tap);
+      final isLast = lastRead?.surah == a.surah && lastRead?.ayah == a.number;
+      spans.add(TextSpan(
+        text: a.text(st.indoPakScript),
+        recognizer: tap,
+        style: isLast ? TextStyle(backgroundColor: AppColors.gold.withValues(alpha: 0.22)) : null,
+      ));
+      spans.add(WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: GestureDetector(
+          onTap: () => _open(context, state, a),
+          child: _AyahMarker(number: a.number, bookmarked: state.isBookmarked(a.surah, a.number)),
+        ),
+      ));
+      if (repo.isRukuEnd(a.surah, a.number)) {
+        spans.add(const WidgetSpan(
+          alignment: PlaceholderAlignment.top,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 2),
+            child: Text('ع', style: TextStyle(fontFamily: arabicFont, fontSize: 16, color: AppColors.gold, fontWeight: FontWeight.w700)),
+          ),
+        ));
+      }
+      spans.add(const TextSpan(text: ' '));
+    }
+
+    final label = urdu
+        ? 'رکوع ${ruku?.$1 ?? 1} • پارہ $juz • آیات ${first.number}–${widget.ayahs.last.number}'
+        : 'Ruku ${ruku?.$1 ?? 1} • ${state.s.t('para')} $juz • ${state.s.t('ayat')} ${first.number}–${widget.ayahs.last.number}';
+    return Card(
+      key: Key('mushaf_${first.surah}_${first.number}'),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(
+            label,
+            textDirection: urdu ? TextDirection.rtl : TextDirection.ltr,
+            textAlign: TextAlign.center,
+            style: urdu
+                ? const TextStyle(fontFamily: urduFont, fontSize: 11, height: 1.9, color: Color(0xFFB4483C))
+                : theme.textTheme.labelSmall?.copyWith(color: const Color(0xFFB4483C)),
+          ),
+          const SizedBox(height: 6),
+          Text.rich(
+            TextSpan(style: base, children: spans),
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.justify,
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+/// Ornamental ayah-end medallion with the ayah number.
+class _AyahMarker extends StatelessWidget {
+  final int number;
+  final bool bookmarked;
+  const _AyahMarker({required this.number, this.bookmarked = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = AppScope.of(context).settings.arabicSize.clamp(18, 40) * 0.95;
+    return Container(
+      key: Key('ayah_marker_$number'),
+      width: size,
+      height: size,
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bookmarked ? AppColors.gold.withValues(alpha: 0.25) : null,
+        border: Border.all(color: AppColors.gold, width: 1.6),
+      ),
+      child: FittedBox(
+        child: Padding(
+          padding: const EdgeInsets.all(3),
+          child: Text(arabicNumber(number),
+              style: const TextStyle(fontFamily: arabicFont, fontSize: 13, color: AppColors.emeraldMid, fontWeight: FontWeight.w700, height: 1.1)),
+        ),
+      ),
     );
   }
 }

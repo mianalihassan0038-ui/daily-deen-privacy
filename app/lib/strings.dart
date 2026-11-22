@@ -641,6 +641,21 @@ class S {
       'ٹائم زون بدلنے پر شیڈول خود بخود اپڈیٹ ہوں گے۔'
     ],
 
+    // ---------------- 3.2: mushaf reader, extra azkar ----------------
+    'mushaf_view': ['Mushaf', 'مصحف'],
+    'translation_view': ['Translation', 'ترجمہ'],
+    'mushaf_tap_hint': [
+      'Tap any ayah to read its translation, bookmark or copy it.',
+      'کسی بھی آیت پر ٹیپ کریں تو اس کا ترجمہ آئے گا، بک مارک یا کاپی بھی کر سکتے ہیں۔'
+    ],
+    'rukus': ['rukus', 'رکوع'],
+    'extra_azkar': ['More Masnoon Azkar (optional)', 'مزید مسنون اذکار (اختیاری)'],
+    'extra_azkar_hint': [
+      'These are optional and are not needed to complete this set.',
+      'یہ اختیاری ہیں، سیٹ مکمل کرنے کیلئے ضروری نہیں۔'
+    ],
+    'extra_azkar_short': ['optional', 'اختیاری'],
+
   };
 }
 

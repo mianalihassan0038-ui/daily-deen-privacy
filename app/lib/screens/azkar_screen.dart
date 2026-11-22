@@ -34,6 +34,8 @@ class TasbeehLauncher {
       AzkarType.daily => (Icons.today, const Color(0xFF0B6E4F)),
       AzkarType.protection => (Icons.shield, const Color(0xFF3E7BC4)),
       AzkarType.travel => (Icons.flight_takeoff, const Color(0xFF7A5BC4)),
+      AzkarType.salah => (Icons.self_improvement, const Color(0xFF0E7C86)),
+      AzkarType.kalimas => (Icons.auto_stories, AppColors.gold),
     };
 
 class AzkarScreen extends StatefulWidget {
@@ -120,17 +122,17 @@ class AzkarCategoriesList extends StatelessWidget {
             for (final t in AzkarType.values)
               Builder(builder: (context) {
                 final (icon, color) = azkarVisual(t);
-                final list = azkar[t]!;
-                final doneCount = [for (var i = 0; i < list.length; i++) state.azkarCount(today, '${t.name}_$i') >= list[i].count]
-                    .where((e) => e)
-                    .length;
+                final core = coreAzkarIndices(t).length;
+                final extras = azkar[t]!.length - core;
+                final doneCount = coreAzkarDone(t, (k) => state.azkarCount(today, k));
                 final routineId = azkarRoutineId[t];
                 final setDone = routineId != null && state.day(today).done.contains(routineId);
                 return ListTile(
                   key: Key('azkar_cat_${t.name}'),
                   leading: IconBadge(icon, color: color),
                   title: Text(azkarTypeNames[t]![urdu ? 1 : 0], style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('$doneCount / ${list.length} ${s.t('completed').toLowerCase()}'),
+                  subtitle: Text('$doneCount / $core ${s.t('completed').toLowerCase()}'
+                      '${extras > 0 ? '  •  +$extras ${s.t('extra_azkar_short')}' : ''}'),
                   trailing: setDone
                       ? const Icon(Icons.check_circle, color: AppColors.onTime)
                       : const Icon(Icons.chevron_right),
@@ -178,9 +180,9 @@ class AzkarDetailScreen extends StatelessWidget {
     final list = azkar[type]!;
     final routineId = azkarRoutineId[type];
     final setDone = routineId != null && state.day(today).done.contains(routineId);
-    final doneCount = [for (var i = 0; i < list.length; i++) state.azkarCount(today, '${type.name}_$i') >= list[i].count]
-        .where((e) => e)
-        .length;
+    final core = coreAzkarIndices(type);
+    final extras = [for (var i = 0; i < list.length; i++) if (list[i].extra) i];
+    final doneCount = coreAzkarDone(type, (k) => state.azkarCount(today, k));
 
     return HeaderScaffold(
       title: azkarTypeNames[type]![urdu ? 1 : 0],
@@ -192,10 +194,10 @@ class AzkarDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               child: Row(children: [
                 ProgressRing(
-                  value: list.isEmpty ? 0 : doneCount / list.length,
+                  value: core.isEmpty ? 0 : doneCount / core.length,
                   size: 54,
                   stroke: 6,
-                  child: Text('$doneCount/${list.length}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                  child: Text('$doneCount/${core.length}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: Text(s.t('azkar_hint'), style: Theme.of(context).textTheme.bodySmall)),
@@ -203,13 +205,28 @@ class AzkarDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          for (var i = 0; i < list.length; i++) ...[
+          for (final i in core) ...[
             ZikrCard(
               zikr: list[i],
               countKey: '${type.name}_$i',
               onCompleted: () => _checkAll(state),
             ),
             const SizedBox(height: 10),
+          ],
+          if (extras.isNotEmpty) ...[
+            Padding(
+              key: const Key('extra_azkar_header'),
+              padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+              child: Text(s.t('extra_azkar'), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+              child: Text(s.t('extra_azkar_hint'), style: Theme.of(context).textTheme.bodySmall),
+            ),
+            for (final i in extras) ...[
+              ZikrCard(zikr: list[i], countKey: '${type.name}_$i'),
+              const SizedBox(height: 10),
+            ],
           ],
           if (routineId != null)
             FilledButton.icon(
@@ -229,7 +246,7 @@ class AzkarDetailScreen extends StatelessWidget {
     final routineId = azkarRoutineId[type];
     if (routineId == null) return;
     final today = state.today;
-    for (var i = 0; i < list.length; i++) {
+    for (final i in coreAzkarIndices(type)) {
       if (state.azkarCount(today, '${type.name}_$i') < list[i].count) return;
     }
     state.setDone(today, routineId, true);

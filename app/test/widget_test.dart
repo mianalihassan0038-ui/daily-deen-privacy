@@ -1,4 +1,6 @@
 import 'package:dailydeen/app_state.dart';
+import 'package:dailydeen/screens/azkar_screen.dart';
+import 'package:dailydeen/data/azkar.dart';
 import 'package:dailydeen/main.dart';
 import 'package:dailydeen/screens/azkar_schedule_screen.dart';
 import 'package:dailydeen/screens/chilla_screen.dart';
@@ -258,9 +260,24 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
     await tester.pumpAndSettle();
     expect(find.byType(CircularProgressIndicator), findsNothing, reason: 'reader still loading');
-    expect(find.byKey(const Key('ayah_1_1')), findsOneWidget);
-    expect(find.textContaining('praise is [due] to Allah'), findsOneWidget);
+    // Default: mushaf view (continuous text with ayah medallions).
+    expect(find.byKey(const Key('mushaf_view')), findsOneWidget);
+    expect(find.byKey(const Key('mushaf_1_1')), findsOneWidget);
+    expect(find.byKey(const Key('ayah_marker_7')), findsOneWidget);
     expect(state.lastRead, const QuranRef(1, 1));
+    // Tapping an ayah opens its translation.
+    await tester.tap(find.byKey(const Key('ayah_marker_2')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ayah_1_2')), findsOneWidget);
+    expect(find.textContaining('praise is [due] to Allah'), findsOneWidget);
+    expect(state.lastRead, const QuranRef(1, 2));
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    // Switch to the ayah-by-ayah translation view.
+    await tester.tap(find.byKey(const Key('reader_mode')));
+    await tester.pumpAndSettle();
+    expect(state.settings.quranMushaf, isFalse);
+    expect(find.byKey(const Key('ayah_1_1')), findsOneWidget);
   });
 
   testWidgets('Quran data: 114 surahs, 30 juz, 604 pages', (tester) async {
@@ -279,6 +296,10 @@ void main() {
       expect(baqarah[0].text(true), isNot(baqarah[0].text(false)));
       expect(repo.rukuOf(2, 8), (2, 3)); // 2nd ruku of Baqarah, 3rd ruku of Para 1
       expect(repo.rukuOf(1, 1), (1, 1));
+      expect(repo.rukuCount(2), 40);
+      expect(repo.isRukuEnd(2, 7), isTrue);
+      expect(repo.isRukuEnd(2, 6), isFalse);
+      expect(repo.isRukuEnd(1, 7), isTrue);
       var total = 0;
       for (final s in repo.surahs) {
         total += s.ayahs;
@@ -516,5 +537,26 @@ void main() {
     }
     await openTab(tester, 'پیش رفت');
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Azkar: extras are optional, new Namaz and Kalima sets open', (tester) async {
+    await pumpApp(tester);
+    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+    nav.push(MaterialPageRoute(builder: (_) => const AzkarDetailScreen(type: AzkarType.morning)));
+    await tester.pumpAndSettle();
+    expect(find.text('9/9'), findsNothing);
+    expect(find.text('0/9'), findsOneWidget);
+    await tester.dragUntilVisible(find.byKey(const Key('extra_azkar_header')), find.byType(ListView).last, const Offset(0, -600));
+    expect(find.byKey(const Key('extra_azkar_header')), findsOneWidget);
+    nav.pop();
+    await tester.pumpAndSettle();
+    for (final t in [AzkarType.salah, AzkarType.kalimas]) {
+      nav.push(MaterialPageRoute(builder: (_) => AzkarDetailScreen(type: t)));
+      await tester.pumpAndSettle();
+      expect(find.byKey(Key('zikr_${t.name}_0')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      nav.pop();
+      await tester.pumpAndSettle();
+    }
   });
 }

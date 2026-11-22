@@ -755,13 +755,10 @@ class _AzkarRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final s = state.s;
-    final list = azkar[type]!;
-    var count = 0;
-    for (var i = 0; i < list.length; i++) {
-      if (state.azkarCount(date, '${type.name}_$i') >= list[i].count) count++;
-    }
+    final total = coreAzkarIndices(type).length;
+    final count = coreAzkarDone(type, (k) => state.azkarCount(date, k));
     final routineId = azkarRoutineId[type]!;
-    final done = state.day(date).done.contains(routineId) || count == list.length;
+    final done = state.day(date).done.contains(routineId) || count == total;
     return InkWell(
       key: Key('report_azkar_${type.name}'),
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AzkarDetailScreen(type: type))),
@@ -774,7 +771,7 @@ class _AzkarRow extends StatelessWidget {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(s.t(type == AzkarType.morning ? 'morning_azkar' : 'evening_azkar'),
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-              Text(done ? s.t('completed') : '$count / ${list.length} ${s.t('completed').toLowerCase()}',
+              Text(done ? s.t('completed') : '$count / $total ${s.t('completed').toLowerCase()}',
                   style: TextStyle(fontSize: 11, color: done ? AppColors.onTime : Theme.of(context).colorScheme.outline)),
             ]),
           ),

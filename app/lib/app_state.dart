@@ -216,6 +216,7 @@ class AppSettings {
   bool showUrdu;
   bool showEnglish;
   bool showTranslit;
+  bool quranMushaf; // continuous mushaf view (true) or ayah-by-ayah translation view
   double arabicSize;
   bool indoPakScript; // Indo-Pak (default) or Uthmani Quran script
 
@@ -269,6 +270,7 @@ class AppSettings {
     this.showUrdu = true,
     this.showEnglish = true,
     this.showTranslit = false,
+    this.quranMushaf = true,
     this.arabicSize = 26,
     this.indoPakScript = true,
     this.tasbeehVibrate = true,
@@ -335,6 +337,7 @@ class AppSettings {
         'showUr': showUrdu,
         'showEn': showEnglish,
         'showTr': showTranslit,
+        'mushaf': quranMushaf,
         'arSize': arabicSize,
         'indoPak': indoPakScript,
         'tVibrate': tasbeehVibrate,
@@ -422,6 +425,7 @@ class AppSettings {
       showUrdu: boolOr('showUr', true),
       showEnglish: boolOr('showEn', true),
       showTranslit: boolOr('showTr', false),
+      quranMushaf: boolOr('mushaf', true),
       arabicSize: dblOr('arSize', 26),
       indoPakScript: boolOr('indoPak', true),
       tasbeehVibrate: boolOr('tVibrate', true),
@@ -443,7 +447,7 @@ class AppSettings {
 const int quranTotalPages = 604;
 
 /// Bumped when new default activities are added, so saved routines get them.
-const int routineVersion = 3;
+const int routineVersion = 4;
 
 /// Default activities added in later versions (chilla: Surah Waqiah and
 /// morning / evening tasbeehat).
@@ -451,6 +455,7 @@ const newDefaultIds = [
   'waqiah',
   'm_istighfar', 'm_durood', 'm_kalima1', 'm_kalima3',
   'e_istighfar', 'e_durood', 'e_kalima1', 'e_kalima3',
+  'awabeen', // v4: Awabeen nawafil after Maghrib
 ];
 
 /// Inserts missing [newDefaultIds] into a saved routine, each after the

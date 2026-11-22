@@ -711,14 +711,7 @@ class _QuickGrid extends StatelessWidget {
     final rec = state.day(today);
     final target = state.settings.quranTarget;
 
-    int azkarDone(AzkarType t) {
-      final list = azkar[t]!;
-      var n = 0;
-      for (var i = 0; i < list.length; i++) {
-        if (state.azkarCount(today, '${t.name}_$i') >= list[i].count) n++;
-      }
-      return n;
-    }
+    int azkarDone(AzkarType t) => coreAzkarDone(t, (k) => state.azkarCount(today, k));
 
     final mDone = rec.done.contains('morning_azkar');
     final eDone = rec.done.contains('evening_azkar');
@@ -748,8 +741,8 @@ class _QuickGrid extends StatelessWidget {
           icon: Icons.wb_sunny,
           color: const Color(0xFFE09A2D),
           title: s.t('morning_azkar'),
-          value: mDone ? s.t('completed') : '${azkarDone(AzkarType.morning)}/${azkar[AzkarType.morning]!.length}',
-          progress: mDone ? 1 : azkarDone(AzkarType.morning) / azkar[AzkarType.morning]!.length,
+          value: mDone ? s.t('completed') : '${azkarDone(AzkarType.morning)}/${coreAzkarIndices(AzkarType.morning).length}',
+          progress: mDone ? 1 : azkarDone(AzkarType.morning) / coreAzkarIndices(AzkarType.morning).length,
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AzkarDetailScreen(type: AzkarType.morning))),
         ),
         _QuickCard(
@@ -757,8 +750,8 @@ class _QuickGrid extends StatelessWidget {
           icon: Icons.nights_stay,
           color: const Color(0xFF5B4BB7),
           title: s.t('evening_azkar'),
-          value: eDone ? s.t('completed') : '${azkarDone(AzkarType.evening)}/${azkar[AzkarType.evening]!.length}',
-          progress: eDone ? 1 : azkarDone(AzkarType.evening) / azkar[AzkarType.evening]!.length,
+          value: eDone ? s.t('completed') : '${azkarDone(AzkarType.evening)}/${coreAzkarIndices(AzkarType.evening).length}',
+          progress: eDone ? 1 : azkarDone(AzkarType.evening) / coreAzkarIndices(AzkarType.evening).length,
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AzkarDetailScreen(type: AzkarType.evening))),
         ),
         _QuickCard(

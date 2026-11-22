@@ -892,4 +892,56 @@ void main() {
       expect(fresh.settings.autoTimezone, isTrue);
     });
   });
+
+  group('Daily Deen 3.2', () {
+    test('awabeen nawafil after Maghrib', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = await AppState.load();
+      final it = state.itemById('awabeen')!;
+      expect(it.optional, isTrue);
+      final times = state.prayerTimes(state.today);
+      final w = state.windowOf(it, state.today);
+      expect(w.start, times[PrayerName.maghrib].toLocal().add(const Duration(minutes: 5)));
+      expect(w.end, times[PrayerName.isha].toLocal());
+      // Saved v3 routines get Awabeen added without touching other items.
+      final old = [for (final d in defaultRoutine.where((e) => e.id != 'awabeen')) d.toJson()];
+      SharedPreferences.setMockInitialValues({
+        'settings': jsonEncode({'routine': old, 'rv': 3, 'onboarded': true}),
+      });
+      final migrated = await AppState.load();
+      expect(migrated.itemById('awabeen'), isNotNull);
+      final ids = migrated.allItems.map((e) => e.id).toList();
+      expect(ids.indexOf('awabeen'), ids.indexOf('maghrib') + 1);
+      expect(ids.where((e) => e == 'awabeen').length, 1);
+    });
+
+    test('new azkar: categories, unique ids, extras keep old progress', () {
+      expect(azkar[AzkarType.salah]!.length, greaterThanOrEqualTo(10));
+      expect(azkar[AzkarType.kalimas]!.length, 6);
+      final ids = <String>{};
+      for (final list in azkar.values) {
+        for (final z in list) {
+          ids.add(z.id);
+          expect(z.arabic.trim(), isNotEmpty, reason: z.id);
+          expect(z.en.trim(), isNotEmpty, reason: z.id);
+          expect(z.ur.trim(), isNotEmpty, reason: z.id);
+          expect(z.count, greaterThan(0));
+        }
+      }
+      expect(ids.contains('sayyid_istighfar'), isTrue);
+      expect(ids.contains('after_adhan'), isTrue);
+      // Original sets keep their size; new ones are optional extras at the end.
+      expect(coreAzkarIndices(AzkarType.morning).length, 9);
+      expect(coreAzkarIndices(AzkarType.evening).length, 8);
+      expect(coreAzkarIndices(AzkarType.sleep).length, 7);
+      expect(azkar[AzkarType.morning]!.length, greaterThan(9));
+      final m = azkar[AzkarType.morning]!;
+      for (var i = 0; i < m.length; i++) {
+        expect(m[i].extra, i >= 9, reason: 'extras only after the original items');
+      }
+      // Completing only the core items completes the set.
+      final counts = <String, int>{for (final i in coreAzkarIndices(AzkarType.morning)) 'morning_$i': m[i].count};
+      expect(coreAzkarDone(AzkarType.morning, (k) => counts[k] ?? 0), 9);
+    });
+  });
 }

@@ -36,7 +36,7 @@ class MoreFeaturesScreen extends StatelessWidget {
       (s.t('daily_muhasaba'), s.t('muhasaba_sub'), Icons.edit_note, const Color(0xFF7A5BC4), () => push(MuhasabaScreen(date: state.today))),
       (s.t('qibla'), s.t('qibla_sub'), Icons.explore, const Color(0xFF0B6E4F), () => push(const QiblaScreen())),
       (s.t('islamic_calendar'), s.t('calendar_sub'), Icons.calendar_month, const Color(0xFFD45A3A), () => push(const IslamicCalendarScreen())),
-      (s.t('sadaqah'), s.t('sadaqah_sub'), Icons.savings, const Color(0xFFB0558A), () => push(const SadaqahScreen())),
+      (s.t('sadaqah'), s.t('sadaqah_sub'), Icons.volunteer_activism, AppColors.emeraldMid, () => push(const SadaqahScreen())),
       (s.t('habit_goals'), s.t('habit_goals_sub'), Icons.flag, const Color(0xFFE09A2D), () => push(const HabitsScreen())),
       (s.t('tasbeeh'), s.t('tasbeeh_sub'), Icons.touch_app, const Color(0xFF2E5E8C), () {
         azkarSubTab.value = 1;

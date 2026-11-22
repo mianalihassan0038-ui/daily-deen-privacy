@@ -215,6 +215,22 @@ void main() {
     }
   });
 
+  testWidgets('mushaf baqarah', (tester) async {
+    final state = await setup(tester, urdu: true);
+    await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() => QuranRepository.instance.ayahs(2));
+    tester.state<NavigatorState>(find.byType(Navigator).first).push(
+          MaterialPageRoute(builder: (_) => const QuranReaderScreen(surah: 2)),
+        );
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await shot(tester, '18_mushaf_baqarah');
+    state.settings.quranMushaf = false;
+    state.saveSettings();
+    await shot(tester, '19_translation_view');
+  });
+
   testWidgets('urdu home', (tester) async {
     final state = await setup(tester, urdu: true);
     await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));

@@ -46,7 +46,7 @@ class SadaqahScreen extends StatelessWidget {
                   value: goal <= 0 ? (todayAmount > 0 ? 1 : 0) : todayAmount / goal,
                   size: 80,
                   color: AppColors.gold,
-                  child: const Icon(Icons.savings, color: AppColors.gold, size: 30),
+                  child: const Icon(Icons.volunteer_activism, color: AppColors.gold, size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

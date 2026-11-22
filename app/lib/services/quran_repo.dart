@@ -139,6 +139,27 @@ class QuranRepository {
     return (inSurah == 0 ? 1 : inSurah, inJuz == 0 ? 1 : inJuz);
   }
 
+  /// True if [s]:[a] starts a ruku.
+  bool isRukuStart(int s, int a) {
+    if (_rukuStarts.isEmpty) return a == 1;
+    final r = _rukuStarts[_indexOf(_rukuStarts, s, a)];
+    return r[0] == s && r[1] == a;
+  }
+
+  /// True if [s]:[a] is the last ayah of a ruku (the mushaf's ع marker).
+  bool isRukuEnd(int s, int a) {
+    final info = surah(s);
+    if (a >= info.ayahs) return true;
+    return isRukuStart(s, a + 1);
+  }
+
+  /// Number of rukus in surah [s].
+  int rukuCount(int s) {
+    if (_rukuStarts.isEmpty) return 1;
+    final n = _rukuStarts.where((r) => r[0] == s).length;
+    return n == 0 ? 1 : n;
+  }
+
   /// True if [s]:[a] is the first ayah on its page.
   bool isPageStart(int s, int a) {
     if (_pageStarts.isEmpty) return false;

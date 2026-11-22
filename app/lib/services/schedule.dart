@@ -81,6 +81,7 @@ const Map<String, ScheduleSpec> defaultSchedules = {
   'e_kalima3': ScheduleSpec('asr', 'maghrib'),
   // After Maghrib
   'waqiah': ScheduleSpec('maghrib', 'midnight'),
+  'awabeen': ScheduleSpec('maghrib', 'isha', startOffset: 5),
   'tilawat_night': ScheduleSpec('maghrib', 'midnight'),
   // After Isha / before sleep (until next Fajr)
   'witr': ScheduleSpec('isha', 'next_fajr'),
