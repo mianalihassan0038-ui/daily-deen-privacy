@@ -417,7 +417,8 @@ void main() {
       expect(state.itemById(id), isNotNull, reason: id);
     }
     final ids = state.allItems.map((e) => e.id).toList();
-    expect(ids.indexOf('waqiah'), ids.indexOf('maghrib') + 1);
+    expect(ids.indexOf('awabeen'), ids.indexOf('maghrib') + 1);
+    expect(ids.indexOf('waqiah'), ids.indexOf('awabeen') + 1);
     expect(ids.indexOf('m_istighfar'), ids.indexOf('tasbeeh_100') + 1);
   });
 
