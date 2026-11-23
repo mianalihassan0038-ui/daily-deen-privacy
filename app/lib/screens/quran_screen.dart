@@ -307,8 +307,10 @@ class _SurahList extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('${s.t('ayah')} ${state.surahPos[info.number]}/${info.ayahs}',
-                        style: Theme.of(context).textTheme.labelSmall),
+                    Flexible(
+                      child: Text('${s.t('ayah')} ${state.surahPos[info.number]}/${info.ayahs}',
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelSmall),
+                    ),
                   ]),
                 ],
               ]),
