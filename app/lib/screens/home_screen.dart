@@ -726,14 +726,18 @@ class _QuickGrid extends StatelessWidget {
     final tahajjud = state.itemById('tahajjud');
     final tDone = rec.done.contains('tahajjud');
 
-    return GridView.count(
-      crossAxisCount: 2,
+    // Fixed tile height (taller for Nastaleeq) instead of an aspect ratio, so
+    // text never overflows on narrow phones.
+    return GridView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.55,
       padding: EdgeInsets.zero,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: AppScope.of(context).settings.urdu ? 136 : 112,
+      ),
       children: [
         _QuickCard(
           key: const Key('quick_quran'),
