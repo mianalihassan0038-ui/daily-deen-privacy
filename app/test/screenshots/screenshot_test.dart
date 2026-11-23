@@ -52,6 +52,11 @@ Future<void> _loadFonts() async {
   final indoPak = FontLoader('KFGQPCNastaleeq');
   indoPak.addFont(Future.value(ByteData.sublistView(File('assets/fonts/KFGQPC-Nastaleeq.otf').readAsBytesSync())));
   await indoPak.load();
+  final fraunces = FontLoader('Fraunces');
+  for (final f in ['assets/fonts/Fraunces-SemiBold.ttf', 'assets/fonts/Fraunces-Bold.ttf']) {
+    fraunces.addFont(Future.value(ByteData.sublistView(File(f).readAsBytesSync())));
+  }
+  await fraunces.load();
   // Serif headings fall back to Naskh's Latin glyphs in tests.
   final serif = FontLoader('serif');
   serif.addFont(Future.value(ByteData.sublistView(File('assets/fonts/NotoNaskhArabic-Bold.ttf').readAsBytesSync())));
