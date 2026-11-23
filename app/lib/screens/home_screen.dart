@@ -319,6 +319,10 @@ class _Header extends StatelessWidget {
                       Flexible(
                         child: Text(state.settings.locationName,
                             overflow: TextOverflow.ellipsis,
+                            // Coordinates / Latin names must not be reordered in RTL.
+                            textDirection: RegExp(r'^[\x00-\x7F]*$').hasMatch(state.settings.locationName)
+                                ? TextDirection.ltr
+                                : null,
                             style: const TextStyle(color: AppColors.goldLight, fontSize: 13, fontWeight: FontWeight.w600)),
                       ),
                     ]),

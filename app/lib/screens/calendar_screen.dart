@@ -111,8 +111,7 @@ class _IslamicCalendarScreenState extends State<IslamicCalendarScreen> {
                           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                             Text('$d',
                                 style: TextStyle(
-                                  fontFamily: displayFont,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w800,
                                   // Jumma is rubricated, like holy days in old manuscripts.
                                   color: isToday ? Colors.white : (g.weekday == DateTime.friday ? AppColors.rubric : null),
                                 )),

@@ -46,12 +46,6 @@ flutter:
     - family: KFGQPCNastaleeq
       fonts:
         - asset: assets/fonts/KFGQPC-Nastaleeq.otf
-    - family: Fraunces
-      fonts:
-        - asset: assets/fonts/Fraunces-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Fraunces-Bold.ttf
-          weight: 700
 
 flutter_launcher_icons:
   android: true

@@ -36,8 +36,6 @@ class AppColors {
 
 const String arabicFont = 'NotoNaskhArabic';
 
-/// Serif display font for English headings and numbers (Sahifa style).
-const String displayFont = 'Fraunces';
 
 /// Urdu (Nastaleeq) font used for all Urdu text in the app.
 const String urduFont = 'NotoNastaliqUrdu';
@@ -96,23 +94,32 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
     colorScheme: scheme,
     useMaterial3: true,
     brightness: brightness,
-    fontFamily: urdu ? urduFont : null,
+    // Urdu: Latin letters and digits stay in the clean system font (Roboto);
+    // Urdu script falls back to Nastaleeq.
+    fontFamilyFallback: urdu ? const [urduFont, arabicFont] : null,
   );
-  // English headings in a serif (Fraunces); Urdu keeps Nastaleeq.
-  TextStyle? serif(TextStyle? t, [FontWeight w = FontWeight.w600]) =>
-      urdu ? t : t?.copyWith(fontFamily: displayFont, fontWeight: w, letterSpacing: -0.1);
+  // Nastaleeq is very tall: Urdu text needs extra line height or lines
+  // overlap.
+  TextStyle? lh(TextStyle? t, double h) => urdu ? t?.copyWith(height: h) : t;
   final tt = base.textTheme;
   return base.copyWith(
     scaffoldBackgroundColor: light ? AppColors.cream : AppColors.darkBg,
     textTheme: tt.copyWith(
-      displayLarge: serif(tt.displayLarge),
-      displayMedium: serif(tt.displayMedium),
-      displaySmall: serif(tt.displaySmall),
-      headlineLarge: serif(tt.headlineLarge),
-      headlineMedium: serif(tt.headlineMedium),
-      headlineSmall: serif(tt.headlineSmall),
-      titleLarge: serif(tt.titleLarge),
-      titleMedium: serif(tt.titleMedium),
+      displayLarge: lh(tt.displayLarge, 1.5),
+      displayMedium: lh(tt.displayMedium, 1.5),
+      displaySmall: lh(tt.displaySmall, 1.6),
+      headlineLarge: lh(tt.headlineLarge, 1.6),
+      headlineMedium: lh(tt.headlineMedium, 1.7),
+      headlineSmall: lh(tt.headlineSmall, 1.7),
+      titleLarge: lh(tt.titleLarge?.copyWith(fontWeight: FontWeight.w700), 1.8),
+      titleMedium: lh(tt.titleMedium?.copyWith(fontWeight: FontWeight.w700), 1.85),
+      titleSmall: lh(tt.titleSmall, 1.9),
+      bodyLarge: lh(tt.bodyLarge, 1.95),
+      bodyMedium: lh(tt.bodyMedium, 1.95),
+      bodySmall: lh(tt.bodySmall, 2.0),
+      labelLarge: lh(tt.labelLarge, 1.8),
+      labelMedium: lh(tt.labelMedium, 1.9),
+      labelSmall: lh(tt.labelSmall, 1.9),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
@@ -164,5 +171,5 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
 
 /// Serif style for big English numbers / titles (falls back to Nastaleeq in
 /// Urdu where the theme font applies).
-TextStyle displayStyle({double size = 22, FontWeight weight = FontWeight.w600, Color? color}) =>
-    TextStyle(fontFamily: displayFont, fontSize: size, fontWeight: weight, color: color, letterSpacing: -0.2);
+TextStyle displayStyle({double size = 22, FontWeight weight = FontWeight.w800, Color? color}) =>
+    TextStyle(fontSize: size, fontWeight: weight, color: color);
