@@ -157,14 +157,19 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                         child: Row(children: [
                           const Icon(Icons.bookmark, size: 18, color: AppColors.gold),
                           const SizedBox(width: 8),
-                          Expanded(child: Text('${s.t('resumed_at')} ${s.t('ayah')} $_startAyah')),
-                          TextButton(
+                          Expanded(
+                            child: Text('${s.t('resumed_at')} ${s.t('ayah')} $_startAyah',
+                                maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ),
+                          Flexible(
+                            child: TextButton(
                             key: const Key('start_beginning'),
                             onPressed: () => setState(() {
                               _startAyah = 1;
                               _centerKey = GlobalKey();
                             }),
-                            child: Text(s.t('start_beginning')),
+                            child: Text(s.t('start_beginning'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          ),
                           ),
                         ]),
                       ),

@@ -278,7 +278,8 @@ void main() {
     await tester.tap(find.byKey(const Key('reader_mode')));
     await tester.pumpAndSettle();
     expect(state.settings.quranMushaf, isFalse);
-    expect(find.byKey(const Key('ayah_1_1')), findsOneWidget);
+    // The translation view continues at the ayah being read (1:2).
+    expect(find.byKey(const Key('ayah_1_2')), findsOneWidget);
   });
 
   testWidgets('Quran data: 114 surahs, 30 juz, 604 pages', (tester) async {
@@ -562,8 +563,12 @@ void main() {
   });
 
   Future<void> settleReader(WidgetTester tester) async {
-    await tester.pump();
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+    // Quran text futures complete in a real-async zone: give them time twice
+    // (the route may be pushed only after the first round).
+    for (var i = 0; i < 3; i++) {
+      await tester.pump();
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+    }
     await tester.pumpAndSettle();
   }
 
