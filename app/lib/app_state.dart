@@ -525,6 +525,13 @@ class AppState extends ChangeNotifier {
   Set<int> readPages = {};
   int qazaPending = 0;
   QuranRef? lastRead;
+
+  /// Where the user stopped in each surah (surah -> ayah), so every surah
+  /// resumes on its own.
+  Map<int, int> surahPos = {};
+
+  /// Ayah to resume [surah] from (1 if never read).
+  int resumeAyah(int surah) => surahPos[surah] ?? 1;
   List<QuranRef> bookmarks = [];
   List<QuranRef> favouriteAyat = [];
   List<Map<String, dynamic>> readingHistory = [];
@@ -550,6 +557,15 @@ class AppState extends ChangeNotifier {
     readPages = (prefs.getStringList('readPages') ?? []).map(int.tryParse).whereType<int>().toSet();
     qazaPending = prefs.getInt('qazaPending') ?? 0;
     lastRead = QuranRef.parse(prefs.getString('lastRead') ?? '');
+    surahPos = {};
+    try {
+      final raw = jsonDecode(prefs.getString('surahPos') ?? '{}') as Map<String, dynamic>;
+      raw.forEach((k, v) {
+        final sNo = int.tryParse(k);
+        if (sNo != null && v is int && validRef(sNo, v)) surahPos[sNo] = v;
+      });
+    } catch (_) {}
+    if (lastRead != null && !surahPos.containsKey(lastRead!.surah)) surahPos[lastRead!.surah] = lastRead!.ayah;
     bookmarks = (prefs.getStringList('bookmarks') ?? [])
         .map(QuranRef.parse)
         .whereType<QuranRef>()
@@ -1214,9 +1230,11 @@ class AppState extends ChangeNotifier {
 
   void setLastRead(int surah, int ayah) {
     final ref = QuranRef(surah, ayah);
-    if (lastRead == ref) return;
+    if (lastRead == ref && surahPos[surah] == ayah) return;
     lastRead = ref;
     prefs.setString('lastRead', ref.key);
+    surahPos[surah] = ayah;
+    prefs.setString('surahPos', jsonEncode({for (final e in surahPos.entries) '${e.key}': e.value}));
     final todayKey = dayKey(today);
     readingHistory.removeWhere((e) => e['d'] == todayKey && e['s'] == surah);
     readingHistory.insert(0, {'d': todayKey, 's': surah, 'a': ayah});

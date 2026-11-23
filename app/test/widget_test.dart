@@ -1,4 +1,5 @@
 import 'package:dailydeen/app_state.dart';
+import 'package:dailydeen/screens/navigation.dart';
 import 'package:dailydeen/screens/azkar_screen.dart';
 import 'package:dailydeen/data/azkar.dart';
 import 'package:dailydeen/main.dart';
@@ -558,5 +559,95 @@ void main() {
       nav.pop();
       await tester.pumpAndSettle();
     }
+  });
+
+  Future<void> settleReader(WidgetTester tester) async {
+    await tester.pump();
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
+    await tester.pumpAndSettle();
+  }
+
+  for (final mushaf in [false, true]) {
+    testWidgets('Quran resumes at the exact ayah per surah (mushaf: $mushaf)', (tester) async {
+      final state = await pumpApp(tester);
+      state.settings.quranMushaf = mushaf;
+      state.saveSettings();
+      await tester.runAsync(() async {
+        await QuranRepository.instance.ensureLoaded();
+        await QuranRepository.instance.ayahs(1);
+        await QuranRepository.instance.ayahs(2);
+      });
+      await openTab(tester, 'Quran');
+      await tester.tap(find.byKey(const Key('surah_2')));
+      await settleReader(tester);
+      // Read (scroll) down.
+      await tester.fling(find.byType(CustomScrollView).last, const Offset(0, -2500), 3000);
+      await tester.pumpAndSettle();
+      final pos = state.resumeAyah(2);
+      expect(pos, greaterThan(5), reason: 'scrolling saves the ayah on screen');
+      expect(state.lastRead, QuranRef(2, pos));
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('surah_progress_2')), findsOneWidget);
+      // Another surah keeps its own position.
+      await tester.tap(find.byKey(const Key('surah_1')));
+      await settleReader(tester);
+      expect(state.resumeAyah(2), pos);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      // Baqarah opens again exactly where it was left.
+      await tester.tap(find.byKey(const Key('surah_2')));
+      await settleReader(tester);
+      expect(find.byKey(const Key('resume_banner')), findsOneWidget);
+      expect(find.textContaining('$pos'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('Tilawat session: read, come back, log pages and mark done', (tester) async {
+    final state = await pumpApp(tester);
+    await tester.runAsync(() async {
+      await QuranRepository.instance.ensureLoaded();
+      await QuranRepository.instance.ayahs(2);
+    });
+    state.setLastRead(2, 30);
+    final item = state.itemById('quran_daily')!;
+    final ctx = tester.element(find.byKey(const Key('home_list')));
+    openTilawatSession(ctx, item, state.today);
+    await settleReader(tester);
+    expect(find.byKey(const Key('resume_banner')), findsOneWidget);
+    await tester.fling(find.byType(CustomScrollView).last, const Offset(0, -4000), 3000);
+    await tester.pumpAndSettle();
+    expect(state.resumeAyah(2), greaterThan(30));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('tilawat_sheet')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('tilawat_pages_plus')));
+    await tester.pump();
+    final pages = int.parse(tester.widget<Text>(find.byKey(const Key('tilawat_pages'))).data!);
+    expect(pages, greaterThan(0));
+    await tester.tap(find.byKey(const Key('tilawat_mark_done')));
+    await tester.pumpAndSettle();
+    expect(state.day(state.today).quranPages, pages);
+    expect(state.isDone(state.today, item), isTrue);
+  });
+
+  testWidgets('Tilawat session: continue later keeps place, logs nothing', (tester) async {
+    final state = await pumpApp(tester);
+    await tester.runAsync(() async {
+      await QuranRepository.instance.ensureLoaded();
+      await QuranRepository.instance.ayahs(18);
+    });
+    final item = state.itemById('kahf')!;
+    final ctx = tester.element(find.byKey(const Key('home_list')));
+    openTilawatSession(ctx, item, state.today, surah: 18, ayah: 1);
+    await settleReader(tester);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tilawat_later')));
+    await tester.pumpAndSettle();
+    expect(state.day(state.today).quranPages, 0);
+    expect(state.isDone(state.today, item), isFalse);
+    expect(state.lastRead?.surah, 18);
   });
 }

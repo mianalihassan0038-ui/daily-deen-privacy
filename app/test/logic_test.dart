@@ -5,6 +5,7 @@ import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/data/azkar.dart';
 import 'package:dailydeen/data/routine.dart';
 import 'package:dailydeen/screens/qibla_screen.dart';
+import 'package:dailydeen/screens/quran_reader_screen.dart';
 import 'package:dailydeen/services/hijri.dart';
 import 'package:dailydeen/services/prayer_times.dart';
 import 'package:dailydeen/services/notifications.dart';
@@ -943,6 +944,31 @@ void main() {
       // Completing only the core items completes the set.
       final counts = <String, int>{for (final i in coreAzkarIndices(AzkarType.morning)) 'morning_$i': m[i].count};
       expect(coreAzkarDone(AzkarType.morning, (k) => counts[k] ?? 0), 9);
+    });
+  });
+
+  group('Daily Deen 3.3 Quran resume', () {
+    test('each surah keeps its own position and it persists', () async {
+      SharedPreferences.setMockInitialValues({'lastRead': '2:120'});
+      final state = await AppState.load();
+      expect(state.resumeAyah(2), 120, reason: 'migrated from the old single last-read');
+      state.setLastRead(18, 40);
+      state.setLastRead(1, 5);
+      expect(state.resumeAyah(2), 120);
+      expect(state.resumeAyah(18), 40);
+      expect(state.resumeAyah(36), 1);
+      final reloaded = await AppState.load();
+      expect(reloaded.resumeAyah(18), 40);
+      expect(reloaded.lastRead, const QuranRef(1, 5));
+    });
+
+    test('session pages read', () {
+      final session = QuranSession(const QuranRef(2, 30), 7);
+      expect(session.pagesRead, 0);
+      session.record(2, 30, 7);
+      expect(session.pagesRead, 0);
+      session.record(2, 50, 9);
+      expect(session.pagesRead, 3);
     });
   });
 }

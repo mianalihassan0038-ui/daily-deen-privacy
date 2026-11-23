@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../app_state.dart';
@@ -11,7 +12,10 @@ import '../widgets/common.dart';
 class QuranReaderScreen extends StatefulWidget {
   final int surah;
   final int ayah;
-  const QuranReaderScreen({super.key, required this.surah, this.ayah = 1});
+  /// Set when opened as a tilawat session from the routine: it records which
+  /// pages were read so the user can log them when coming back.
+  final QuranSession? session;
+  const QuranReaderScreen({super.key, required this.surah, this.ayah = 1, this.session});
 
   @override
   State<QuranReaderScreen> createState() => _QuranReaderScreenState();
@@ -19,9 +23,51 @@ class QuranReaderScreen extends StatefulWidget {
 
 class _QuranReaderScreenState extends State<QuranReaderScreen> {
   final repo = QuranRepository.instance;
-  final _centerKey = GlobalKey();
+  var _centerKey = GlobalKey();
+  final _viewportKey = GlobalKey();
+  final Map<int, GlobalKey> _cardKeys = {};
+  final Map<int, GlobalKey<_MushafBlockState>> _blockKeys = {};
+  late int _surah = widget.surah;
+  late int _startAyah = widget.ayah;
+  bool? _lastMode;
   List<Ayah>? _ayahs;
   Object? _error;
+
+  /// Finds the ayah at the top of the screen and saves it as the reading
+  /// position (per surah), so reading continues exactly from here.
+  void _trackPosition() {
+    final vp = _viewportKey.currentContext?.findRenderObject() as RenderBox?;
+    if (vp == null || !vp.attached || _ayahs == null) return;
+    final topY = vp.localToGlobal(Offset.zero).dy + 16;
+    final state = AppScope.of(context);
+    int? found;
+    if (state.settings.quranMushaf) {
+      final keys = _blockKeys.keys.toList()..sort();
+      for (final k in keys) {
+        final st = _blockKeys[k]!.currentState;
+        if (st == null) continue;
+        final a = st.ayahAt(topY);
+        if (a != null) {
+          found = a;
+          break;
+        }
+      }
+    } else {
+      double? bestTop;
+      _cardKeys.forEach((n, key) {
+        final rb = key.currentContext?.findRenderObject() as RenderBox?;
+        if (rb == null || !rb.attached) return;
+        final top = rb.localToGlobal(Offset.zero).dy;
+        if (top + rb.size.height > topY && (bestTop == null || top < bestTop!)) {
+          bestTop = top;
+          found = n;
+        }
+      });
+    }
+    if (found == null) return;
+    state.setLastRead(_surah, found!);
+    widget.session?.record(_surah, found!, repo.pageOf(_surah, found!));
+  }
 
   @override
   void initState() {
@@ -32,24 +78,43 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   Future<void> _load() async {
     try {
       await repo.ensureLoaded();
-      final list = await repo.ayahs(widget.surah);
+      final list = await repo.ayahs(_surah);
       if (!mounted) return;
       setState(() => _ayahs = list);
-      AppScope.of(context).setLastRead(widget.surah, widget.ayah.clamp(1, list.length).toInt());
+      final a = _startAyah.clamp(1, list.length).toInt();
+      AppScope.of(context).setLastRead(_surah, a);
+      widget.session?.record(_surah, a, repo.pageOf(_surah, a));
     } catch (e) {
       if (mounted) setState(() => _error = e);
     }
   }
 
+  /// Opens another surah in this same screen (each surah is its own
+  /// reading; the next one starts at its beginning).
   void _openSurah(int n) {
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => QuranReaderScreen(surah: n)));
+    setState(() {
+      _surah = n;
+      _startAyah = 1;
+      _ayahs = null;
+      _cardKeys.clear();
+      _blockKeys.clear();
+      _centerKey = GlobalKey();
+    });
+    _load();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final s = state.s;
-    final info = repo.isLoaded ? repo.surah(widget.surah) : null;
+    final info = repo.isLoaded ? repo.surah(_surah) : null;
+    // Switching mushaf / translation view keeps the reading position.
+    final mode = state.settings.quranMushaf;
+    if (_lastMode != null && _lastMode != mode) {
+      _startAyah = state.resumeAyah(_surah);
+      _centerKey = GlobalKey();
+    }
+    _lastMode = mode;
     final title = info == null ? s.t('quran') : '${info.number}. ${info.name}';
     final ayahs = _ayahs;
 
@@ -82,13 +147,44 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             )
           : ayahs == null
               ? const Center(child: CircularProgressIndicator())
-              : _buildList(context, state, info!, ayahs),
+              : Column(children: [
+                  if (_startAyah > 1)
+                    Material(
+                      key: const Key('resume_banner'),
+                      color: AppColors.gold.withValues(alpha: 0.14),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+                        child: Row(children: [
+                          const Icon(Icons.bookmark, size: 18, color: AppColors.gold),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text('${s.t('resumed_at')} ${s.t('ayah')} $_startAyah')),
+                          TextButton(
+                            key: const Key('start_beginning'),
+                            onPressed: () => setState(() {
+                              _startAyah = 1;
+                              _centerKey = GlobalKey();
+                            }),
+                            child: Text(s.t('start_beginning')),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  Expanded(
+                    child: NotificationListener<ScrollEndNotification>(
+                      onNotification: (_) {
+                        _trackPosition();
+                        return false;
+                      },
+                      child: KeyedSubtree(key: _viewportKey, child: _buildList(context, state, info!, ayahs)),
+                    ),
+                  ),
+                ]),
     );
   }
 
   Widget _buildList(BuildContext context, AppState state, SurahInfo info, List<Ayah> ayahs) {
     if (state.settings.quranMushaf) return _buildMushaf(context, state, info, ayahs);
-    final start = (widget.ayah.clamp(1, ayahs.length).toInt()) - 1;
+    final start = (_startAyah.clamp(1, ayahs.length).toInt()) - 1;
     final before = ayahs.sublist(0, start).reversed.toList();
     final after = ayahs.sublist(start);
     final top = start == 0; // opening at ayah 1: show the surah header first
@@ -97,7 +193,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       slivers: [
         SliverList.builder(
           itemCount: before.length + (top ? 0 : 1),
-          itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _AyahCard(ayah: before[i]),
+          itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _card(before[i]),
         ),
         SliverList.builder(
           key: _centerKey,
@@ -108,7 +204,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               i--;
             }
             if (i == after.length) return _footer(context, state, info);
-            return _AyahCard(ayah: after[i]);
+            return _card(after[i]);
           },
         ),
       ],
@@ -124,7 +220,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       if (blocks.isEmpty || repo.isRukuStart(a.surah, a.number)) blocks.add([]);
       blocks.last.add(a);
     }
-    final startAyah = widget.ayah.clamp(1, ayahs.length).toInt();
+    final startAyah = _startAyah.clamp(1, ayahs.length).toInt();
     final startBlock = blocks.indexWhere((b) => b.last.number >= startAyah);
     final before = blocks.sublist(0, startBlock).reversed.toList();
     final after = blocks.sublist(startBlock);
@@ -135,7 +231,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
       slivers: [
         SliverList.builder(
           itemCount: before.length + (top ? 0 : 1),
-          itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _MushafBlock(ayahs: before[i]),
+          itemBuilder: (c, i) => i == before.length ? _SurahHeader(info: info) : _block(before[i]),
         ),
         SliverList.builder(
           key: _centerKey,
@@ -153,12 +249,17 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                     textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
               );
             }
-            return _MushafBlock(ayahs: after[i]);
+            return _block(after[i]);
           },
         ),
       ],
     );
   }
+
+  Widget _card(Ayah a) => KeyedSubtree(key: _cardKeys.putIfAbsent(a.number, GlobalKey.new), child: _AyahCard(ayah: a));
+
+  Widget _block(List<Ayah> b) =>
+      _MushafBlock(key: _blockKeys.putIfAbsent(b.first.number, GlobalKey<_MushafBlockState>.new), ayahs: b);
 
   Widget _footer(BuildContext context, AppState state, SurahInfo info) {
     final s = state.s;
@@ -576,7 +677,7 @@ String arabicNumber(int n) => n.toString().split('').map((c) => '٠١٢٣٤٥٦�
 /// One ruku as continuous mushaf text.
 class _MushafBlock extends StatefulWidget {
   final List<Ayah> ayahs;
-  const _MushafBlock({required this.ayahs});
+  const _MushafBlock({super.key, required this.ayahs});
 
   @override
   State<_MushafBlock> createState() => _MushafBlockState();
@@ -584,6 +685,25 @@ class _MushafBlock extends StatefulWidget {
 
 class _MushafBlockState extends State<_MushafBlock> {
   final List<TapGestureRecognizer> _taps = [];
+  final _textKey = GlobalKey();
+  final List<int> _starts = []; // text offset where each ayah starts
+
+  /// The ayah being read at screen position [globalY], or null if this
+  /// block is entirely above it.
+  int? ayahAt(double globalY) {
+    final rp = _textKey.currentContext?.findRenderObject();
+    final box = context.findRenderObject() as RenderBox?;
+    if (rp is! RenderParagraph || box == null || !box.attached || !rp.attached) return null;
+    final blockBottom = box.localToGlobal(Offset(0, box.size.height)).dy;
+    if (blockBottom <= globalY) return null;
+    var result = widget.ayahs.first.number;
+    for (var i = 0; i < _starts.length && i < widget.ayahs.length; i++) {
+      final caret = rp.getOffsetForCaret(TextPosition(offset: _starts[i]), Rect.zero);
+      final y = rp.localToGlobal(caret).dy;
+      if (y <= globalY) result = widget.ayahs[i].number;
+    }
+    return result;
+  }
 
   void _clear() {
     for (final t in _taps) {
@@ -632,12 +752,18 @@ class _MushafBlockState extends State<_MushafBlock> {
     _clear();
 
     final spans = <InlineSpan>[];
+    _starts.clear();
+    var offset = 0;
     for (final a in widget.ayahs) {
       final tap = TapGestureRecognizer()..onTap = () => _open(context, state, a);
       _taps.add(tap);
       final isLast = lastRead?.surah == a.surah && lastRead?.ayah == a.number;
+      final text = mushafText(a.text(st.indoPakScript));
+      _starts.add(offset);
+      offset += text.length + 2; // text + medallion + space
+      if (repo.isRukuEnd(a.surah, a.number) && !hasRukuSign(a.text(st.indoPakScript))) offset += 1;
       spans.add(TextSpan(
-        text: mushafText(a.text(st.indoPakScript)),
+        text: text,
         recognizer: tap,
         style: isLast ? TextStyle(backgroundColor: AppColors.gold.withValues(alpha: 0.22)) : null,
       ));
@@ -679,6 +805,7 @@ class _MushafBlockState extends State<_MushafBlock> {
           ),
           const SizedBox(height: 6),
           Text.rich(
+            key: _textKey,
             TextSpan(style: base, children: spans),
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.justify,
@@ -717,5 +844,31 @@ class _AyahMarker extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+
+/// Tracks a tilawat session opened from the routine ("Do this now").
+class QuranSession {
+  final QuranRef start;
+  final int startPage;
+  QuranRef? last;
+  final Set<int> pages = {};
+  QuranSession(this.start, this.startPage) {
+    pages.add(startPage);
+  }
+
+  void record(int surah, int ayah, int page) {
+    last = QuranRef(surah, ayah);
+    pages.add(page);
+  }
+
+  int get lastPage => pages.isEmpty ? startPage : pages.reduce((a, b) => a > b ? a : b);
+
+  /// Pages read: from the start page up to the page the reader stopped on
+  /// (0 if the reader did not move).
+  int get pagesRead {
+    if (last == null || last == start) return 0;
+    return (lastPage - startPage + 1).clamp(0, 604).toInt();
   }
 }

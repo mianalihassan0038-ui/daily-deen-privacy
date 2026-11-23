@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../core/theme.dart';
 import '../data/azkar.dart';
 import '../data/routine.dart';
+import '../services/quran_repo.dart';
 import 'azkar_screen.dart';
 import 'muhasaba_screen.dart';
 import 'quran_reader_screen.dart';
@@ -68,11 +69,11 @@ void openActivity(BuildContext context, RoutineItem item, DateTime date) {
   }
   final q = _quranTargets[item.id];
   if (q != null) {
-    nav.push(MaterialPageRoute(builder: (_) => QuranReaderScreen(surah: q.$1, ayah: q.$2)));
+    openTilawatSession(context, item, date, surah: q.$1, ayah: q.$2);
     return;
   }
   if (item.id == 'quran_daily' || item.id.startsWith('tilawat')) {
-    ShellScope.go(context, Tabs.quran);
+    openTilawatSession(context, item, date);
     return;
   }
   if (item.dhikrKey != null) {
@@ -209,4 +210,112 @@ void showUndo(BuildContext context, AppState state, DateTime date, RoutineItem i
         onPressed: () => state.restoreSnapshot(date, snap),
       ),
     ));
+}
+
+
+/// Opens the Quran reader for a tilawat activity — at the exact ayah where
+/// reading stopped (or at [surah]:[ayah] for a surah task) — and, when the
+/// user comes back, asks whether to log the pages / mark it done or to
+/// continue later.
+Future<void> openTilawatSession(BuildContext context, RoutineItem item, DateTime date, {int? surah, int? ayah}) async {
+  final state = AppScope.of(context);
+  final repo = QuranRepository.instance;
+  try {
+    await repo.ensureLoaded();
+  } catch (_) {
+    if (context.mounted) ShellScope.go(context, Tabs.quran);
+    return;
+  }
+  if (!context.mounted) return;
+  final lr = state.lastRead;
+  final sNo = surah ?? lr?.surah ?? 1;
+  // A surah task resumes inside that surah if it was started today.
+  final aNo = ayah == null ? (lr?.ayah ?? 1) : (surah != null && lr?.surah == surah ? state.resumeAyah(surah) : ayah);
+  final session = QuranSession(QuranRef(sNo, aNo), repo.pageOf(sNo, aNo));
+  await Navigator.of(context).push(MaterialPageRoute(
+    builder: (_) => QuranReaderScreen(surah: sNo, ayah: aNo, session: session),
+  ));
+  if (!context.mounted) return;
+  await showTilawatResultSheet(context, state, item, date, session);
+}
+
+/// "How did the reading go?" — log pages and/or mark done, or continue later.
+Future<void> showTilawatResultSheet(
+    BuildContext context, AppState state, RoutineItem item, DateTime date, QuranSession session) {
+  final s = state.s;
+  final urdu = state.settings.urdu;
+  final repo = QuranRepository.instance;
+  var pages = session.pagesRead;
+  final isDaily = item.id == 'quran_daily';
+  final last = session.last ?? session.start;
+  String ref(QuranRef r) => '${repo.surah(r.surah).name} ${r.surah}:${r.ayah}';
+  return showModalBottomSheet(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (c) => StatefulBuilder(
+      builder: (c, setSheet) => SafeArea(
+        child: Padding(
+          key: const Key('tilawat_sheet'),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(item.name(urdu), style: Theme.of(c).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            Text('${s.t('you_read_from')} ${ref(session.start)} ${s.t('to')} ${ref(last)}',
+                style: Theme.of(c).textTheme.bodyMedium),
+            Text(s.t('position_saved'), style: Theme.of(c).textTheme.bodySmall),
+            const SizedBox(height: 14),
+            Row(children: [
+              Expanded(child: Text(s.t('pages_read'), style: const TextStyle(fontWeight: FontWeight.w700))),
+              IconButton(
+                key: const Key('tilawat_pages_minus'),
+                onPressed: pages > 0 ? () => setSheet(() => pages--) : null,
+                icon: const Icon(Icons.remove_circle_outline),
+              ),
+              Text('$pages', key: const Key('tilawat_pages'), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              IconButton(
+                key: const Key('tilawat_pages_plus'),
+                onPressed: () => setSheet(() => pages++),
+                icon: const Icon(Icons.add_circle_outline),
+              ),
+            ]),
+            if (isDaily)
+              Text('${s.t('today')}: ${state.day(date).quranPages} + $pages / ${state.settings.quranTarget} ${s.t('pages')}',
+                  style: Theme.of(c).textTheme.bodySmall),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              key: const Key('tilawat_mark_done'),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              onPressed: () {
+                if (pages > 0) state.addPages(date, pages);
+                final snap = state.snapshotOf(date, item);
+                if (!state.isDone(date, item) && state.toggleItem(date, item)) {
+                  showUndo(context, state, date, item, snap);
+                }
+                Navigator.pop(c);
+              },
+              icon: const Icon(Icons.check_circle),
+              label: Text(s.t('mark_completed')),
+            ),
+            const SizedBox(height: 8),
+            if (pages > 0)
+              OutlinedButton(
+                key: const Key('tilawat_add_pages'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+                onPressed: () {
+                  state.addPages(date, pages);
+                  Navigator.pop(c);
+                },
+                child: Text('${s.t('add_pages')} ($pages) • ${s.t('continue_later')}'),
+              ),
+            TextButton(
+              key: const Key('tilawat_later'),
+              onPressed: () => Navigator.pop(c),
+              child: Text(s.t('continue_later')),
+            ),
+          ]),
+        ),
+      ),
+    ),
+  );
 }

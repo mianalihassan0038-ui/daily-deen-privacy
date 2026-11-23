@@ -34,8 +34,11 @@ class _QuranScreenState extends State<QuranScreen> {
     });
   }
 
-  void _open(int surah, [int ayah = 1]) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuranReaderScreen(surah: surah, ayah: ayah)));
+  /// Opens [surah]; without an explicit ayah it resumes where the user
+  /// stopped in that surah.
+  void _open(int surah, [int? ayah]) {
+    final a = ayah ?? AppScope.of(context).resumeAyah(surah);
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuranReaderScreen(surah: surah, ayah: a)));
   }
 
   @override
@@ -287,8 +290,28 @@ class _SurahList extends StatelessWidget {
               key: Key('surah_${info.number}'),
               leading: SurahNumberBadge(info.number, done: readToday.contains(info.number)),
               title: Text(info.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text(
-                  '${urdu ? info.meaningUr : info.meaningEn} • ${info.ayahs} ${s.t('ayat')} • ${info.meccan ? s.t('makki') : s.t('madani')}'),
+              subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                    '${urdu ? info.meaningUr : info.meaningEn} • ${info.ayahs} ${s.t('ayat')} • ${info.meccan ? s.t('makki') : s.t('madani')}'),
+                if ((state.surahPos[info.number] ?? 1) > 1) ...[
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          key: Key('surah_progress_${info.number}'),
+                          value: state.surahPos[info.number]! / info.ayahs,
+                          minHeight: 4,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('${s.t('ayah')} ${state.surahPos[info.number]}/${info.ayahs}',
+                        style: Theme.of(context).textTheme.labelSmall),
+                  ]),
+                ],
+              ]),
               trailing: Text(info.arabicName, style: quranStyle(context, indoPak: true, size: 18, color: AppColors.emeraldMid)),
               onTap: () => onOpen(info.number),
             ),

@@ -656,6 +656,16 @@ class S {
     ],
     'extra_azkar_short': ['optional', 'اختیاری'],
 
+    // ---------------- 3.3: reading resume + tilawat session ----------------
+    'resumed_at': ['Continuing from', 'یہاں سے جاری'],
+    'start_beginning': ['Start from beginning', 'شروع سے پڑھیں'],
+    'you_read_from': ['You read from', 'آپ نے پڑھا'],
+    'to': ['to', 'تا'],
+    'position_saved': ['Your place is saved — next time you continue from here.', 'آپ کی جگہ محفوظ ہے، اگلی بار یہیں سے شروع ہوگا۔'],
+    'pages_read': ['Pages read', 'پڑھے گئے صفحات'],
+    'add_pages': ['Add pages', 'صفحات شامل کریں'],
+    'continue_later': ['Continue later', 'بعد میں جاری رکھیں'],
+
   };
 }
 
