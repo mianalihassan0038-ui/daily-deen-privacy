@@ -306,7 +306,9 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       name.isEmpty ? s.t('salam') : '${s.t('salam_comma')} $name 👋',
-                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+                      style: state.settings.urdu
+                          ? const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)
+                          : displayStyle(size: 24, color: Colors.white),
                     ),
                     const SizedBox(height: 6),
                     Text(dateLine, style: const TextStyle(color: Colors.white70, fontSize: 13)),
@@ -508,7 +510,7 @@ class _NowCard extends StatelessWidget {
                     key: const Key('now_title'),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+                    style: urdu ? const TextStyle(fontSize: 19, fontWeight: FontWeight.w800) : displayStyle(size: 20)),
                 Text('${formatTime(w.start, urdu: urdu)} – ${formatTime(w.end, urdu: urdu)}',
                     style: theme.textTheme.bodySmall),
               ]),
@@ -521,7 +523,9 @@ class _NowCard extends StatelessWidget {
             child: Text(
               '${upcoming ? s.t('starts_in') : s.t('time_left')}  ${formatDuration(remaining.isNegative ? Duration.zero : remaining)}',
               key: const Key('countdown'),
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: theme.colorScheme.primary),
+              style: urdu
+                  ? TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: theme.colorScheme.primary)
+                  : displayStyle(size: 23, weight: FontWeight.w700, color: theme.colorScheme.primary),
             ),
           ),
           if (progress != null && !upcoming) ...[
@@ -986,11 +990,10 @@ class RoutineTile extends StatelessWidget {
         icon: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: done
-              ? const Icon(Icons.check_circle, key: ValueKey('done'), color: AppColors.onTime)
+              ? const Seal(key: ValueKey('done'), size: 30)
               : locked
                   ? Icon(Icons.lock_outline, key: const ValueKey('locked'), color: theme.colorScheme.outline)
-                  : Icon(Icons.radio_button_unchecked,
-                      key: const ValueKey('todo'), color: missed ? AppColors.missed : theme.colorScheme.outline),
+                  : SealOutline(key: const ValueKey('todo'), size: 30, color: missed ? AppColors.missed : null),
         ),
       ),
     );

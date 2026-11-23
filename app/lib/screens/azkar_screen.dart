@@ -529,6 +529,12 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Rosary line: one bead per count (up to 33; larger targets fill proportionally).
+              RosaryLine(
+                total: target <= 33 ? target : 33,
+                filled: target <= 33 ? inRound : (inRound * 33 / target).floor(),
+              ),
+              const SizedBox(height: 10),
               Text('${s.t('target')}: $target  •  ${s.t('rounds')}: $rounds  •  ${s.t('today_total')}: $count',
                   style: theme.textTheme.bodySmall),
               const SizedBox(height: 10),

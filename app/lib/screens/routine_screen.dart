@@ -219,11 +219,11 @@ class _TimelineState extends State<_Timeline> {
                 key: Key('timeline_check_${it.id}'),
                 tooltip: locked ? s.t('locked') : (done ? s.t('mark_not_done') : s.t('mark_done')),
                 onPressed: () => tryToggle(context, state, date, it, now: now),
-                icon: Icon(
-                  done ? Icons.check_circle : (locked ? Icons.lock_outline : Icons.radio_button_unchecked),
-                  color: done ? AppColors.onTime : theme.colorScheme.outline,
-                  size: 28,
-                ),
+                icon: done
+                    ? const Seal(size: 28)
+                    : locked
+                        ? Icon(Icons.lock_outline, color: theme.colorScheme.outline, size: 26)
+                        : const SealOutline(size: 28),
               ),
             ]),
           ),

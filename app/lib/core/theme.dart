@@ -7,11 +7,19 @@ class AppColors {
   static const emeraldLight = Color(0xFF1E8F62);
   static const gold = Color(0xFFC9A44C);
   static const goldLight = Color(0xFFF1D98C);
-  static const cream = Color(0xFFFAF6EC);
-  static const creamDark = Color(0xFFF1EADA);
-  static const darkBg = Color(0xFF0D1813);
-  static const darkSurface = Color(0xFF16261F);
-  static const darkSurfaceHigh = Color(0xFF1E3229);
+  // "Sahifa" paper & ink (manuscript look), keeping the green/gold identity.
+  static const cream = Color(0xFFF5EEE2); // paper
+  static const creamDark = Color(0xFFEADFC8); // deep paper
+  static const paperCard = Color(0xFFFBF7EF);
+  static const hairline = Color(0xFFDDD1BC);
+  static const ink = Color(0xFF251A20); // plum-black text
+  static const mutedInk = Color(0xFF6E5F66);
+  static const rubric = Color(0xFFB23A2E); // manuscript red, used sparingly (Jumma, headings)
+  // Night manuscript (dark mode).
+  static const darkBg = Color(0xFF17111A);
+  static const darkSurface = Color(0xFF221A24);
+  static const darkSurfaceHigh = Color(0xFF2D2330);
+  static const nightInk = Color(0xFFF0E7D8);
 
   static const onTime = Color(0xFF1E8F62);
   static const jamaat = Color(0xFF0B6E4F);
@@ -27,6 +35,9 @@ class AppColors {
 }
 
 const String arabicFont = 'NotoNaskhArabic';
+
+/// Serif display font for English headings and numbers (Sahifa style).
+const String displayFont = 'Fraunces';
 
 /// Urdu (Nastaleeq) font used for all Urdu text in the app.
 const String urduFont = 'NotoNastaliqUrdu';
@@ -74,7 +85,11 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
     secondary: AppColors.gold,
     onSecondary: const Color(0xFF2B2000),
     tertiary: AppColors.gold,
-    surface: light ? Colors.white : AppColors.darkSurface,
+    surface: light ? AppColors.paperCard : AppColors.darkSurface,
+    onSurface: light ? AppColors.ink : AppColors.nightInk,
+    onSurfaceVariant: light ? AppColors.mutedInk : const Color(0xFFB9A6AE),
+    outline: light ? AppColors.mutedInk : const Color(0xFFB9A6AE),
+    outlineVariant: light ? AppColors.hairline : const Color(0xFF453543),
     surfaceContainerHighest: light ? AppColors.creamDark : AppColors.darkSurfaceHigh,
   );
   final base = ThemeData(
@@ -83,15 +98,29 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
     brightness: brightness,
     fontFamily: urdu ? urduFont : null,
   );
+  // English headings in a serif (Fraunces); Urdu keeps Nastaleeq.
+  TextStyle? serif(TextStyle? t, [FontWeight w = FontWeight.w600]) =>
+      urdu ? t : t?.copyWith(fontFamily: displayFont, fontWeight: w, letterSpacing: -0.1);
+  final tt = base.textTheme;
   return base.copyWith(
     scaffoldBackgroundColor: light ? AppColors.cream : AppColors.darkBg,
+    textTheme: tt.copyWith(
+      displayLarge: serif(tt.displayLarge),
+      displayMedium: serif(tt.displayMedium),
+      displaySmall: serif(tt.displaySmall),
+      headlineLarge: serif(tt.headlineLarge),
+      headlineMedium: serif(tt.headlineMedium),
+      headlineSmall: serif(tt.headlineSmall),
+      titleLarge: serif(tt.titleLarge),
+      titleMedium: serif(tt.titleMedium),
+    ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: light ? const Color(0x14000000) : const Color(0x1FFFFFFF)),
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: light ? AppColors.hairline : const Color(0xFF3A2E3A)),
       ),
-      color: light ? Colors.white : AppColors.darkSurface,
+      color: light ? AppColors.paperCard : AppColors.darkSurface,
       margin: EdgeInsets.zero,
     ),
     appBarTheme: const AppBarTheme(
@@ -101,7 +130,7 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
       elevation: 0,
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: light ? Colors.white : AppColors.darkSurface,
+      backgroundColor: light ? AppColors.paperCard : AppColors.darkSurface,
       indicatorColor: (light ? AppColors.emerald : const Color(0xFF5FD39A)).withValues(alpha: 0.14),
       labelTextStyle: WidgetStatePropertyAll(
         TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: light ? AppColors.emerald : Colors.white70),
@@ -123,12 +152,17 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: light ? Colors.white : AppColors.darkSurfaceHigh,
+      fillColor: light ? AppColors.paperCard : AppColors.darkSurfaceHigh,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
     ),
-    dividerTheme: DividerThemeData(color: light ? const Color(0x14000000) : const Color(0x1FFFFFFF), space: 1),
+    dividerTheme: DividerThemeData(color: light ? AppColors.hairline : const Color(0xFF3A2E3A), space: 1),
     pageTransitionsTheme: const PageTransitionsTheme(builders: {
       TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
     }),
   );
 }
+
+/// Serif style for big English numbers / titles (falls back to Nastaleeq in
+/// Urdu where the theme font applies).
+TextStyle displayStyle({double size = 22, FontWeight weight = FontWeight.w600, Color? color}) =>
+    TextStyle(fontFamily: displayFont, fontSize: size, fontWeight: weight, color: color, letterSpacing: -0.2);

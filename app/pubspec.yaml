@@ -1,7 +1,7 @@
 name: dailydeen
 description: "Daily Deen - Islamic daily routine, Namaz, Quran and Azkar tracker."
 publish_to: 'none'
-version: 3.2.0+1
+version: 3.3.0+1
 
 environment:
   sdk: ^3.5.0
@@ -46,6 +46,12 @@ flutter:
     - family: KFGQPCNastaleeq
       fonts:
         - asset: assets/fonts/KFGQPC-Nastaleeq.otf
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-Bold.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: true
