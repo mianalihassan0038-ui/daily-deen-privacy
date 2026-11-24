@@ -1,7 +1,7 @@
 name: dailydeen
 description: "Daily Deen - Islamic daily routine, Namaz, Quran and Azkar tracker."
 publish_to: 'none'
-version: 3.4.1+3
+version: 3.5.0+4
 
 environment:
   sdk: ^3.5.0

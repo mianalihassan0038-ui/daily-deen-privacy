@@ -302,7 +302,7 @@ class _DayDetail extends StatelessWidget {
           Text(s.t('prayers'), style: const TextStyle(fontWeight: FontWeight.w800)),
           for (final k in prayerKeys)
             row(s.t(k), reportPrayerStatus(rec.prayer(k), urdu), isPrayed(rec.prayer(k))),
-          group(s.t('tilawat'), reportTilawat),
+          group(s.t('tilawat'), reportTilawatOn(day.date)),
           group(s.t('morning_tasbeehat'), reportMorning),
           group(s.t('evening_tasbeehat'), reportEvening),
         ]),

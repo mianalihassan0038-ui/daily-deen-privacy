@@ -261,6 +261,9 @@ const List<RoutineItem> defaultRoutine = [
   RoutineItem(id: 'm_kalima3', en: 'Third Kalima (Morning)', ur: 'تیسرا کلمہ (صبح)', section: RoutineSection.earlyMorning,
       timeEn: 'After Fajr', timeUr: 'فجر کے بعد', targetEn: '100 times', targetUr: '100 مرتبہ',
       dhikrKey: 'kalima3@m', dhikrTarget: 100, category: RoutineCategory.dhikr),
+  RoutineItem(id: 'm_lailaha', en: 'La ilaha illallah (Morning)', ur: 'لا الہ الا اللہ (صبح)', section: RoutineSection.earlyMorning,
+      timeEn: 'After Fajr', timeUr: 'فجر کے بعد', targetEn: '100 times', targetUr: '100 مرتبہ',
+      dhikrKey: 'lailaha@m', dhikrTarget: 100, category: RoutineCategory.dhikr),
   RoutineItem(id: 'yaseen', en: 'Surah Yaseen', ur: 'سورۃ یٰسین', section: RoutineSection.earlyMorning,
       timeEn: 'Morning', timeUr: 'صبح', targetEn: '1 time', targetUr: '1 مرتبہ',
       category: RoutineCategory.quran),
@@ -295,8 +298,11 @@ const List<RoutineItem> defaultRoutine = [
   RoutineItem(id: 'e_kalima3', en: 'Third Kalima (Evening)', ur: 'تیسرا کلمہ (شام)', section: RoutineSection.day,
       timeEn: 'Evening', timeUr: 'شام', targetEn: '100 times', targetUr: '100 مرتبہ',
       dhikrKey: 'kalima3@e', dhikrTarget: 100, category: RoutineCategory.dhikr),
+  RoutineItem(id: 'e_lailaha', en: 'La ilaha illallah (Evening)', ur: 'لا الہ الا اللہ (شام)', section: RoutineSection.day,
+      timeEn: 'Evening', timeUr: 'شام', targetEn: '100 times', targetUr: '100 مرتبہ',
+      dhikrKey: 'lailaha@e', dhikrTarget: 100, category: RoutineCategory.dhikr),
   RoutineItem(id: 'kahf', en: 'Surah Al-Kahf', ur: 'سورۃ الکہف', section: RoutineSection.day,
-      timeEn: 'Friday', timeUr: 'جمعہ', targetEn: 'Friday target', targetUr: 'جمعہ کا ہدف', fridayOnly: true, days: {5},
+      timeEn: 'Friday, until after Asr', timeUr: 'جمعہ، عصر کے بعد تک', targetEn: '1 time', targetUr: '1 مرتبہ', fridayOnly: true, days: {5},
       category: RoutineCategory.quran),
 
   // ---------- Evening & night ----------

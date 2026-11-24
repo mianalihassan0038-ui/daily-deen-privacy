@@ -556,6 +556,29 @@ void main() {
     expect(find.byKey(const Key('extra_azkar_header')), findsOneWidget);
     nav.pop();
     await tester.pumpAndSettle();
+    // After-salah and Namaz azkar: one tap completes the whole set, with undo.
+    for (final t in [AzkarType.afterSalah, AzkarType.salah]) {
+      nav.push(MaterialPageRoute(builder: (_) => AzkarDetailScreen(type: t)));
+      await tester.pumpAndSettle();
+      final st = AppScope.of(tester.element(find.byType(AzkarDetailScreen)));
+      final n = azkar[t]!.length;
+      await tester.tap(find.byKey(const Key('azkar_complete_all')));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < n; i++) {
+        expect(st.azkarCount(st.today, '${t.name}_$i'), azkar[t]![i].count);
+      }
+      expect(tester.widget<FilledButton>(find.byKey(const Key('azkar_complete_all'))).onPressed, isNull);
+      await tester.tap(find.byKey(const Key('undo_action')));
+      await tester.pumpAndSettle();
+      expect(st.azkarCount(st.today, '${t.name}_0'), 0);
+      nav.pop();
+      await tester.pumpAndSettle();
+    }
+    nav.push(MaterialPageRoute(builder: (_) => const AzkarDetailScreen(type: AzkarType.morning)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('azkar_complete_all')), findsNothing);
+    nav.pop();
+    await tester.pumpAndSettle();
     for (final t in [AzkarType.salah, AzkarType.kalimas]) {
       nav.push(MaterialPageRoute(builder: (_) => AzkarDetailScreen(type: t)));
       await tester.pumpAndSettle();

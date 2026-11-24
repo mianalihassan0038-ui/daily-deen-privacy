@@ -193,6 +193,22 @@ void main() {
       expect(state.witrDone(today), isFalse);
     });
 
+    test('3.5: La ilaha illallah tasbeehat, Kahf on Fridays in chilla', () {
+      final today = state.today;
+      for (var i = 0; i < 100; i++) {
+        state.incrementDhikr(today, 'lailaha@m');
+      }
+      expect(state.isDone(today, state.itemById('m_lailaha')!), isTrue);
+      expect(state.isDone(today, state.itemById('e_lailaha')!), isFalse);
+      expect(reportMorning, contains('m_lailaha'));
+      expect(reportEvening, contains('e_lailaha'));
+      final friday = DateTime(2026, 11, 27), thursday = DateTime(2026, 11, 26);
+      expect(reportTilawatOn(friday), ['yaseen', 'waqiah', 'mulk', 'kahf']);
+      expect(reportTilawatOn(thursday), ['yaseen', 'waqiah', 'mulk']);
+      expect(chillaProgress(state, friday).$2, chillaProgress(state, thursday).$2 + 1);
+      expect(tasbeehList.firstWhere((d) => d.key == 'durood').arabic, contains('إِبْرَاهِيمَ'));
+    });
+
     test('dhikr reaching target ticks routine item', () {
       final today = state.today;
       for (var i = 0; i < 99; i++) {

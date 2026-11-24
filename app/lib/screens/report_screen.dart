@@ -30,7 +30,7 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> {
   DateTime? _date;
 
-  static const _surahs = {'yaseen': 36, 'waqiah': 56, 'mulk': 67};
+  static const _surahs = {'yaseen': 36, 'waqiah': 56, 'mulk': 67, 'kahf': 18};
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +199,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(10),
                     child: Row(children: [
-                      for (final id in reportTilawat)
+                      for (final id in reportTilawatOn(date))
                         Expanded(
                           child: Builder(builder: (context) {
                             final it = state.itemById(id);

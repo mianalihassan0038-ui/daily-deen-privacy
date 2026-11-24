@@ -166,6 +166,9 @@ class AzkarCategoriesList extends StatelessWidget {
   }
 }
 
+/// Sets usually read right after namaz: offer a one-tap "complete all".
+const quickCompleteAzkar = {AzkarType.afterSalah, AzkarType.salah};
+
 /// Screen that lists all azkar of a category with counters.
 class AzkarDetailScreen extends StatelessWidget {
   final AzkarType type;
@@ -204,6 +207,20 @@ class AzkarDetailScreen extends StatelessWidget {
               ]),
             ),
           ),
+          if (quickCompleteAzkar.contains(type)) ...[
+            const SizedBox(height: 4),
+            Builder(builder: (context) {
+              final allDone = [for (var i = 0; i < list.length; i++) i]
+                  .every((i) => state.azkarCount(today, '${type.name}_$i') >= list[i].count);
+              return FilledButton.icon(
+                key: const Key('azkar_complete_all'),
+                onPressed: allDone ? null : () => _completeAll(context, state),
+                icon: Icon(allDone ? Icons.check_circle : Icons.done_all),
+                label: Text(allDone ? s.t('all_azkar_done') : s.t('complete_all_azkar')),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+              );
+            }),
+          ],
           const SizedBox(height: 8),
           for (final i in core) ...[
             ZikrCard(
@@ -239,6 +256,30 @@ class AzkarDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// "Already read after namaz": fills every counter of this set in one tap,
+  /// with an Undo that restores the previous counts.
+  void _completeAll(BuildContext context, AppState state) {
+    final list = azkar[type]!;
+    final today = state.today;
+    final before = {for (var i = 0; i < list.length; i++) '${type.name}_$i': state.azkarCount(today, '${type.name}_$i')};
+    state.setAzkarCounts(today, {for (var i = 0; i < list.length; i++) '${type.name}_$i': list[i].count});
+    _checkAll(state);
+    final s = state.s;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.emerald,
+        content: Text(s.t('all_azkar_done')),
+        action: SnackBarAction(
+          key: const Key('undo_action'),
+          label: s.t('undo'),
+          textColor: AppColors.gold,
+          onPressed: () => state.setAzkarCounts(today, before),
+        ),
+      ));
   }
 
   void _checkAll(AppState state) {
@@ -476,9 +517,11 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             child: Column(children: [
               Text(d.arabic,
+                  key: const Key('tasbeeh_arabic'),
                   textAlign: TextAlign.center,
                   textDirection: TextDirection.rtl,
-                  style: arabicStyle(context, size: 30, weight: FontWeight.w700)),
+                  // Long texts such as Durood-e-Ibrahimi get a reading size.
+                  style: arabicStyle(context, size: d.arabic.length > 60 ? 21 : 30, weight: FontWeight.w700)),
               Text(
                 [if (!d.custom) d.name, if (dhikrSession(d.key) == '@m') s.t('az_m'), if (dhikrSession(d.key) == '@e') s.t('az_e')].join(' • '),
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),

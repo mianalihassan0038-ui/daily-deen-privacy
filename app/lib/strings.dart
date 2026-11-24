@@ -212,6 +212,8 @@ class S {
     'azkar_hint': ['Tap a card to count. Long lists are completed one card at a time.', 'گننے کے لیے کارڈ پر ٹیپ کریں۔'],
     'tap_card_to_count': ['Tap the card to count', 'گننے کے لیے کارڈ پر ٹیپ کریں'],
     'mark_complete': ['Mark set complete', 'مکمل نشان لگائیں'],
+    'complete_all_azkar': ['Already read — complete all', 'پڑھ لیے ہیں — سب مکمل کریں'],
+    'all_azkar_done': ['All azkar completed', 'تمام اذکار مکمل ہو گئے'],
     'azkar_sources': [
       'Duas are from Hisn al-Muslim with their Hadith or Quran references.',
       'دعائیں حصن المسلم سے، حدیث یا قرآن کے حوالے کے ساتھ۔'

@@ -447,7 +447,7 @@ class AppSettings {
 const int quranTotalPages = 604;
 
 /// Bumped when new default activities are added, so saved routines get them.
-const int routineVersion = 4;
+const int routineVersion = 5;
 
 /// Default activities added in later versions (chilla: Surah Waqiah and
 /// morning / evening tasbeehat).
@@ -456,6 +456,7 @@ const newDefaultIds = [
   'm_istighfar', 'm_durood', 'm_kalima1', 'm_kalima3',
   'e_istighfar', 'e_durood', 'e_kalima1', 'e_kalima3',
   'awabeen', // v4: Awabeen nawafil after Maghrib
+  'm_lailaha', 'e_lailaha', // v5: La ilaha illallah morning / evening
 ];
 
 /// Inserts missing [newDefaultIds] into a saved routine, each after the
@@ -1160,6 +1161,12 @@ class AppState extends ChangeNotifier {
 
   void setAzkarCount(DateTime date, String key, int value) {
     day(date).azkar[key] = value;
+    _saveDay(date);
+  }
+
+  /// Sets several azkar counters at once (e.g. "already read, complete all").
+  void setAzkarCounts(DateTime date, Map<String, int> values) {
+    day(date).azkar.addAll(values);
     _saveDay(date);
   }
 

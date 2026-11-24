@@ -64,6 +64,7 @@ const Map<String, ScheduleSpec> defaultSchedules = {
   'm_durood': ScheduleSpec('fajr', 'dhuhr'),
   'm_kalima1': ScheduleSpec('fajr', 'dhuhr'),
   'm_kalima3': ScheduleSpec('fajr', 'dhuhr'),
+  'm_lailaha': ScheduleSpec('fajr', 'dhuhr'),
   'yaseen': ScheduleSpec('fajr', 'dhuhr'),
   // Forenoon
   'ishraq': ScheduleSpec('sunrise', 'dhuhr', startOffset: 20, endOffset: -10),
@@ -72,13 +73,14 @@ const Map<String, ScheduleSpec> defaultSchedules = {
   'quran_daily': ScheduleSpec('day', 'midnight'),
   'durood_100': ScheduleSpec('day', 'midnight'),
   'astaghfar_100': ScheduleSpec('day', 'midnight'),
-  'kahf': ScheduleSpec('day', 'midnight'),
+  'kahf': ScheduleSpec('day', 'maghrib'), // Friday, until after Asr
   // After Asr (evening window ends at Maghrib by default)
   'evening_azkar': ScheduleSpec('asr', 'maghrib'),
   'e_istighfar': ScheduleSpec('asr', 'maghrib'),
   'e_durood': ScheduleSpec('asr', 'maghrib'),
   'e_kalima1': ScheduleSpec('asr', 'maghrib'),
   'e_kalima3': ScheduleSpec('asr', 'maghrib'),
+  'e_lailaha': ScheduleSpec('asr', 'maghrib'),
   // After Maghrib
   'waqiah': ScheduleSpec('maghrib', 'midnight'),
   'awabeen': ScheduleSpec('maghrib', 'isha', startOffset: 5),

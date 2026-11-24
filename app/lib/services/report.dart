@@ -4,8 +4,12 @@ import '../strings.dart';
 
 /// Activities shown in the daily report, grouped as in the user's chilla format.
 const reportTilawat = ['yaseen', 'waqiah', 'mulk'];
-const reportMorning = ['m_istighfar', 'm_durood', 'm_kalima1', 'm_kalima3'];
-const reportEvening = ['e_istighfar', 'e_durood', 'e_kalima1', 'e_kalima3'];
+const reportMorning = ['m_istighfar', 'm_durood', 'm_kalima1', 'm_kalima3', 'm_lailaha'];
+const reportEvening = ['e_istighfar', 'e_durood', 'e_kalima1', 'e_kalima3', 'e_lailaha'];
+
+/// Important surahs of [date]: Surah Al-Kahf joins the daily three on Fridays.
+List<String> reportTilawatOn(DateTime date) =>
+    [...reportTilawat, if (date.weekday == DateTime.friday) 'kahf'];
 
 String reportPrayerStatus(PrayerStatus st, bool urdu) => switch (st) {
       PrayerStatus.jamaat => urdu ? 'باجماعت' : 'With Jamaat',
@@ -62,7 +66,7 @@ String buildDailyReport(AppState state, DateTime date, {required bool urdu}) {
     }
   }
 
-  section(urdu ? '*تلاوت*' : '*Tilawat*', reportTilawat);
+  section(urdu ? '*تلاوت*' : '*Tilawat*', reportTilawatOn(date));
   section(urdu ? '*تسبیحات:* صبح' : '*Tasbeehat:* Morning', reportMorning, bullets: true);
   section(urdu ? '*تسبیحات:* شام' : '*Tasbeehat:* Evening', reportEvening, bullets: true);
   return b.toString().trimRight();
@@ -75,7 +79,7 @@ String buildDailyReport(AppState state, DateTime date, {required bool urdu}) {
   final rec = state.day(date);
   var done = prayerKeys.where((k) => isPrayed(rec.prayer(k))).length;
   var total = prayerKeys.length;
-  for (final id in [...reportTilawat, ...reportMorning, ...reportEvening]) {
+  for (final id in [...reportTilawatOn(date), ...reportMorning, ...reportEvening]) {
     final it = state.itemById(id);
     if (it == null) continue;
     total++;
