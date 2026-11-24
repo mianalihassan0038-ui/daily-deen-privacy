@@ -680,6 +680,54 @@ void main() {
     await tester.pumpAndSettle();
     expect(state.day(state.today).quranPages, 0);
     expect(state.isDone(state.today, item), isFalse);
-    expect(state.lastRead?.surah, 18);
+    // A routine surah never moves the tilawat bookmark; its own place is kept.
+    expect(state.lastRead, isNull);
+    expect(state.taskPosOn(ReadingTask('kahf', 18, 1), state.today)?.surah, 18);
+  });
+
+  testWidgets('Tilawat and routine surahs are separate', (tester) async {
+    final state = await pumpApp(tester);
+    await tester.runAsync(() async {
+      await QuranRepository.instance.ensureLoaded();
+      await QuranRepository.instance.ayahs(2);
+      await QuranRepository.instance.ayahs(36);
+    });
+    state.setLastRead(2, 50); // daily tilawat is in Al-Baqarah
+    final ctx = tester.element(find.byKey(const Key('home_list')));
+
+    // "Last 2 ayat of Al-Baqarah" opens at 2:285, not at the tilawat place.
+    final last2 = state.itemById('baqarah_last2')!;
+    openActivity(ctx, last2, state.today);
+    await settleReader(tester);
+    expect(find.byKey(const Key('resume_banner')), findsOneWidget);
+    expect(find.textContaining('285'), findsWidgets);
+    expect(state.lastRead, const QuranRef(2, 50));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tilawat_mark_done')));
+    await tester.pumpAndSettle();
+    expect(state.isDone(state.today, last2), isTrue);
+    expect(state.lastRead, const QuranRef(2, 50), reason: 'tilawat bookmark untouched');
+    expect(state.resumeAyah(2), 50);
+
+    // Yaseen opens at its beginning.
+    openActivity(ctx, state.itemById('yaseen')!, state.today);
+    await settleReader(tester);
+    expect(find.byKey(const Key('resume_banner')), findsNothing);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tilawat_later')));
+    await tester.pumpAndSettle();
+    expect(state.lastRead, const QuranRef(2, 50));
+
+    // Daily tilawat continues exactly where the tilawat stopped.
+    openTilawatSession(ctx, state.itemById('quran_daily')!, state.today);
+    await settleReader(tester);
+    expect(find.textContaining('50'), findsWidgets);
+    expect(state.readingTask, isNull);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tilawat_later')));
+    await tester.pumpAndSettle();
   });
 }

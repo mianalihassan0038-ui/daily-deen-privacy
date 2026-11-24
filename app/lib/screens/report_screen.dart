@@ -49,7 +49,8 @@ class _ReportScreenState extends State<ReportScreen> {
       if (it.dhikrKey != null) {
         TasbeehLauncher.open(context, it.dhikrKey!);
       } else if (_surahs.containsKey(id)) {
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuranReaderScreen(surah: _surahs[id]!)));
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => QuranReaderScreen(surah: _surahs[id]!, task: ReadingTask(id, _surahs[id]!, 1))));
       } else {
         tryToggle(context, state, date, it);
       }

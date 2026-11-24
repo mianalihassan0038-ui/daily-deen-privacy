@@ -212,6 +212,11 @@ class S {
     'azkar_hint': ['Tap a card to count. Long lists are completed one card at a time.', 'گننے کے لیے کارڈ پر ٹیپ کریں۔'],
     'tap_card_to_count': ['Tap the card to count', 'گننے کے لیے کارڈ پر ٹیپ کریں'],
     'mark_complete': ['Mark set complete', 'مکمل نشان لگائیں'],
+    'separate_tasks': ['Keep routine surahs separate from tilawat', 'معمولات کی سورتیں تلاوت سے الگ رکھیں'],
+    'separate_tasks_sub': [
+      'Yaseen, Mulk, Waqiah, Kahf and the last 2 ayat of Al-Baqarah open at their own place and never move your tilawat bookmark.',
+      'یٰسین، ملک، واقعہ، کہف اور سورۃ البقرہ کی آخری دو آیات اپنی جگہ سے کھلیں گی اور آپ کی تلاوت کی جگہ نہیں بدلے گی۔'
+    ],
     'complete_all_azkar': ['Already read — complete all', 'پڑھ لیے ہیں — سب مکمل کریں'],
     'all_azkar_done': ['All azkar completed', 'تمام اذکار مکمل ہو گئے'],
     'azkar_sources': [

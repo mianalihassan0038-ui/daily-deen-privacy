@@ -217,6 +217,7 @@ class AppSettings {
   bool showEnglish;
   bool showTranslit;
   bool quranMushaf; // continuous mushaf view (true) or ayah-by-ayah translation view
+  bool separateTasks; // routine surahs (Yaseen, Baqarah last 2...) never move the tilawat bookmark
   double arabicSize;
   bool indoPakScript; // Indo-Pak (default) or Uthmani Quran script
 
@@ -271,6 +272,7 @@ class AppSettings {
     this.showEnglish = true,
     this.showTranslit = false,
     this.quranMushaf = true,
+    this.separateTasks = true,
     this.arabicSize = 26,
     this.indoPakScript = true,
     this.tasbeehVibrate = true,
@@ -338,6 +340,7 @@ class AppSettings {
         'showEn': showEnglish,
         'showTr': showTranslit,
         'mushaf': quranMushaf,
+        'sepTasks': separateTasks,
         'arSize': arabicSize,
         'indoPak': indoPakScript,
         'tVibrate': tasbeehVibrate,
@@ -426,6 +429,7 @@ class AppSettings {
       showEnglish: boolOr('showEn', true),
       showTranslit: boolOr('showTr', false),
       quranMushaf: boolOr('mushaf', true),
+      separateTasks: boolOr('sepTasks', true),
       arabicSize: dblOr('arSize', 26),
       indoPakScript: boolOr('indoPak', true),
       tasbeehVibrate: boolOr('tVibrate', true),
@@ -532,7 +536,37 @@ class AppState extends ChangeNotifier {
   Map<int, int> surahPos = {};
 
   /// Ayah to resume [surah] from (1 if never read).
-  int resumeAyah(int surah) => surahPos[surah] ?? 1;
+  int resumeAyah(int surah) {
+    final t = readingTask;
+    if (t != null && settings.separateTasks) {
+      final p = taskPosOn(t, today);
+      return p != null && p.surah == surah ? p.ayah : (surah == t.surah ? t.ayah : 1);
+    }
+    return surahPos[surah] ?? 1;
+  }
+
+  /// The routine surah task (e.g. Yaseen, last 2 ayat of Al-Baqarah) open in
+  /// the reader right now. While set, reading positions are saved for that
+  /// task only and the daily tilawat bookmark stays where it was.
+  ReadingTask? readingTask;
+
+  /// Where a routine surah task was left today: "date|surah|ayah" per item id.
+  Map<String, String> taskPos = {};
+
+  QuranRef? taskPosOn(ReadingTask t, DateTime date) {
+    final parts = (taskPos[t.id] ?? '').split('|');
+    if (parts.length != 3 || parts[0] != dayKey(date)) return null;
+    final s = int.tryParse(parts[1]), a = int.tryParse(parts[2]);
+    return s == null || a == null || !validRef(s, a) ? null : QuranRef(s, a);
+  }
+
+  void _setTaskPos(ReadingTask t, int surah, int ayah) {
+    final v = '${dayKey(today)}|$surah|$ayah';
+    if (taskPos[t.id] == v) return;
+    taskPos[t.id] = v;
+    prefs.setString('taskPos', jsonEncode(taskPos));
+    notifyListeners();
+  }
   List<QuranRef> bookmarks = [];
   List<QuranRef> favouriteAyat = [];
   List<Map<String, dynamic>> readingHistory = [];
@@ -559,6 +593,11 @@ class AppState extends ChangeNotifier {
     qazaPending = prefs.getInt('qazaPending') ?? 0;
     lastRead = QuranRef.parse(prefs.getString('lastRead') ?? '');
     surahPos = {};
+    try {
+      taskPos = (jsonDecode(prefs.getString('taskPos') ?? '{}') as Map<String, dynamic>).map((k, v) => MapEntry(k, '$v'));
+    } catch (_) {
+      taskPos = {};
+    }
     try {
       final raw = jsonDecode(prefs.getString('surahPos') ?? '{}') as Map<String, dynamic>;
       raw.forEach((k, v) {
@@ -1236,6 +1275,11 @@ class AppState extends ChangeNotifier {
   }
 
   void setLastRead(int surah, int ayah) {
+    final t = readingTask;
+    if (t != null && settings.separateTasks) {
+      _setTaskPos(t, surah, ayah);
+      return;
+    }
     final ref = QuranRef(surah, ayah);
     if (lastRead == ref && surahPos[surah] == ayah) return;
     lastRead = ref;
@@ -1605,9 +1649,19 @@ class ScheduledActivity {
 class AppScope extends InheritedNotifier<AppState> {
   const AppScope({super.key, required AppState state, required super.child}) : super(notifier: state);
 
+  /// Reads the state without listening (usable in initState).
+  static AppState read(BuildContext context) => context.getInheritedWidgetOfExactType<AppScope>()!.notifier!;
+
   static AppState of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
     assert(scope != null, 'AppScope not found');
     return scope!.notifier!;
   }
+}
+
+/// A routine surah task opened in the Quran reader (see [AppState.readingTask]).
+class ReadingTask {
+  final String id; // routine item id
+  final int surah, ayah; // where the task starts
+  const ReadingTask(this.id, this.surah, this.ayah);
 }

@@ -521,6 +521,17 @@ class TargetsScreen extends StatelessWidget {
                   },
                 ),
               ),
+              SwitchListTile(
+                key: const Key('separate_tasks'),
+                secondary: const Icon(Icons.bookmarks_outlined),
+                title: Text(s.t('separate_tasks')),
+                subtitle: Text(s.t('separate_tasks_sub')),
+                value: st.separateTasks,
+                onChanged: (v) {
+                  st.separateTasks = v;
+                  state.saveSettings();
+                },
+              ),
               for (final item in state.allItems.where((i) => i.dhikrKey != null))
                 ListTile(
                   leading: const Icon(Icons.touch_app_outlined),

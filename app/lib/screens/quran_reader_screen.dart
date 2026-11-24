@@ -15,7 +15,10 @@ class QuranReaderScreen extends StatefulWidget {
   /// Set when opened as a tilawat session from the routine: it records which
   /// pages were read so the user can log them when coming back.
   final QuranSession? session;
-  const QuranReaderScreen({super.key, required this.surah, this.ayah = 1, this.session});
+  /// Set for a routine surah task (Yaseen, Mulk, last ayat of Al-Baqarah...):
+  /// reading it does not move the daily tilawat bookmark.
+  final ReadingTask? task;
+  const QuranReaderScreen({super.key, required this.surah, this.ayah = 1, this.session, this.task});
 
   @override
   State<QuranReaderScreen> createState() => _QuranReaderScreenState();
@@ -69,10 +72,22 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     widget.session?.record(_surah, found!, repo.pageOf(_surah, found!));
   }
 
+  AppState? _state;
+
   @override
   void initState() {
     super.initState();
+    if (widget.task != null) {
+      _state = AppScope.read(context);
+      _state!.readingTask = widget.task;
+    }
     _load();
+  }
+
+  @override
+  void dispose() {
+    if (widget.task != null && identical(_state?.readingTask, widget.task)) _state!.readingTask = null;
+    super.dispose();
   }
 
   Future<void> _load() async {

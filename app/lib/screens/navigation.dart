@@ -227,13 +227,27 @@ Future<void> openTilawatSession(BuildContext context, RoutineItem item, DateTime
     return;
   }
   if (!context.mounted) return;
-  final lr = state.lastRead;
-  final sNo = surah ?? lr?.surah ?? 1;
-  // A surah task resumes inside that surah if it was started today.
-  final aNo = ayah == null ? (lr?.ayah ?? 1) : (surah != null && lr?.surah == surah ? state.resumeAyah(surah) : ayah);
+  // Two separate things:
+  // * daily tilawat continues from the tilawat bookmark (where the last
+  //   tilawat stopped);
+  // * a routine surah task (Yaseen, Mulk, Waqiah, last 2 ayat of Al-Baqarah...)
+  //   opens at its own place and never moves the tilawat bookmark. If it was
+  //   left half-way today, it continues from there.
+  final isTask = surah != null && state.settings.separateTasks;
+  final task = isTask ? ReadingTask(item.id, surah, ayah ?? 1) : null;
+  final int sNo, aNo;
+  if (task != null) {
+    final p = state.taskPosOn(task, date);
+    sNo = p?.surah ?? surah;
+    aNo = p?.ayah ?? (ayah ?? 1);
+  } else {
+    final lr = state.lastRead;
+    sNo = surah ?? lr?.surah ?? 1;
+    aNo = ayah == null ? (surah == null ? (lr?.ayah ?? 1) : state.resumeAyah(sNo)) : ayah;
+  }
   final session = QuranSession(QuranRef(sNo, aNo), repo.pageOf(sNo, aNo));
   await Navigator.of(context).push(MaterialPageRoute(
-    builder: (_) => QuranReaderScreen(surah: sNo, ayah: aNo, session: session),
+    builder: (_) => QuranReaderScreen(surah: sNo, ayah: aNo, session: session, task: task),
   ));
   if (!context.mounted) return;
   await showTilawatResultSheet(context, state, item, date, session);
