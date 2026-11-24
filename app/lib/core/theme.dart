@@ -43,12 +43,21 @@ const String urduFont = 'NotoNastaliqUrdu';
 /// Indo-Pak Quran font (King Fahd Complex Nastaleeq).
 const String indoPakFont = 'KFGQPCNastaleeq';
 
+/// Nastaleeq renders the single ligature ﷺ as a huge glyph that runs into the
+/// lines above and below; Urdu text spells it out instead.
+String urduText(String s) => s.replaceAll('\uFDFA', 'صلی اللہ علیہ وسلم');
+
+/// Scales long-form reading text with the screen width so it reads the same
+/// on small and large phones.
+double readingScale(BuildContext context) =>
+    (MediaQuery.sizeOf(context).width / 400).clamp(0.88, 1.08).toDouble();
+
 /// Style for Urdu text such as translations.
 TextStyle urduStyle(BuildContext context, {double size = 17, Color? color, FontWeight weight = FontWeight.w400}) {
   return TextStyle(
     fontFamily: urduFont,
-    fontSize: size,
-    height: 2.0,
+    fontSize: size * readingScale(context),
+    height: 2.15,
     fontWeight: weight,
     color: color ?? Theme.of(context).colorScheme.onSurface,
   );
@@ -68,7 +77,7 @@ TextStyle quranStyle(BuildContext context, {required bool indoPak, double size =
 TextStyle arabicStyle(BuildContext context, {double size = 24, Color? color, FontWeight weight = FontWeight.w400}) {
   return TextStyle(
     fontFamily: arabicFont,
-    fontSize: size,
+    fontSize: size * readingScale(context),
     height: 1.9,
     fontWeight: weight,
     color: color ?? Theme.of(context).colorScheme.onSurface,

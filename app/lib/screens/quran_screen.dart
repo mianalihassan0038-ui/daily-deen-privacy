@@ -644,7 +644,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             Card(
               child: ListTile(
                 title: Text('${repo.surah(a.surah).name} ${a.surah}:${a.number}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                subtitle: Text(urdu ? a.ur : a.en, maxLines: 3, overflow: TextOverflow.ellipsis),
+                subtitle: Text(urdu ? urduText(a.ur) : a.en, maxLines: 3, overflow: TextOverflow.ellipsis),
                 onTap: () => _open(a.surah, a.number),
               ),
             ),

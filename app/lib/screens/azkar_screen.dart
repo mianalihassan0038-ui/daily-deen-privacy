@@ -319,7 +319,7 @@ class ZikrCard extends StatelessWidget {
                   textDirection: TextDirection.ltr,
                   style: theme.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic, color: AppColors.emeraldMid)),
               const SizedBox(height: 8),
-              Text(zikr.ur,
+              Text(urduText(zikr.ur),
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
                   style: urduStyle(context, size: 16)),
@@ -595,7 +595,7 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
         Wrap(spacing: 8, runSpacing: 8, children: [
           for (final t in tasbeehList)
             ChoiceChip(
-              label: Text(urdu ? t.ur : t.en),
+              label: Text(urdu ? urduText(t.ur) : t.en),
               selected: dhikrBase(_key) == t.key,
               onSelected: (_) => setState(() => _key = t.key + dhikrSession(_key)),
             ),

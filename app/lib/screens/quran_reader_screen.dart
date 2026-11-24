@@ -504,7 +504,7 @@ class _AyahCard extends StatelessWidget {
                 if (showUr)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-                    child: Text(ayah.ur, textDirection: TextDirection.rtl, textAlign: TextAlign.right, style: urduStyle(context)),
+                    child: Text(urduText(ayah.ur), textDirection: TextDirection.rtl, textAlign: TextAlign.right, style: urduStyle(context)),
                   ),
                 if (showEn)
                   Padding(

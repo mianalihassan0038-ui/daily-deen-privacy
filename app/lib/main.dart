@@ -75,6 +75,15 @@ class DailyDeenApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
+            // Very large system font sizes break Nastaleeq layouts (it is
+            // much taller than Latin text), so the scale is capped.
+            builder: (context, child) {
+              final mq = MediaQuery.of(context);
+              return MediaQuery(
+                data: mq.copyWith(textScaler: mq.textScaler.clamp(maxScaleFactor: urdu ? 1.15 : 1.3)),
+                child: child!,
+              );
+            },
             home: RootGate(showSplash: showSplash),
           );
         },

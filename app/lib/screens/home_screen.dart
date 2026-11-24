@@ -870,7 +870,7 @@ class _DuaOfDayCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: arabicStyle(context, size: 22)),
               const SizedBox(height: 6),
-              Text(urdu ? dua.ur : dua.en, maxLines: 3, overflow: TextOverflow.ellipsis),
+              Text(urdu ? urduText(dua.ur) : dua.en, maxLines: 3, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 6),
               Text(dua.reference,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic, color: AppColors.gold)),

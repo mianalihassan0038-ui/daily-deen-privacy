@@ -236,4 +236,37 @@ void main() {
     await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
     await shot(tester, '11_home_urdu');
   });
+  // Urdu on a small phone with a large system font: must lay out cleanly.
+  testWidgets('urdu screens small phone big font', (tester) async {
+    final state = await setup(tester, urdu: true);
+    tester.view.physicalSize = const Size(720, 1520);
+    tester.view.devicePixelRatio = 2.0;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await tester.pumpWidget(DailyDeenApp(state: state, showSplash: false));
+    await tab(tester, Tabs.home);
+    await shot(tester, '20_home_urdu_small');
+    await tab(tester, Tabs.namaz);
+    await shot(tester, '21_namaz_urdu');
+    azkarSubTab.value = 0;
+    await tab(tester, Tabs.azkar);
+    await shot(tester, '22_azkar_urdu');
+    azkarSubTab.value = 1;
+    await tester.pumpAndSettle();
+    await shot(tester, '23_tasbeeh_urdu');
+    await tab(tester, Tabs.progress);
+    await shot(tester, '24_progress_urdu');
+    await tab(tester, Tabs.home);
+    await push(tester, const AzkarDetailScreen(type: AzkarType.morning));
+    await shot(tester, '25_morning_azkar_urdu');
+    await push(tester, const AzkarDetailScreen(type: AzkarType.evening));
+    await tester.drag(find.byType(ListView).last, const Offset(0, -2600));
+    await shot(tester, '26_evening_azkar_urdu_scrolled');
+    await push(tester, const MoreFeaturesScreen());
+    await shot(tester, '27_more_urdu');
+    await push(tester, const SettingsScreen());
+    await shot(tester, '28_settings_urdu');
+    await push(tester, const RoutineScreen());
+    await shot(tester, '29_routine_urdu');
+  });
 }

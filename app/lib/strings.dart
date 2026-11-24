@@ -6,7 +6,7 @@ class S {
   String t(String key) {
     final v = _strings[key];
     if (v == null) return key;
-    return urdu ? v[1] : v[0];
+    return urdu ? v[1].replaceAll('\uFDFA', 'صلی اللہ علیہ وسلم') : v[0];
   }
 
   static bool has(String key) => _strings.containsKey(key);
