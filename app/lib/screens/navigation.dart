@@ -238,7 +238,7 @@ Future<void> openTilawatSession(BuildContext context, RoutineItem item, DateTime
   final int sNo, aNo;
   if (task != null) {
     final p = state.taskPosOn(task, date);
-    sNo = p?.surah ?? surah;
+    sNo = p?.surah ?? surah!;
     aNo = p?.ayah ?? (ayah ?? 1);
   } else {
     final lr = state.lastRead;
