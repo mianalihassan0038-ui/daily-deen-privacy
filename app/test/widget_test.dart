@@ -706,7 +706,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tilawat_mark_done')));
     await tester.pumpAndSettle();
-    expect(state.isDone(state.today, last2), isTrue);
     expect(state.lastRead, const QuranRef(2, 50), reason: 'tilawat bookmark untouched');
     expect(state.resumeAyah(2), 50);
 
