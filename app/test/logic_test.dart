@@ -932,18 +932,28 @@ void main() {
       }
       expect(ids.contains('sayyid_istighfar'), isTrue);
       expect(ids.contains('after_adhan'), isTrue);
-      // Original sets keep their size; new ones are optional extras at the end.
-      expect(coreAzkarIndices(AzkarType.morning).length, 9);
-      expect(coreAzkarIndices(AzkarType.evening).length, 8);
-      expect(coreAzkarIndices(AzkarType.sleep).length, 7);
-      expect(azkar[AzkarType.morning]!.length, greaterThan(9));
+      // 3.4: morning/evening follow equranlibrary chapters 1 and 2 exactly,
+      // every item counts; sleep keeps its 7 core items + optional extras.
       final m = azkar[AzkarType.morning]!;
-      for (var i = 0; i < m.length; i++) {
-        expect(m[i].extra, i >= 9, reason: 'extras only after the original items');
+      final e = azkar[AzkarType.evening]!;
+      expect(m.length, 40);
+      expect(e.length, 38);
+      expect(coreAzkarIndices(AzkarType.morning).length, 40);
+      expect(coreAzkarIndices(AzkarType.evening).length, 38);
+      expect(coreAzkarIndices(AzkarType.sleep).length, 7);
+      expect(azkar[AzkarType.sleep]!.any((z) => z.extra), isTrue);
+      for (final list in [m, e]) {
+        expect(list.map((z) => z.id).toSet().length, list.length, reason: 'unique ids');
       }
-      // Completing only the core items completes the set.
-      final counts = <String, int>{for (final i in coreAzkarIndices(AzkarType.morning)) 'morning_$i': m[i].count};
-      expect(coreAzkarDone(AzkarType.morning, (k) => counts[k] ?? 0), 9);
+      expect([m.first.id, m[1].id, m[2].id, m[4].id], ['four_words', 'kursi', 'three_quls', 'la_yadurru']);
+      expect([m[19].id, m[20].id, m[35].id, m.last.id], ['subhan_bihamdihi', 'ashhaduka_m', 'rum_17_19', 'ikfini_2']);
+      expect([e[18].id, e[19].id, e[32].id, e[33].id, e.last.id],
+          ['ashhaduka_e', 'subhan_bihamdihi', 'ala_nafsi', 'rabbiyallah', 'adada_ma_khalaqa']);
+      expect(m[5].arabic, contains('الْمَصِيرُ'));
+      expect(e[5].arabic, contains('النُّشُورُ'));
+      expect(m[2].count, 3);
+      final counts = <String, int>{for (var i = 0; i < m.length; i++) 'morning_$i': m[i].count};
+      expect(coreAzkarDone(AzkarType.morning, (k) => counts[k] ?? 0), 40);
     });
   });
 

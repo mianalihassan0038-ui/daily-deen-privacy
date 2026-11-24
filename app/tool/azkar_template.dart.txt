@@ -78,18 +78,6 @@ const Map<AzkarType, List<String>> azkarTypeNames = {
   AzkarType.kalimas: ['Six Kalimas', 'چھ کلمے'],
 };
 
-const _kursi = Zikr(
-  id: 'kursi',
-  titleEn: 'Ayat-ul-Kursi',
-  titleUr: 'آیت الکرسی',
-  arabic: '{{ar:2:255}}',
-  translit: '{{tr:2:255}}',
-  en: '{{en:2:255}}',
-  ur: '{{ur:2:255}}',
-  count: 1,
-  reference: 'Al-Baqarah 2:255',
-);
-
 const _ikhlas = Zikr(
   id: 'ikhlas',
   titleEn: 'Surah Al-Ikhlas',
@@ -136,26 +124,6 @@ const _bismillahLaYadurru = Zikr(
   reference: 'Abu Dawud 5088, Tirmidhi 3388',
 );
 
-const _subhanAllahWaBihamdihi = Zikr(
-  id: 'subhan_bihamdihi',
-  arabic: 'سُبْحَانَ ٱللَّٰهِ وَبِحَمْدِهِ',
-  translit: 'SubhanAllahi wa bihamdihi',
-  en: 'Glory be to Allah and praise be to Him.',
-  ur: 'اللہ پاک ہے اور اسی کی تعریف ہے۔',
-  count: 100,
-  reference: 'Sahih Muslim 2692',
-);
-
-const _audhuKalimat = Zikr(
-  id: 'audhu_kalimat',
-  arabic: 'أَعُوذُ بِكَلِمَاتِ ٱللَّٰهِ ٱلتَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ',
-  translit: "A'udhu bikalimatillahit-tammati min sharri ma khalaq",
-  en: 'I seek refuge in the perfect words of Allah from the evil of what He has created.',
-  ur: 'میں اللہ کے کامل کلمات کی پناہ مانگتا ہوں ہر اس چیز کے شر سے جو اس نے پیدا کی۔',
-  count: 3,
-  reference: 'Sahih Muslim 2709',
-);
-
 const _tahlil = Zikr(
   id: 'tahlil',
   arabic: 'لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ ٱلْمُلْكُ وَلَهُ ٱلْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
@@ -167,240 +135,6 @@ const _tahlil = Zikr(
 );
 
 // ---- Added in 3.2 (equranlibrary.com azkaar chapters as checklist) ----
-const _z_sayyid_istighfar = Zikr(
-  id: 'sayyid_istighfar',
-  titleEn: 'Sayyid-ul-Istighfar',
-  titleUr: 'سید الاستغفار',
-  arabic: 'اَللّٰهُمَّ أَنْتَ رَبِّي لَا إِلٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ',
-  translit: "Allahumma anta Rabbi la ilaha illa anta, khalaqtani wa ana 'abduka, wa ana 'ala 'ahdika wa wa'dika mastata'tu, a'udhu bika min sharri ma sana'tu, abu'u laka bini'matika 'alayya, wa abu'u laka bidhanbi faghfir li, fa innahu la yaghfirudh-dhunuba illa anta",
-  en: 'O Allah, You are my Lord, there is no god but You. You created me and I am Your servant. I keep Your covenant and promise as much as I can. I seek refuge in You from the evil of what I have done. I acknowledge Your favour upon me and I acknowledge my sin, so forgive me, for none forgives sins except You.',
-  ur: 'اے اللہ! تو میرا رب ہے، تیرے سوا کوئی معبود نہیں۔ تو نے مجھے پیدا کیا اور میں تیرا بندہ ہوں، اور میں اپنی طاقت کے مطابق تیرے عہد اور وعدے پر قائم ہوں۔ میں اپنے کیے کے شر سے تیری پناہ چاہتا ہوں، مجھ پر تیری جو نعمتیں ہیں ان کا اقرار کرتا ہوں اور اپنے گناہ کا اعتراف کرتا ہوں، پس مجھے بخش دے کیونکہ تیرے سوا کوئی گناہ معاف نہیں کرتا۔',
-  count: 1,
-  reference: 'Bukhari 6306',
-  extra: true,
-);
-
-const _z_bika_m = Zikr(
-  id: 'bika_m',
-  titleEn: "Allah's companionship",
-  titleUr: 'اللہ تعالیٰ کی معیت',
-  arabic: 'اَللّٰهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ',
-  translit: 'Allahumma bika asbahna, wa bika amsayna, wa bika nahya, wa bika namutu, wa ilaykan-nushur',
-  en: 'O Allah, by You we enter the morning and by You we enter the evening, by You we live and by You we die, and to You is the resurrection.',
-  ur: 'اے اللہ! تیرے ہی حکم سے ہم نے صبح کی اور تیرے ہی حکم سے شام کی، تیرے ہی حکم سے ہم جیتے اور مرتے ہیں، اور تیری ہی طرف اٹھ کر جانا ہے۔',
-  count: 1,
-  reference: 'Tirmidhi 3391, Abu Dawud 5068',
-  extra: true,
-);
-
-const _z_fitrah_m = Zikr(
-  id: 'fitrah_m',
-  titleEn: 'Upon the natural religion of Islam',
-  titleUr: 'فطرتِ اسلام پر',
-  arabic: 'أَصْبَحْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا، وَمَا كَانَ مِنَ الْمُشْرِكِينَ',
-  translit: "Asbahna 'ala fitratil-Islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin, wa 'ala millati abina Ibrahima hanifan musliman, wa ma kana minal-mushrikin",
-  en: 'We have entered the morning upon the natural religion of Islam, the word of sincerity, the religion of our Prophet Muhammad ﷺ and the way of our father Ibrahim, who was upright, a Muslim, and not one of the polytheists.',
-  ur: 'ہم نے فطرتِ اسلام پر، کلمۂ اخلاص پر، اپنے نبی محمد ﷺ کے دین پر اور اپنے باپ ابراہیم کی ملت پر صبح کی جو یکسو مسلمان تھے اور مشرکوں میں سے نہ تھے۔',
-  count: 1,
-  reference: "Musnad Ahmad; Nasa'i (Amal al-Yawm)",
-  extra: true,
-);
-
-const _z_afini_badani = Zikr(
-  id: 'afini_badani',
-  titleEn: 'Well-being of body',
-  titleUr: 'بدن کی عافیت',
-  arabic: 'اَللّٰهُمَّ عَافِنِي فِي بَدَنِي، اَللّٰهُمَّ عَافِنِي فِي سَمْعِي، اَللّٰهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلٰهَ إِلَّا أَنْتَ. اَللّٰهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لَا إِلٰهَ إِلَّا أَنْتَ',
-  translit: "Allahumma 'afini fi badani, Allahumma 'afini fi sam'i, Allahumma 'afini fi basari, la ilaha illa anta. Allahumma inni a'udhu bika minal-kufri wal-faqr, wa a'udhu bika min 'adhabil-qabr, la ilaha illa anta",
-  en: 'O Allah, grant me well-being in my body, in my hearing and in my sight; there is no god but You. O Allah, I seek refuge in You from disbelief and poverty, and from the punishment of the grave; there is no god but You.',
-  ur: 'اے اللہ! مجھے میرے بدن، میری سماعت اور میری بصارت میں عافیت دے، تیرے سوا کوئی معبود نہیں۔ اے اللہ! میں کفر اور فقر سے اور قبر کے عذاب سے تیری پناہ مانگتا ہوں، تیرے سوا کوئی معبود نہیں۔',
-  count: 3,
-  reference: 'Abu Dawud 5090',
-  extra: true,
-);
-
-const _z_ya_hayyu = Zikr(
-  id: 'ya_hayyu',
-  titleEn: 'Setting all affairs right',
-  titleUr: 'تمام کاموں کی اصلاح',
-  arabic: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ',
-  translit: "Ya Hayyu ya Qayyum, birahmatika astaghith, aslih li sha'ni kullahu, wa la takilni ila nafsi tarfata 'ayn",
-  en: 'O Ever-Living, O Sustainer of all, by Your mercy I seek help: set right all my affairs and do not leave me to myself even for the blink of an eye.',
-  ur: 'اے ہمیشہ زندہ، اے سب کو قائم رکھنے والے! تیری رحمت کے وسیلے سے فریاد کرتا ہوں، میرے سب کام درست فرما دے اور مجھے پلک جھپکنے کے برابر بھی میرے نفس کے حوالے نہ کر۔',
-  count: 1,
-  reference: "Mustadrak Hakim 2000, Nasa'i (Amal al-Yawm)",
-  extra: true,
-);
-
-const _z_afw_afiyah = Zikr(
-  id: 'afw_afiyah',
-  titleEn: 'Pardon and well-being',
-  titleUr: 'معافی اور عافیت',
-  arabic: 'اَللّٰهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ، اَللّٰهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اَللّٰهُمَّ اسْتُرْ عَوْرَاتِي، وَآمِنْ رَوْعَاتِي، اَللّٰهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ، وَمِنْ خَلْفِي، وَعَنْ يَمِينِي، وَعَنْ شِمَالِي، وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي',
-  translit: "Allahumma inni as'alukal-'afwa wal-'afiyata fid-dunya wal-akhirah. Allahumma inni as'alukal-'afwa wal-'afiyata fi dini wa dunyaya wa ahli wa mali. Allahummastur 'awrati wa amin raw'ati. Allahummahfazni min bayni yadayya wa min khalfi wa 'an yamini wa 'an shimali wa min fawqi, wa a'udhu bi'azamatika an ughtala min tahti",
-  en: 'O Allah, I ask You for pardon and well-being in this world and the Hereafter. O Allah, I ask You for pardon and well-being in my religion, my worldly life, my family and my wealth. O Allah, cover my faults and calm my fears. O Allah, guard me from in front of me, behind me, on my right, on my left and above me, and I seek refuge in Your greatness from being taken unawares from beneath me.',
-  ur: 'اے اللہ! میں تجھ سے دنیا اور آخرت میں معافی اور عافیت مانگتا ہوں۔ اے اللہ! میں تجھ سے اپنے دین، اپنی دنیا، اپنے گھر والوں اور اپنے مال میں معافی اور عافیت مانگتا ہوں۔ اے اللہ! میرے عیبوں پر پردہ ڈال دے اور میرے خوف کو امن میں بدل دے۔ اے اللہ! میرے آگے سے، پیچھے سے، دائیں سے، بائیں سے اور اوپر سے میری حفاظت فرما، اور میں تیری عظمت کی پناہ چاہتا ہوں اس سے کہ نیچے سے اچانک ہلاک کیا جاؤں۔',
-  count: 1,
-  reference: 'Abu Dawud 5074, Ibn Majah 3871',
-  extra: true,
-);
-
-const _z_alim_al_ghayb = Zikr(
-  id: 'alim_al_ghayb',
-  titleEn: 'Refuge from the evil of the self and Satan',
-  titleUr: 'نفس اور شیطان کے شر سے پناہ',
-  arabic: 'اَللّٰهُمَّ عَالِمَ الْغَيْبِ وَالشَّهَادَةِ، فَاطِرَ السَّمٰوَاتِ وَالْأَرْضِ، رَبَّ كُلِّ شَيْءٍ وَمَلِيكَهُ، أَشْهَدُ أَنْ لَا إِلٰهَ إِلَّا أَنْتَ، أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ الشَّيْطَانِ وَشِرْكِهِ، وَأَنْ أَقْتَرِفَ عَلَى نَفْسِي سُوءًا أَوْ أَجُرَّهُ إِلَى مُسْلِمٍ',
-  translit: "Allahumma 'Alimal-ghaybi wash-shahadah, Fatiras-samawati wal-ard, Rabba kulli shay'in wa malikah, ashhadu an la ilaha illa anta, a'udhu bika min sharri nafsi, wa min sharrish-shaytani wa shirkih, wa an aqtarifa 'ala nafsi su'an aw ajurrahu ila muslim",
-  en: 'O Allah, Knower of the unseen and the seen, Creator of the heavens and the earth, Lord and Owner of everything: I bear witness that there is no god but You. I seek refuge in You from the evil of my soul, from the evil of Satan and his call to shirk, and from doing wrong against myself or bringing it upon a Muslim.',
-  ur: 'اے اللہ! غائب اور حاضر کے جاننے والے، آسمانوں اور زمین کے پیدا کرنے والے، ہر چیز کے رب اور مالک! میں گواہی دیتا ہوں کہ تیرے سوا کوئی معبود نہیں۔ میں اپنے نفس کے شر سے، شیطان کے شر اور اس کے شرک سے تیری پناہ مانگتا ہوں، اور اس سے کہ اپنی جان پر کوئی برائی کروں یا کسی مسلمان کی طرف اسے لے جاؤں۔',
-  count: 1,
-  reference: 'Abu Dawud 5067, Tirmidhi 3392',
-  extra: true,
-);
-
-const _z_hasbiyallah_7 = Zikr(
-  id: 'hasbiyallah_7',
-  titleEn: 'Allah is sufficient for me',
-  titleUr: 'مجھے اللہ کافی ہے',
-  arabic: 'حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ، وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ',
-  translit: "Hasbiyallahu la ilaha illa huwa, 'alayhi tawakkaltu, wa huwa Rabbul-'Arshil-'Azim",
-  en: 'Allah is sufficient for me; there is no god but He. In Him I put my trust, and He is the Lord of the Mighty Throne.',
-  ur: 'مجھے اللہ کافی ہے، اس کے سوا کوئی معبود نہیں، اسی پر میں نے بھروسہ کیا اور وہی عرشِ عظیم کا رب ہے۔',
-  count: 7,
-  reference: 'Abu Dawud 5081',
-  extra: true,
-);
-
-const _z_ma_bi_nimah_m = Zikr(
-  id: 'ma_bi_nimah_m',
-  titleEn: 'Gratitude for blessings',
-  titleUr: 'نعمتوں پر شکر',
-  arabic: 'اَللّٰهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
-  translit: "Allahumma ma asbaha bi min ni'matin aw bi-ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr",
-  en: 'O Allah, whatever blessing I or any of Your creation have this morning is from You alone, without partner; so to You is all praise and all thanks.',
-  ur: 'اے اللہ! صبح کے وقت مجھ پر یا تیری مخلوق میں سے کسی پر جو بھی نعمت ہے وہ صرف تیری طرف سے ہے، تیرا کوئی شریک نہیں، پس تیرے ہی لیے تعریف ہے اور تیرا ہی شکر ہے۔',
-  count: 1,
-  reference: 'Abu Dawud 5073',
-  extra: true,
-);
-
-const _z_tahlil_10 = Zikr(
-  id: 'tahlil_10',
-  titleEn: 'Tahlil (10 times)',
-  titleUr: 'تہلیل (10 مرتبہ)',
-  arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
-  translit: "La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, wa huwa 'ala kulli shay'in qadir",
-  en: 'There is no god but Allah, alone without partner. His is the dominion and His is the praise, and He has power over all things.',
-  ur: 'اللہ کے سوا کوئی معبود نہیں، وہ اکیلا ہے اس کا کوئی شریک نہیں، اسی کی بادشاہی ہے اور اسی کے لیے تعریف ہے، اور وہ ہر چیز پر قادر ہے۔',
-  count: 10,
-  reference: 'Musnad Ahmad 23568',
-  extra: true,
-);
-
-const _z_ajirni_nar = Zikr(
-  id: 'ajirni_nar',
-  titleEn: 'Protection from the Fire (after Fajr and Maghrib)',
-  titleUr: 'جہنم سے پناہ (فجر اور مغرب کے بعد)',
-  arabic: 'اَللّٰهُمَّ أَجِرْنِي مِنَ النَّارِ',
-  translit: 'Allahumma ajirni minan-nar',
-  en: 'O Allah, protect me from the Fire.',
-  ur: 'اے اللہ! مجھے جہنم کی آگ سے بچا لے۔',
-  count: 7,
-  reference: 'Abu Dawud 5079',
-  extra: true,
-);
-
-const _z_ilman_nafia = Zikr(
-  id: 'ilman_nafia',
-  titleEn: 'Beneficial knowledge (after Fajr)',
-  titleUr: 'نفع بخش علم (فجر کے بعد)',
-  arabic: 'اَللّٰهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا',
-  translit: "Allahumma inni as'aluka 'ilman nafi'an, wa rizqan tayyiban, wa 'amalan mutaqabbala",
-  en: 'O Allah, I ask You for beneficial knowledge, good provision and accepted deeds.',
-  ur: 'اے اللہ! میں تجھ سے نفع دینے والا علم، پاکیزہ رزق اور قبول ہونے والا عمل مانگتا ہوں۔',
-  count: 1,
-  reference: 'Ibn Majah 925',
-  extra: true,
-);
-
-const _z_adada_khalqihi = Zikr(
-  id: 'adada_khalqihi',
-  titleEn: 'Words heavy on the scale',
-  titleUr: 'میزان میں بھاری کلمات',
-  arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ',
-  translit: "Subhanallahi wa bihamdihi, 'adada khalqihi, wa rida nafsihi, wa zinata 'arshihi, wa midada kalimatih",
-  en: 'Glory and praise be to Allah, as many times as the number of His creation, as much as pleases Him, as heavy as His Throne and as much as the ink of His words.',
-  ur: 'اللہ پاک ہے اور اپنی تعریف کے ساتھ، اپنی مخلوق کی تعداد کے برابر، اپنی رضا کے مطابق، اپنے عرش کے وزن کے برابر اور اپنے کلمات کی سیاہی کے برابر۔',
-  count: 3,
-  reference: 'Muslim 2726',
-  extra: true,
-);
-
-const _z_hashr_last = Zikr(
-  id: 'hashr_last',
-  titleEn: 'Refuge + last 3 ayat of Surah Al-Hashr',
-  titleUr: 'تعوذ اور سورۃ الحشر کی آخری تین آیات',
-  arabic: 'أَعُوذُ بِاللّٰهِ السَّمِيعِ الْعَلِيمِ مِنَ الشَّيْطَانِ الرَّجِيمِ (٣)\n{{ar:59:22-24}}',
-  translit: "A'udhu billahis-Sami'il-'Alimi minash-shaytanir-rajim (3 times), then: {{tr:59:22-24}}",
-  en: 'I seek refuge in Allah, the All-Hearing, the All-Knowing, from Satan the accursed (3 times). Then: {{en:59:22-24}}',
-  ur: 'میں شیطان مردود سے اللہ سننے والے، جاننے والے کی پناہ مانگتا ہوں (3 مرتبہ)، پھر: {{ur:59:22-24}}',
-  count: 1,
-  reference: 'Tirmidhi 2922; Al-Hashr 59:22-24',
-  extra: true,
-);
-
-const _z_rum_17_19 = Zikr(
-  id: 'rum_17_19',
-  titleEn: 'Surah Ar-Rum 17–19',
-  titleUr: 'سورۃ الروم آیات 17–19',
-  arabic: '{{ar:30:17-19}}',
-  translit: '{{tr:30:17-19}}',
-  en: '{{en:30:17-19}}',
-  ur: '{{ur:30:17-19}}',
-  count: 1,
-  reference: 'Abu Dawud 5076; Ar-Rum 30:17-19',
-  extra: true,
-);
-
-const _z_bika_e = Zikr(
-  id: 'bika_e',
-  titleEn: "Allah's companionship",
-  titleUr: 'اللہ تعالیٰ کی معیت',
-  arabic: 'اَللّٰهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ',
-  translit: 'Allahumma bika amsayna, wa bika asbahna, wa bika nahya, wa bika namutu, wa ilaykal-masir',
-  en: 'O Allah, by You we enter the evening and by You we enter the morning, by You we live and by You we die, and to You is the final return.',
-  ur: 'اے اللہ! تیرے ہی حکم سے ہم نے شام کی اور تیرے ہی حکم سے صبح کی، تیرے ہی حکم سے ہم جیتے اور مرتے ہیں، اور تیری ہی طرف لوٹ کر جانا ہے۔',
-  count: 1,
-  reference: 'Tirmidhi 3391, Abu Dawud 5068',
-  extra: true,
-);
-
-const _z_fitrah_e = Zikr(
-  id: 'fitrah_e',
-  titleEn: 'Upon the natural religion of Islam',
-  titleUr: 'فطرتِ اسلام پر',
-  arabic: 'أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا، وَمَا كَانَ مِنَ الْمُشْرِكِينَ',
-  translit: "Amsayna 'ala fitratil-Islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin, wa 'ala millati abina Ibrahima hanifan musliman, wa ma kana minal-mushrikin",
-  en: 'We have entered the evening upon the natural religion of Islam, the word of sincerity, the religion of our Prophet Muhammad ﷺ and the way of our father Ibrahim, who was upright, a Muslim, and not one of the polytheists.',
-  ur: 'ہم نے فطرتِ اسلام پر، کلمۂ اخلاص پر، اپنے نبی محمد ﷺ کے دین پر اور اپنے باپ ابراہیم کی ملت پر شام کی جو یکسو مسلمان تھے اور مشرکوں میں سے نہ تھے۔',
-  count: 1,
-  reference: "Musnad Ahmad; Nasa'i (Amal al-Yawm)",
-  extra: true,
-);
-
-const _z_ma_bi_nimah_e = Zikr(
-  id: 'ma_bi_nimah_e',
-  titleEn: 'Gratitude for blessings',
-  titleUr: 'نعمتوں پر شکر',
-  arabic: 'اَللّٰهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
-  translit: "Allahumma ma amsa bi min ni'matin aw bi-ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr",
-  en: 'O Allah, whatever blessing I or any of Your creation have this evening is from You alone, without partner; so to You is all praise and all thanks.',
-  ur: 'اے اللہ! شام کے وقت مجھ پر یا تیری مخلوق میں سے کسی پر جو بھی نعمت ہے وہ صرف تیری طرف سے ہے، تیرا کوئی شریک نہیں، پس تیرے ہی لیے تعریف ہے اور تیرا ہی شکر ہے۔',
-  count: 1,
-  reference: 'Abu Dawud 5073',
-  extra: true,
-);
-
 const _z_bismika_rabbi = Zikr(
   id: 'bismika_rabbi',
   titleEn: 'Lying down on the bed',
@@ -983,86 +717,678 @@ const _z_kalima_6 = Zikr(
   reference: 'Commonly taught (phrases from Quran & Sunnah)',
 );
 
+// ---- 3.4: Morning & Evening azkar in the exact order of
+// equranlibrary.com/azkaarchapters/1 and /2 ----
+const _me_four_words = Zikr(
+  id: 'four_words',
+  titleEn: 'Takbir, Tahmid, Tasbih, Tahlil',
+  titleUr: 'تکبیر، تحمید، تسبیح، تہلیل',
+  arabic: 'اَللّٰهُ أَكْبَرُ، اَلْحَمْدُ لِلّٰهِ، سُبْحَانَ اللّٰهِ، لَا إِلٰهَ إِلَّا اللّٰهُ',
+  translit: 'Allahu akbar, alhamdu lillah, subhanallah, la ilaha illallah',
+  en: 'Allah is the Greatest; all praise is for Allah; glory be to Allah; there is no god but Allah. (The Prophet ﷺ loved to sit remembering Allah with these words from Fajr until sunrise, and from Asr until sunset.)',
+  ur: 'اللہ سب سے بڑا ہے، تمام تعریفیں اللہ کے لیے ہیں، اللہ پاک ہے، اللہ کے سوا کوئی معبود نہیں۔ (نبی ﷺ کو فجر سے طلوعِ آفتاب تک اور عصر سے غروب تک ان کلمات سے اللہ کا ذکر کرنا بہت محبوب تھا۔)',
+  count: 1,
+  reference: 'Musnad Ahmad 22194',
+);
+
+const _me_kursi = Zikr(
+  id: 'kursi',
+  titleEn: 'Ayat-ul-Kursi',
+  titleUr: 'آیت الکرسی',
+  arabic: '{{ar:2:255}}',
+  translit: '{{tr:2:255}}',
+  en: '{{en:2:255}}',
+  ur: '{{ur:2:255}}',
+  count: 1,
+  reference: 'Tabarani (Kabir) 542; Al-Baqarah 2:255',
+);
+
+const _me_three_quls = Zikr(
+  id: 'three_quls',
+  titleEn: 'Surah Al-Ikhlas, Al-Falaq, An-Nas',
+  titleUr: 'سورۃ الاخلاص، الفلق، الناس',
+  arabic: '{{ar:112}}\n\n{{ar:113}}\n\n{{ar:114}}',
+  translit: '{{tr:112}}\n\n{{tr:113}}\n\n{{tr:114}}',
+  en: 'Al-Ikhlas: {{en:112}}\n\nAl-Falaq: {{en:113}}\n\nAn-Nas: {{en:114}}',
+  ur: 'سورۃ الاخلاص: {{ur:112}}\n\nسورۃ الفلق: {{ur:113}}\n\nسورۃ الناس: {{ur:114}}',
+  count: 3,
+  reference: 'Abu Dawud 5082',
+);
+
+const _me_adada_khalqihi = Zikr(
+  id: 'adada_khalqihi',
+  titleEn: 'Words heavy on the scale',
+  titleUr: 'میزان میں بھاری کلمات',
+  arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، عَدَدَ خَلْقِهِ، وَرِضَا نَفْسِهِ، وَزِنَةَ عَرْشِهِ، وَمِدَادَ كَلِمَاتِهِ',
+  translit: "Subhanallahi wa bihamdihi, 'adada khalqihi, wa rida nafsihi, wa zinata 'arshihi, wa midada kalimatih",
+  en: 'Glory and praise be to Allah, as many times as the number of His creation, as much as pleases Him, as heavy as His Throne and as much as the ink of His words.',
+  ur: 'اللہ پاک ہے اور اپنی تعریف کے ساتھ، اپنی مخلوق کی تعداد کے برابر، اپنی رضا کے مطابق، اپنے عرش کے وزن کے برابر اور اپنے کلمات کی سیاہی کے برابر۔',
+  count: 3,
+  reference: 'Sahih Muslim 2726',
+);
+
+const _me_la_yadurru = Zikr(
+  id: 'la_yadurru',
+  titleEn: 'Protection by the name of Allah',
+  titleUr: 'اللہ کے نام کی حفاظت',
+  arabic: 'بِسْمِ اللّٰهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ، وَهُوَ السَّمِيعُ الْعَلِيمُ',
+  translit: "Bismillahil-ladhi la yadurru ma'as-mihi shay'un fil-ardi wa la fis-sama'i, wa huwas-Sami'ul-'Alim",
+  en: 'In the name of Allah, with whose name nothing on earth or in heaven can cause harm, and He is the All-Hearing, All-Knowing.',
+  ur: 'اللہ کے نام سے جس کے نام کے ساتھ زمین و آسمان میں کوئی چیز نقصان نہیں پہنچا سکتی، اور وہ سننے والا جاننے والا ہے۔',
+  count: 3,
+  reference: 'Musnad Ahmad 474; Abu Dawud 5088; Tirmidhi 3388',
+);
+
+const _me_bika_m = Zikr(
+  id: 'bika_m',
+  titleEn: "Allah's companionship",
+  titleUr: 'اللہ تعالیٰ کی معیت',
+  arabic: 'اَللّٰهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ',
+  translit: 'Allahumma bika asbahna, wa bika amsayna, wa bika nahya, wa bika namutu, wa ilaykal-masir',
+  en: 'O Allah, by You we enter the morning and by You we enter the evening, by You we live and by You we die, and to You is the final return.',
+  ur: 'اے اللہ! تیرے ہی حکم سے ہم نے صبح کی اور تیرے ہی حکم سے شام کی، تیرے ہی حکم سے ہم جیتے اور مرتے ہیں، اور تیری ہی طرف لوٹ کر جانا ہے۔',
+  count: 1,
+  reference: 'Tirmidhi 3391',
+);
+
+const _me_fitrah_m = Zikr(
+  id: 'fitrah_m',
+  titleEn: 'Upon the natural religion of Islam',
+  titleUr: 'فطرتِ اسلام پر',
+  arabic: 'أَصْبَحْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا، وَمَا كَانَ مِنَ الْمُشْرِكِينَ',
+  translit: "Asbahna 'ala fitratil-Islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin ﷺ, wa 'ala millati abina Ibrahima hanifan musliman, wa ma kana minal-mushrikin",
+  en: 'We have entered the morning upon the natural religion of Islam, the word of sincerity, the religion of our Prophet Muhammad ﷺ and the way of our father Ibrahim, who was upright, a Muslim, and not one of the polytheists.',
+  ur: 'ہم نے فطرتِ اسلام پر، کلمۂ اخلاص پر، اپنے نبی محمد ﷺ کے دین پر اور اپنے باپ ابراہیم کی ملت پر صبح کی جو یکسو مسلمان تھے اور مشرکوں میں سے نہ تھے۔',
+  count: 1,
+  reference: "Sunan al-Kubra (Nasa'i) 9745",
+);
+
+const _me_ilman_nafia = Zikr(
+  id: 'ilman_nafia',
+  titleEn: 'Beneficial knowledge',
+  titleUr: 'نفع بخش علم',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا',
+  translit: "Allahumma inni as'aluka 'ilman nafi'an, wa rizqan tayyiban, wa 'amalan mutaqabbala",
+  en: 'O Allah, I ask You for beneficial knowledge, good provision and accepted deeds.',
+  ur: 'اے اللہ! میں تجھ سے نفع دینے والا علم، پاکیزہ رزق اور قبول ہونے والا عمل مانگتا ہوں۔',
+  count: 1,
+  reference: "Shu'ab al-Iman 1645",
+);
+
+const _me_fatir = Zikr(
+  id: 'fatir',
+  titleEn: 'Refuge from the evil of the self and Satan',
+  titleUr: 'نفس اور شیطان کے شر سے پناہ',
+  arabic: 'اَللّٰهُمَّ فَاطِرَ السَّمٰوَاتِ وَالْأَرْضِ، عَالِمَ الْغَيْبِ وَالشَّهَادَةِ، رَبَّ كُلِّ شَيْءٍ وَمَلِيكَهُ، أَشْهَدُ أَنْ لَا إِلٰهَ إِلَّا أَنْتَ، أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَشَرِّ الشَّيْطَانِ وَشِرْكِهِ',
+  translit: "Allahumma Fatiras-samawati wal-ard, 'Alimal-ghaybi wash-shahadah, Rabba kulli shay'in wa malikah, ashhadu an la ilaha illa anta, a'udhu bika min sharri nafsi, wa sharrish-shaytani wa shirkih",
+  en: 'O Allah, Creator of the heavens and the earth, Knower of the unseen and the seen, Lord and Owner of everything: I bear witness that there is no god but You. I seek refuge in You from the evil of my soul, and from the evil of Satan and his call to shirk.',
+  ur: 'اے اللہ! آسمانوں اور زمین کے پیدا کرنے والے، غائب اور حاضر کے جاننے والے، ہر چیز کے رب اور مالک! میں گواہی دیتا ہوں کہ تیرے سوا کوئی معبود نہیں۔ میں اپنے نفس کے شر سے اور شیطان کے شر اور اس کے شرک سے تیری پناہ مانگتا ہوں۔',
+  count: 1,
+  reference: 'Abu Dawud 5067',
+);
+
+const _me_mulk_m = Zikr(
+  id: 'mulk_m',
+  titleEn: 'The dominion belongs to Allah',
+  titleUr: 'بادشاہی اللہ کی ہے',
+  arabic: 'أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلّٰهِ، وَالْحَمْدُ لِلّٰهِ، لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هٰذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هٰذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابِ النَّارِ وَعَذَابِ الْقَبْرِ',
+  translit: "Asbahna wa asbahal-mulku lillah, wal-hamdu lillah, la ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, wa huwa 'ala kulli shay'in qadir. Rabbi as'aluka khayra ma fi hadhal-yawmi wa khayra ma ba'dah, wa a'udhu bika min sharri ma fi hadhal-yawmi wa sharri ma ba'dah. Rabbi a'udhu bika minal-kasali wa su'il-kibar. Rabbi a'udhu bika min 'adhabin-nari wa 'adhabil-qabr",
+  en: 'We have entered the morning and the dominion belongs to Allah; all praise is for Allah. There is no god but Allah alone, without partner; His is the dominion and His the praise, and He has power over all things. My Lord, I ask You for the good of this day and the good after it, and I seek refuge in You from the evil of this day and the evil after it. My Lord, I seek refuge in You from laziness and the misery of old age. My Lord, I seek refuge in You from the punishment of the Fire and the punishment of the grave.',
+  ur: 'ہم نے صبح کی اور ساری بادشاہی اللہ کی ہے، تمام تعریفیں اللہ کے لیے ہیں، اللہ کے سوا کوئی معبود نہیں، وہ اکیلا ہے اس کا کوئی شریک نہیں، اسی کی بادشاہی اور اسی کی تعریف ہے اور وہ ہر چیز پر قادر ہے۔ اے میرے رب! میں تجھ سے اس دن کی اور اس کے بعد کی بھلائی مانگتا ہوں، اور اس دن کے اور اس کے بعد کے شر سے تیری پناہ چاہتا ہوں۔ اے میرے رب! میں سستی اور بڑھاپے کی خرابی سے تیری پناہ چاہتا ہوں۔ اے میرے رب! میں جہنم کے عذاب اور قبر کے عذاب سے تیری پناہ چاہتا ہوں۔',
+  count: 1,
+  reference: 'Tirmidhi 3390',
+);
+
+const _me_raditu = Zikr(
+  id: 'raditu',
+  titleEn: 'Pleased with Allah, Islam and the Prophet ﷺ',
+  titleUr: 'اللہ، اسلام اور نبی ﷺ پر راضی',
+  arabic: 'رَضِيتُ بِاللّٰهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللّٰهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا',
+  translit: 'Raditu billahi Rabba, wa bil-Islami dina, wa bi-Muhammadin sallallahu alayhi wa sallama nabiyya',
+  en: 'I am pleased with Allah as my Lord, with Islam as my religion and with Muhammad ﷺ as my Prophet.',
+  ur: 'میں اللہ کے رب ہونے، اسلام کے دین ہونے اور محمد ﷺ کے نبی ہونے پر راضی ہوں۔',
+  count: 3,
+  reference: 'Musnad Ahmad 18967, 11102; Sahih Muslim 34',
+);
+
+const _me_afini_badani = Zikr(
+  id: 'afini_badani',
+  titleEn: 'Well-being of body',
+  titleUr: 'بدن کی عافیت',
+  arabic: 'اَللّٰهُمَّ عَافِنِي فِي بَدَنِي، اَللّٰهُمَّ عَافِنِي فِي سَمْعِي، اَللّٰهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلٰهَ إِلَّا أَنْتَ. اَللّٰهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لَا إِلٰهَ إِلَّا أَنْتَ',
+  translit: "Allahumma 'afini fi badani, Allahumma 'afini fi sam'i, Allahumma 'afini fi basari, la ilaha illa anta. Allahumma inni a'udhu bika minal-kufri wal-faqr, wa a'udhu bika min 'adhabil-qabr, la ilaha illa anta",
+  en: 'O Allah, grant me well-being in my body, in my hearing and in my sight; there is no god but You. O Allah, I seek refuge in You from disbelief and poverty, and from the punishment of the grave; there is no god but You.',
+  ur: 'اے اللہ! مجھے میرے بدن، میری سماعت اور میری بصارت میں عافیت دے، تیرے سوا کوئی معبود نہیں۔ اے اللہ! میں کفر اور فقر سے اور قبر کے عذاب سے تیری پناہ مانگتا ہوں، تیرے سوا کوئی معبود نہیں۔',
+  count: 3,
+  reference: 'Abu Dawud 5090',
+);
+
+const _me_ya_hayyu = Zikr(
+  id: 'ya_hayyu',
+  titleEn: 'Setting all affairs right',
+  titleUr: 'تمام کاموں کی اصلاح',
+  arabic: 'يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ',
+  translit: "Ya Hayyu ya Qayyum, birahmatika astaghith, aslih li sha'ni kullahu, wa la takilni ila nafsi tarfata 'ayn",
+  en: 'O Ever-Living, O Sustainer of all, by Your mercy I seek help: set right all my affairs and do not leave me to myself even for the blink of an eye.',
+  ur: 'اے ہمیشہ زندہ، اے سب کو قائم رکھنے والے! تیری رحمت کے وسیلے سے فریاد کرتا ہوں، میرے سب کام درست فرما دے اور مجھے پلک جھپکنے کے برابر بھی میرے نفس کے حوالے نہ کر۔',
+  count: 1,
+  reference: 'Mustadrak Hakim 2000; Tabarani (Awsat) 3565; Tirmidhi 3524',
+);
+
+const _me_sayyid_istighfar = Zikr(
+  id: 'sayyid_istighfar',
+  titleEn: 'Sayyid-ul-Istighfar',
+  titleUr: 'سید الاستغفار',
+  arabic: 'اَللّٰهُمَّ أَنْتَ رَبِّي لَا إِلٰهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ',
+  translit: "Allahumma anta Rabbi la ilaha illa anta, khalaqtani wa ana 'abduka, wa ana 'ala 'ahdika wa wa'dika mastata'tu, a'udhu bika min sharri ma sana'tu, abu'u laka bini'matika 'alayya, wa abu'u laka bidhanbi faghfir li, fa innahu la yaghfirudh-dhunuba illa anta",
+  en: 'O Allah, You are my Lord, there is no god but You. You created me and I am Your servant. I keep Your covenant and promise as much as I can. I seek refuge in You from the evil of what I have done. I acknowledge Your favour upon me and I acknowledge my sin, so forgive me, for none forgives sins except You.',
+  ur: 'اے اللہ! تو میرا رب ہے، تیرے سوا کوئی معبود نہیں۔ تو نے مجھے پیدا کیا اور میں تیرا بندہ ہوں، اور میں اپنی طاقت کے مطابق تیرے عہد اور وعدے پر قائم ہوں۔ میں اپنے کیے کے شر سے تیری پناہ چاہتا ہوں، مجھ پر تیری جو نعمتیں ہیں ان کا اقرار کرتا ہوں اور اپنے گناہ کا اعتراف کرتا ہوں، پس مجھے بخش دے کیونکہ تیرے سوا کوئی گناہ معاف نہیں کرتا۔',
+  count: 1,
+  reference: 'Bukhari 6306; Ibn Sunni 43',
+);
+
+const _me_afw_afiyah = Zikr(
+  id: 'afw_afiyah',
+  titleEn: 'Pardon and well-being',
+  titleUr: 'معافی اور عافیت',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ، اَللّٰهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اَللّٰهُمَّ اسْتُرْ عَوْرَاتِي، وَآمِنْ رَوْعَاتِي، اَللّٰهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ، وَمِنْ خَلْفِي، وَعَنْ يَمِينِي، وَعَنْ شِمَالِي، وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي',
+  translit: "Allahumma inni as'alukal-'afwa wal-'afiyata fid-dunya wal-akhirah. Allahumma inni as'alukal-'afwa wal-'afiyata fi dini wa dunyaya wa ahli wa mali. Allahummastur 'awrati wa amin raw'ati. Allahummahfazni min bayni yadayya wa min khalfi wa 'an yamini wa 'an shimali wa min fawqi, wa a'udhu bi'azamatika an ughtala min tahti",
+  en: 'O Allah, I ask You for pardon and well-being in this world and the Hereafter. O Allah, I ask You for pardon and well-being in my religion, my worldly life, my family and my wealth. O Allah, cover my faults and calm my fears. O Allah, guard me from in front of me, behind me, on my right, on my left and above me, and I seek refuge in Your greatness from being taken unawares from beneath me.',
+  ur: 'اے اللہ! میں تجھ سے دنیا اور آخرت میں معافی اور عافیت مانگتا ہوں۔ اے اللہ! میں تجھ سے اپنے دین، اپنی دنیا، اپنے گھر والوں اور اپنے مال میں معافی اور عافیت مانگتا ہوں۔ اے اللہ! میرے عیبوں پر پردہ ڈال دے اور میرے خوف کو امن میں بدل دے۔ اے اللہ! میرے آگے سے، پیچھے سے، دائیں سے، بائیں سے اور اوپر سے میری حفاظت فرما، اور میں تیری عظمت کی پناہ چاہتا ہوں اس سے کہ نیچے سے اچانک ہلاک کیا جاؤں۔',
+  count: 1,
+  reference: 'Ibn Majah 3871',
+);
+
+const _me_audhu_kalimat = Zikr(
+  id: 'audhu_kalimat',
+  titleEn: 'Refuge in the perfect words of Allah',
+  titleUr: 'اللہ کے کامل کلمات کی پناہ',
+  arabic: 'أَعُوذُ بِكَلِمَاتِ اللّٰهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ',
+  translit: "A'udhu bikalimatillahit-tammati min sharri ma khalaq",
+  en: 'I seek refuge in the perfect words of Allah from the evil of what He has created.',
+  ur: 'میں اللہ کے کامل کلمات کی پناہ مانگتا ہوں ہر اس چیز کے شر سے جو اس نے پیدا کی۔',
+  count: 1,
+  reference: 'Tirmidhi 3604; Abu Dawud 3899',
+);
+
+const _me_tahlil_10 = Zikr(
+  id: 'tahlil_10',
+  titleEn: 'Tahlil (10 times)',
+  titleUr: 'تہلیل (10 مرتبہ)',
+  arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+  translit: "La ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, wa huwa 'ala kulli shay'in qadir",
+  en: 'There is no god but Allah, alone without partner. His is the dominion and His is the praise, and He has power over all things.',
+  ur: 'اللہ کے سوا کوئی معبود نہیں، وہ اکیلا ہے اس کا کوئی شریک نہیں، اسی کی بادشاہی ہے اور اسی کے لیے تعریف ہے، اور وہ ہر چیز پر قادر ہے۔',
+  count: 10,
+  reference: 'Musnad Ahmad 17990',
+);
+
+const _me_ajirni_nar = Zikr(
+  id: 'ajirni_nar',
+  titleEn: 'Protection from the Fire (after Fajr and Maghrib)',
+  titleUr: 'جہنم سے پناہ (فجر اور مغرب کے بعد)',
+  arabic: 'اَللّٰهُمَّ أَجِرْنِي مِنَ النَّارِ',
+  translit: 'Allahumma ajirni minan-nar',
+  en: 'O Allah, protect me from the Fire.',
+  ur: 'اے اللہ! مجھے جہنم کی آگ سے بچا لے۔',
+  count: 7,
+  reference: 'Abu Dawud 5079',
+);
+
+const _me_ma_bi_nimah_m = Zikr(
+  id: 'ma_bi_nimah_m',
+  titleEn: 'Gratitude for blessings',
+  titleUr: 'نعمتوں پر شکر',
+  arabic: 'اَللّٰهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
+  translit: "Allahumma ma asbaha bi min ni'matin aw bi-ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr",
+  en: 'O Allah, whatever blessing I or any of Your creation have this morning is from You alone, without partner; so to You is all praise and all thanks.',
+  ur: 'اے اللہ! صبح کے وقت مجھ پر یا تیری مخلوق میں سے کسی پر جو بھی نعمت ہے وہ صرف تیری طرف سے ہے، تیرا کوئی شریک نہیں، پس تیرے ہی لیے تعریف ہے اور تیرا ہی شکر ہے۔',
+  count: 1,
+  reference: "Shu'ab al-Iman 4059; Abu Dawud 5073",
+);
+
+const _me_subhan_bihamdihi = Zikr(
+  id: 'subhan_bihamdihi',
+  titleEn: 'SubhanAllahi wa bihamdihi (100 times)',
+  titleUr: 'سبحان اللہ وبحمدہ (100 مرتبہ)',
+  arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ',
+  translit: 'SubhanAllahi wa bihamdihi',
+  en: 'Glory be to Allah and praise be to Him.',
+  ur: 'اللہ پاک ہے اور اسی کی تعریف ہے۔',
+  count: 100,
+  reference: 'Sahih Muslim 2692 (6843)',
+);
+
+const _me_ashhaduka_m = Zikr(
+  id: 'ashhaduka_m',
+  titleEn: 'Bearing witness to Tawhid',
+  titleUr: 'توحید کی گواہی',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلَائِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللّٰهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ',
+  translit: "Allahumma inni asbahtu ushhiduka, wa ushhidu hamalata 'arshika, wa mala'ikataka, wa jami'a khalqika, annaka antallahu la ilaha illa anta wahdaka la sharika lak, wa anna Muhammadan 'abduka wa rasuluk",
+  en: 'O Allah, this morning I call You to witness, and I call the bearers of Your Throne, Your angels and all Your creation to witness, that You are Allah; there is no god but You alone, without partner, and that Muhammad is Your servant and Messenger. (Said four times, it frees one from the Fire.)',
+  ur: 'اے اللہ! میں نے صبح کی، میں تجھے گواہ بناتا ہوں اور تیرے عرش اٹھانے والوں، تیرے فرشتوں اور تیری ساری مخلوق کو گواہ بناتا ہوں کہ تو ہی اللہ ہے، تیرے سوا کوئی معبود نہیں، تو اکیلا ہے تیرا کوئی شریک نہیں، اور محمد ﷺ تیرے بندے اور رسول ہیں۔ (چار مرتبہ پڑھنے والے کو اللہ جہنم سے آزاد فرما دیتا ہے۔)',
+  count: 4,
+  reference: 'Abu Dawud 5078, 5069',
+);
+
+const _me_nimah_satr_m = Zikr(
+  id: 'nimah_satr_m',
+  titleEn: 'Completion of blessing, well-being and cover',
+  titleUr: 'نعمت، عافیت اور پردے کی تکمیل',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَصْبَحْتُ مِنْكَ فِي نِعْمَةٍ وَعَافِيَةٍ وَسِتْرٍ، فَأَتِمَّ عَلَيَّ نِعْمَتَكَ وَعَافِيَتَكَ وَسِتْرَكَ فِي الدُّنْيَا وَالْآخِرَةِ',
+  translit: "Allahumma inni asbahtu minka fi ni'matin wa 'afiyatin wa sitr, fa-atimma 'alayya ni'mataka wa 'afiyataka wa sitraka fid-dunya wal-akhirah",
+  en: 'O Allah, I have entered the morning in blessing, well-being and cover from You; so complete Your blessing, well-being and cover upon me in this world and the Hereafter.',
+  ur: 'اے اللہ! میں نے تیری طرف سے نعمت، عافیت اور پردہ پوشی میں صبح کی، پس دنیا اور آخرت میں مجھ پر اپنی نعمت، عافیت اور پردہ پوشی کو مکمل فرما دے۔',
+  count: 3,
+  reference: 'Ibn Sunni 55',
+);
+
+const _me_mashaallah = Zikr(
+  id: 'mashaallah',
+  titleEn: 'Whatever Allah wills',
+  titleUr: 'ماشاء اللہ',
+  arabic: 'مَا شَاءَ اللّٰهُ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ، أَشْهَدُ أَنَّ اللّٰهَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ',
+  translit: "Ma sha'Allah, la hawla wa la quwwata illa billah, ashhadu annallaha 'ala kulli shay'in qadir",
+  en: 'What Allah wills (happens). There is no might nor power except with Allah. I bear witness that Allah has power over all things.',
+  ur: 'جو اللہ چاہے (وہی ہوتا ہے)، اللہ کے بغیر نہ کوئی طاقت ہے نہ قوت، میں گواہی دیتا ہوں کہ اللہ ہر چیز پر قادر ہے۔',
+  count: 1,
+  reference: 'Ibn Sunni 53',
+);
+
+const _me_hamd_rabbi = Zikr(
+  id: 'hamd_rabbi',
+  titleEn: 'Praise without associating partners',
+  titleUr: 'شرک سے پاک حمد',
+  arabic: 'اَلْحَمْدُ لِلّٰهِ رَبِّي، لَا أُشْرِكُ بِهِ شَيْئًا، أَشْهَدُ أَنْ لَا إِلٰهَ إِلَّا اللّٰهُ',
+  translit: "Alhamdu lillahi Rabbi, la ushriku bihi shay'a, ashhadu an la ilaha illallah",
+  en: 'All praise is for Allah, my Lord; I associate nothing with Him. I bear witness that there is no god but Allah.',
+  ur: 'تمام تعریفیں اللہ کے لیے ہیں جو میرا رب ہے، میں اس کے ساتھ کسی چیز کو شریک نہیں ٹھہراتا، میں گواہی دیتا ہوں کہ اللہ کے سوا کوئی معبود نہیں۔',
+  count: 1,
+  reference: 'Tabarani (Kabir) 635',
+);
+
+const _me_kulli_shaytan = Zikr(
+  id: 'kulli_shaytan',
+  titleEn: 'Refuge from every devil, pest and evil eye',
+  titleUr: 'ہر شیطان، زہریلے جانور اور نظرِ بد سے پناہ',
+  arabic: 'أَعُوذُ بِكَلِمَاتِ اللّٰهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ، وَمِنْ كُلِّ عَيْنٍ لَامَّةٍ',
+  translit: "A'udhu bikalimatillahit-tammati min kulli shaytanin wa hammah, wa min kulli 'aynin lammah",
+  en: 'I seek refuge in the perfect words of Allah from every devil and every poisonous creature, and from every evil eye.',
+  ur: 'میں اللہ کے کامل کلمات کی پناہ مانگتا ہوں ہر شیطان اور ہر زہریلے جانور سے، اور ہر لگنے والی بری نظر سے۔',
+  count: 1,
+  reference: 'Bukhari 3371',
+);
+
+const _me_ghadabihi = Zikr(
+  id: 'ghadabihi',
+  titleEn: 'Refuge from His anger and the whispers of devils',
+  titleUr: 'اللہ کے غضب اور شیاطین کے وسوسوں سے پناہ',
+  arabic: 'أَعُوذُ بِكَلِمَاتِ اللّٰهِ التَّامَّاتِ مِنْ غَضَبِهِ وَعِقَابِهِ، وَشَرِّ عِبَادِهِ، وَمِنْ هَمَزَاتِ الشَّيَاطِينِ وَأَنْ يَحْضُرُونِ',
+  translit: "A'udhu bikalimatillahit-tammati min ghadabihi wa 'iqabihi, wa sharri 'ibadihi, wa min hamazatish-shayatini wa an yahdurun",
+  en: 'I seek refuge in the perfect words of Allah from His anger and His punishment, from the evil of His servants, and from the whispers of the devils and from their coming to me.',
+  ur: 'میں اللہ کے کامل کلمات کی پناہ مانگتا ہوں اس کے غضب اور اس کی سزا سے، اس کے بندوں کے شر سے، اور شیطانوں کے وسوسوں سے اور اس سے کہ وہ میرے پاس آئیں۔',
+  count: 1,
+  reference: 'Abu Dawud 3893; Tirmidhi 3528',
+);
+
+const _me_la_yujawizuhunna = Zikr(
+  id: 'la_yujawizuhunna',
+  titleEn: 'Refuge from every evil of night and day',
+  titleUr: 'دن رات کے ہر شر سے پناہ',
+  arabic: 'أَعُوذُ بِكَلِمَاتِ اللّٰهِ التَّامَّاتِ الَّتِي لَا يُجَاوِزُهُنَّ بَرٌّ وَلَا فَاجِرٌ، مِنْ شَرِّ مَا خَلَقَ وَذَرَأَ وَبَرَأَ، وَمِنْ شَرِّ مَا يَنْزِلُ مِنَ السَّمَاءِ، وَمِنْ شَرِّ مَا يَعْرُجُ فِيهَا، وَمِنْ شَرِّ مَا ذَرَأَ فِي الْأَرْضِ، وَمِنْ شَرِّ مَا يَخْرُجُ مِنْهَا، وَمِنْ شَرِّ فِتَنِ اللَّيْلِ وَالنَّهَارِ، وَمِنْ شَرِّ كُلِّ طَارِقٍ إِلَّا طَارِقًا يَطْرُقُ بِخَيْرٍ يَا رَحْمٰنُ',
+  translit: "A'udhu bikalimatillahit-tammatil-lati la yujawizuhunna barrun wa la fajir, min sharri ma khalaqa wa dhara'a wa bara'a, wa min sharri ma yanzilu minas-sama'i, wa min sharri ma ya'ruju fiha, wa min sharri ma dhara'a fil-ard, wa min sharri ma yakhruju minha, wa min sharri fitanil-layli wan-nahar, wa min sharri kulli tariqin illa tariqan yatruqu bikhayrin ya Rahman",
+  en: 'I seek refuge in the perfect words of Allah, which neither the righteous nor the wicked can surpass, from the evil of what He created, brought forth and made; from the evil of what descends from the sky and what ascends to it; from the evil of what He spread on the earth and what comes out of it; from the evil of the trials of night and day; and from the evil of every night-visitor, except one who comes with good, O Most Merciful.',
+  ur: 'میں اللہ کے ان کامل کلمات کی پناہ مانگتا ہوں جن سے نہ کوئی نیک آگے بڑھ سکتا ہے نہ بد، ہر اس چیز کے شر سے جو اس نے پیدا کی، پھیلائی اور بنائی؛ جو آسمان سے اترتی ہے اور جو اس میں چڑھتی ہے اس کے شر سے؛ جو زمین میں پھیلائی اور جو اس سے نکلتی ہے اس کے شر سے؛ دن رات کے فتنوں کے شر سے؛ اور رات کو آنے والے ہر شر سے، سوائے اس کے جو خیر لے کر آئے، اے رحمٰن!',
+  count: 1,
+  reference: 'Musnad Ahmad 15461',
+);
+
+const _me_wajhillah = Zikr(
+  id: 'wajhillah',
+  titleEn: 'Refuge in the Face of Allah',
+  titleUr: 'اللہ کی ذات کی پناہ',
+  arabic: 'أَعُوذُ بِوَجْهِ اللّٰهِ الْعَظِيمِ الَّذِي لَيْسَ شَيْءٌ أَعْظَمَ مِنْهُ، وَبِكَلِمَاتِ اللّٰهِ التَّامَّاتِ الَّتِي لَا يُجَاوِزُهُنَّ بَرٌّ وَلَا فَاجِرٌ، وَبِأَسْمَاءِ اللّٰهِ الْحُسْنَى كُلِّهَا مَا عَلِمْتُ مِنْهَا وَمَا لَمْ أَعْلَمْ، مِنْ شَرِّ مَا خَلَقَ وَذَرَأَ وَبَرَأَ',
+  translit: "A'udhu biwajhillahil-'Azimil-ladhi laysa shay'un a'zama minh, wa bikalimatillahit-tammatil-lati la yujawizuhunna barrun wa la fajir, wa bi-asma'illahil-husna kulliha ma 'alimtu minha wa ma lam a'lam, min sharri ma khalaqa wa dhara'a wa bara'a",
+  en: 'I seek refuge in the Face of Allah the Magnificent, than whom nothing is greater; in the perfect words of Allah, which neither the righteous nor the wicked can surpass; and in all the Most Beautiful Names of Allah, those I know and those I do not know, from the evil of what He created, brought forth and made.',
+  ur: 'میں اللہ عظیم کی ذات کی پناہ مانگتا ہوں جس سے بڑی کوئی چیز نہیں، اور اللہ کے ان کامل کلمات کی جن سے نہ کوئی نیک آگے بڑھ سکتا ہے نہ بد، اور اللہ کے تمام اسمائے حسنیٰ کی، جو میں جانتا ہوں اور جو نہیں جانتا، ہر اس چیز کے شر سے جو اس نے پیدا کی، پھیلائی اور بنائی۔',
+  count: 1,
+  reference: 'Muwatta Malik 2002',
+);
+
+const _me_shirk_khafi = Zikr(
+  id: 'shirk_khafi',
+  titleEn: 'Refuge from shirk',
+  titleUr: 'شرک سے پناہ',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَعُوذُ بِكَ أَنْ أُشْرِكَ بِكَ وَأَنَا أَعْلَمُ، وَأَسْتَغْفِرُكَ لِمَا لَا أَعْلَمُ',
+  translit: "Allahumma inni a'udhu bika an ushrika bika wa ana a'lam, wa astaghfiruka lima la a'lam",
+  en: 'O Allah, I seek refuge in You from knowingly associating anything with You, and I ask Your forgiveness for what I do unknowingly.',
+  ur: 'اے اللہ! میں تیری پناہ مانگتا ہوں اس سے کہ جانتے بوجھتے تیرے ساتھ شرک کروں، اور جو میں نہیں جانتا اس کی تجھ سے معافی مانگتا ہوں۔',
+  count: 3,
+  reference: "Musnad Abi Ya'la 58",
+);
+
+const _me_hashr_last = Zikr(
+  id: 'hashr_last',
+  titleEn: "Isti'adhah + last 3 ayat of Surah Al-Hashr",
+  titleUr: 'تعوذ اور سورۃ الحشر کی آخری تین آیات',
+  arabic: 'أَعُوذُ بِاللّٰهِ السَّمِيعِ الْعَلِيمِ مِنَ الشَّيْطَانِ الرَّجِيمِ (٣)\n\n{{ar:59:22-24}}',
+  translit: "A'udhu billahis-Sami'il-'Alimi minash-shaytanir-rajim (3 times), then: {{tr:59:22-24}}",
+  en: 'I seek refuge in Allah, the All-Hearing, the All-Knowing, from Satan the accursed (3 times). Then recite: {{en:59:22-24}}',
+  ur: 'میں شیطان مردود سے اللہ سننے والے، جاننے والے کی پناہ مانگتا ہوں (3 مرتبہ)، پھر یہ آیات پڑھیں: {{ur:59:22-24}}',
+  count: 3,
+  reference: 'Ibn Sunni 49; Tirmidhi 2922; Al-Hashr 59:22-24',
+);
+
+const _me_alayka_tawakkaltu = Zikr(
+  id: 'alayka_tawakkaltu',
+  titleEn: 'Trust in Allah and refuge from every creature',
+  titleUr: 'اللہ پر توکل اور ہر جاندار کے شر سے پناہ',
+  arabic: 'اَللّٰهُمَّ أَنْتَ رَبِّي، لَا إِلٰهَ إِلَّا أَنْتَ، عَلَيْكَ تَوَكَّلْتُ، وَأَنْتَ رَبُّ الْعَرْشِ الْعَظِيمِ، مَا شَاءَ اللّٰهُ كَانَ، وَمَا لَمْ يَشَأْ لَمْ يَكُنْ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ الْعَلِيِّ الْعَظِيمِ، أَعْلَمُ أَنَّ اللّٰهَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، وَأَنَّ اللّٰهَ قَدْ أَحَاطَ بِكُلِّ شَيْءٍ عِلْمًا، اَللّٰهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ كُلِّ دَابَّةٍ أَنْتَ آخِذٌ بِنَاصِيَتِهَا، إِنَّ رَبِّي عَلَى صِرَاطٍ مُسْتَقِيمٍ',
+  translit: "Allahumma anta Rabbi, la ilaha illa anta, 'alayka tawakkaltu, wa anta Rabbul-'Arshil-'Azim. Ma sha'Allahu kana, wa ma lam yasha' lam yakun, wa la hawla wa la quwwata illa billahil-'Aliyyil-'Azim. A'lamu annallaha 'ala kulli shay'in qadir, wa annallaha qad ahata bikulli shay'in 'ilma. Allahumma inni a'udhu bika min sharri nafsi, wa min sharri kulli dabbatin anta akhidhun binasiyatiha, inna Rabbi 'ala siratim-mustaqim",
+  en: 'O Allah, You are my Lord; there is no god but You. In You I trust, and You are the Lord of the Mighty Throne. What Allah wills happens and what He does not will does not happen; there is no might nor power except with Allah, the Most High, the Magnificent. I know that Allah has power over all things and that Allah encompasses everything in knowledge. O Allah, I seek refuge in You from the evil of my soul and from the evil of every creature whose forelock You hold. Indeed my Lord is on a straight path.',
+  ur: 'اے اللہ! تو میرا رب ہے، تیرے سوا کوئی معبود نہیں، میں نے تجھ پر بھروسہ کیا اور تو عرشِ عظیم کا رب ہے۔ جو اللہ چاہے وہ ہوتا ہے اور جو نہ چاہے وہ نہیں ہوتا، اللہ بلند و عظیم کے بغیر نہ کوئی طاقت ہے نہ قوت۔ میں جانتا ہوں کہ اللہ ہر چیز پر قادر ہے اور اللہ نے ہر چیز کو اپنے علم سے گھیر رکھا ہے۔ اے اللہ! میں اپنے نفس کے شر سے اور ہر اس جاندار کے شر سے تیری پناہ مانگتا ہوں جس کی پیشانی تیرے قبضے میں ہے، بے شک میرا رب سیدھے راستے پر ہے۔',
+  count: 1,
+  reference: "Tabarani (Du'a) 343; Ibn Sunni 57",
+);
+
+const _me_ikfini = Zikr(
+  id: 'ikfini',
+  titleEn: 'Allah suffices for every concern',
+  titleUr: 'ہر فکر میں اللہ کافی ہے',
+  arabic: 'اَللّٰهُمَّ رَبَّ السَّمٰوَاتِ السَّبْعِ وَرَبَّ الْعَرْشِ الْعَظِيمِ، اِكْفِنِي كُلَّ مُهِمٍّ مِنْ حَيْثُ شِئْتَ وَمِنْ أَيْنَ شِئْتَ، حَسْبِيَ اللّٰهُ لِدِينِي، حَسْبِيَ اللّٰهُ لِدُنْيَايَ، حَسْبِيَ اللّٰهُ لِمَا أَهَمَّنِي، حَسْبِيَ اللّٰهُ لِمَنْ بَغَى عَلَيَّ، حَسْبِيَ اللّٰهُ لِمَنْ حَسَدَنِي، حَسْبِيَ اللّٰهُ لِمَنْ كَادَنِي بِسُوءٍ، حَسْبِيَ اللّٰهُ عِنْدَ الْمَوْتِ، حَسْبِيَ اللّٰهُ عِنْدَ الْمَسْأَلَةِ فِي الْقَبْرِ، حَسْبِيَ اللّٰهُ عِنْدَ الْمِيزَانِ، حَسْبِيَ اللّٰهُ عِنْدَ الصِّرَاطِ، حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ، وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ',
+  translit: "Allahumma Rabbas-samawatis-sab'i wa Rabbal-'Arshil-'Azim, ikfini kulla muhimmin min haythu shi'ta wa min ayna shi'ta. Hasbiyallahu li-dini, hasbiyallahu li-dunyaya, hasbiyallahu lima ahammani, hasbiyallahu liman bagha 'alayya, hasbiyallahu liman hasadani, hasbiyallahu liman kadani bisu', hasbiyallahu 'indal-mawt, hasbiyallahu 'indal-mas'alati fil-qabr, hasbiyallahu 'indal-mizan, hasbiyallahu 'indas-sirat, hasbiyallahu la ilaha illa huwa, 'alayhi tawakkaltu, wa huwa Rabbul-'Arshil-'Azim",
+  en: 'O Allah, Lord of the seven heavens and Lord of the Mighty Throne, suffice me in every worry, from wherever and however You will. Allah is sufficient for me for my religion, for my worldly life and for whatever concerns me; Allah is sufficient for me against whoever wrongs me, envies me or plots evil against me; Allah is sufficient for me at death, at the questioning in the grave, at the Scale and at the Bridge. Allah is sufficient for me; there is no god but He. In Him I trust, and He is the Lord of the Mighty Throne.',
+  ur: 'اے اللہ! ساتوں آسمانوں کے رب اور عرشِ عظیم کے رب! جہاں سے اور جیسے تو چاہے میری ہر فکر کے لیے کافی ہو جا۔ میرے دین کے لیے، میری دنیا کے لیے اور میری ہر فکر کے لیے اللہ کافی ہے؛ جو مجھ پر زیادتی کرے، مجھ سے حسد کرے یا میرے خلاف بری چال چلے اس کے مقابلے میں اللہ کافی ہے؛ موت کے وقت، قبر کے سوال کے وقت، میزان پر اور پل صراط پر اللہ کافی ہے۔ مجھے اللہ کافی ہے، اس کے سوا کوئی معبود نہیں، اسی پر میں نے بھروسہ کیا اور وہی عرشِ عظیم کا رب ہے۔',
+  count: 1,
+  reference: 'Makarim al-Akhlaq (Kharaiti) 1037; Nawadir al-Usul 2/274',
+);
+
+const _me_hasbiyallah_7 = Zikr(
+  id: 'hasbiyallah_7',
+  titleEn: 'Allah is sufficient for me',
+  titleUr: 'مجھے اللہ کافی ہے',
+  arabic: 'حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ، وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ',
+  translit: "Hasbiyallahu la ilaha illa huwa, 'alayhi tawakkaltu, wa huwa Rabbul-'Arshil-'Azim",
+  en: 'Allah is sufficient for me; there is no god but He. In Him I put my trust, and He is the Lord of the Mighty Throne.',
+  ur: 'مجھے اللہ کافی ہے، اس کے سوا کوئی معبود نہیں، اسی پر میں نے بھروسہ کیا اور وہی عرشِ عظیم کا رب ہے۔',
+  count: 7,
+  reference: 'Abu Dawud 5081',
+);
+
+const _me_lakal_hamd_m = Zikr(
+  id: 'lakal_hamd_m',
+  titleEn: 'Renewing the covenant with Allah',
+  titleUr: 'اللہ سے عہد کی تجدید',
+  arabic: 'اَللّٰهُمَّ لَكَ الْحَمْدُ، لَا إِلٰهَ إِلَّا أَنْتَ، أَنْتَ رَبِّي وَأَنَا عَبْدُكَ، آمَنْتُ بِكَ مُخْلِصًا لَكَ دِينِي، أَصْبَحْتُ عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَتُوبُ إِلَيْكَ مِنْ سَيِّئِ عَمَلِي، وَأَسْتَغْفِرُكَ لِذُنُوبِي الَّتِي لَا يَغْفِرُهَا إِلَّا أَنْتَ',
+  translit: "Allahumma lakal-hamd, la ilaha illa anta, anta Rabbi wa ana 'abduk, amantu bika mukhlisan laka dini, asbahtu 'ala 'ahdika wa wa'dika mastata't, atubu ilayka min sayyi'i 'amali, wa astaghfiruka li-dhunubil-lati la yaghfiruha illa ant",
+  en: 'O Allah, to You belongs all praise; there is no god but You. You are my Lord and I am Your servant. I believe in You, devoting my religion sincerely to You. This morning I hold to Your covenant and promise as much as I can. I turn to You in repentance from my bad deeds, and I ask Your forgiveness for my sins, which none forgives but You.',
+  ur: 'اے اللہ! تیرے ہی لیے تمام تعریف ہے، تیرے سوا کوئی معبود نہیں، تو میرا رب ہے اور میں تیرا بندہ ہوں۔ میں تجھ پر ایمان لایا، اپنا دین تیرے لیے خالص کرتے ہوئے۔ میں نے اپنی طاقت کے مطابق تیرے عہد اور وعدے پر صبح کی۔ میں اپنے برے اعمال سے تیری طرف توبہ کرتا ہوں اور اپنے ان گناہوں کی تجھ سے معافی مانگتا ہوں جنہیں تیرے سوا کوئی معاف نہیں کر سکتا۔',
+  count: 3,
+  reference: 'Tabarani (Awsat) 3096',
+);
+
+const _me_kun_li_jaran = Zikr(
+  id: 'kun_li_jaran',
+  titleEn: 'Allah as protector from all creation',
+  titleUr: 'تمام مخلوق کے شر سے اللہ کی پناہ',
+  arabic: 'اَللّٰهُمَّ رَبَّ السَّمٰوَاتِ السَّبْعِ وَمَا أَظَلَّتْ، وَرَبَّ الْأَرَضِينَ وَمَا أَقَلَّتْ، وَرَبَّ الشَّيَاطِينِ وَمَا أَضَلَّتْ، كُنْ لِي جَارًا مِنْ شَرِّ خَلْقِكَ كُلِّهِمْ جَمِيعًا أَنْ يَفْرُطَ عَلَيَّ أَحَدٌ مِنْهُمْ أَوْ أَنْ يَبْغِيَ، عَزَّ جَارُكَ، وَجَلَّ ثَنَاؤُكَ، وَلَا إِلٰهَ غَيْرُكَ، لَا إِلٰهَ إِلَّا أَنْتَ',
+  translit: "Allahumma Rabbas-samawatis-sab'i wa ma azallat, wa Rabbal-aradina wa ma aqallat, wa Rabbash-shayatini wa ma adallat, kun li jaran min sharri khalqika kullihim jami'an an yafruta 'alayya ahadun minhum aw an yabghi. 'Azza jaruka, wa jalla thana'uka, wa la ilaha ghayruk, la ilaha illa ant",
+  en: 'O Allah, Lord of the seven heavens and all they shade, Lord of the earths and all they carry, and Lord of the devils and all they mislead: be my protector against the evil of all Your creation, lest any of them should harm me or transgress against me. Honoured is the one under Your protection, exalted is Your praise; there is no god besides You, there is no god but You.',
+  ur: 'اے اللہ! ساتوں آسمانوں اور ان کے سایہ کردہ چیزوں کے رب، زمینوں اور ان پر موجود چیزوں کے رب، اور شیطانوں اور ان کے گمراہ کیے ہوؤں کے رب! اپنی ساری مخلوق کے شر سے میرا محافظ بن جا، کہ ان میں سے کوئی مجھ پر زیادتی یا سرکشی کرے۔ تیری پناہ میں آنے والا عزت پاتا ہے، تیری ثنا بلند ہے، تیرے سوا کوئی معبود نہیں، تیرے سوا کوئی معبود نہیں۔',
+  count: 1,
+  reference: 'Tirmidhi 3523',
+);
+
+const _me_rum_17_19 = Zikr(
+  id: 'rum_17_19',
+  titleEn: 'Surah Ar-Rum 17–19',
+  titleUr: 'سورۃ الروم آیات 17–19',
+  arabic: '{{ar:30:17-19}}',
+  translit: '{{tr:30:17-19}}',
+  en: '{{en:30:17-19}}',
+  ur: '{{ur:30:17-19}}',
+  count: 1,
+  reference: 'Abu Dawud 5076; Ar-Rum 30:17-19',
+);
+
+const _me_tawadaa = Zikr(
+  id: 'tawadaa',
+  titleEn: 'Praise for His greatness, might and power',
+  titleUr: 'اللہ کی عظمت، عزت اور قدرت کی حمد',
+  arabic: 'اَلْحَمْدُ لِلّٰهِ الَّذِي تَوَاضَعَ كُلُّ شَيْءٍ لِعَظَمَتِهِ، وَالْحَمْدُ لِلّٰهِ الَّذِي ذَلَّ كُلُّ شَيْءٍ لِعِزَّتِهِ، وَالْحَمْدُ لِلّٰهِ الَّذِي اسْتَسْلَمَ كُلُّ شَيْءٍ لِقُدْرَتِهِ، وَالْحَمْدُ لِلّٰهِ الَّذِي خَضَعَ كُلُّ شَيْءٍ لِمُلْكِهِ',
+  translit: "Alhamdu lillahil-ladhi tawada'a kullu shay'in li'azamatih, wal-hamdu lillahil-ladhi dhalla kullu shay'in li'izzatih, wal-hamdu lillahil-ladhis-taslama kullu shay'in liqudratih, wal-hamdu lillahil-ladhi khada'a kullu shay'in limulkih",
+  en: 'All praise is for Allah, before whose greatness everything is humble; all praise is for Allah, before whose might everything is lowly; all praise is for Allah, to whose power everything submits; and all praise is for Allah, to whose dominion everything yields.',
+  ur: 'تمام تعریفیں اللہ کے لیے جس کی عظمت کے آگے ہر چیز جھکی ہوئی ہے، تمام تعریفیں اللہ کے لیے جس کی عزت کے آگے ہر چیز پست ہے، تمام تعریفیں اللہ کے لیے جس کی قدرت کے آگے ہر چیز سرِ تسلیم خم کیے ہوئے ہے، اور تمام تعریفیں اللہ کے لیے جس کی بادشاہی کے آگے ہر چیز عاجز ہے۔',
+  count: 1,
+  reference: "Tabarani (Du'a) 325",
+);
+
+const _me_adada_ma_khalaqa = Zikr(
+  id: 'adada_ma_khalaqa',
+  titleEn: 'Glorification as many as His creation',
+  titleUr: 'مخلوق کی تعداد کے برابر تسبیح',
+  arabic: 'سُبْحَانَ اللّٰهِ عَدَدَ مَا خَلَقَ فِي السَّمَاءِ، وَسُبْحَانَ اللّٰهِ عَدَدَ مَا خَلَقَ فِي الْأَرْضِ، وَسُبْحَانَ اللّٰهِ عَدَدَ مَا بَيْنَ ذٰلِكَ، وَسُبْحَانَ اللّٰهِ عَدَدَ مَا هُوَ خَالِقٌ، وَاللّٰهُ أَكْبَرُ مِثْلَ ذٰلِكَ، وَالْحَمْدُ لِلّٰهِ مِثْلَ ذٰلِكَ، وَلَا إِلٰهَ إِلَّا اللّٰهُ مِثْلَ ذٰلِكَ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ مِثْلَ ذٰلِكَ',
+  translit: "Subhanallahi 'adada ma khalaqa fis-sama', wa subhanallahi 'adada ma khalaqa fil-ard, wa subhanallahi 'adada ma bayna dhalik, wa subhanallahi 'adada ma huwa khaliq, wallahu akbaru mithla dhalik, wal-hamdu lillahi mithla dhalik, wa la ilaha illallahu mithla dhalik, wa la hawla wa la quwwata illa billahi mithla dhalik",
+  en: 'Glory be to Allah as many times as all He created in the heaven; glory be to Allah as many times as all He created on earth; glory be to Allah as many times as all that is between them; glory be to Allah as many times as all He will create. And "Allah is the Greatest", "All praise is for Allah", "There is no god but Allah" and "There is no might nor power except with Allah" — each the same number of times.',
+  ur: 'اللہ پاک ہے اس کی تعداد کے برابر جو اس نے آسمان میں پیدا کیا، اللہ پاک ہے اس کی تعداد کے برابر جو اس نے زمین میں پیدا کیا، اللہ پاک ہے اس کی تعداد کے برابر جو ان کے درمیان ہے، اور اللہ پاک ہے اس کی تعداد کے برابر جو وہ پیدا کرنے والا ہے۔ اور اللہ اکبر، الحمد للہ، لا الہ الا اللہ اور لا حول ولا قوۃ الا باللہ بھی اتنی ہی تعداد میں۔',
+  count: 1,
+  reference: 'Tirmidhi 3568',
+);
+
+const _me_subhan_azim = Zikr(
+  id: 'subhan_azim',
+  titleEn: "SubhanAllahil-'Azim wa bihamdihi",
+  titleUr: 'سبحان اللہ العظیم وبحمدہ',
+  arabic: 'سُبْحَانَ اللّٰهِ الْعَظِيمِ وَبِحَمْدِهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ',
+  translit: "SubhanAllahil-'Azimi wa bihamdihi, wa la hawla wa la quwwata illa billah",
+  en: 'Glory be to Allah the Magnificent and praise be to Him; there is no might nor power except with Allah.',
+  ur: 'اللہ عظیم پاک ہے اور اسی کی تعریف ہے، اور اللہ کے بغیر نہ کوئی طاقت ہے نہ قوت۔',
+  count: 3,
+  reference: 'Ibn Sunni 133–134',
+);
+
+const _me_ikfini_2 = Zikr(
+  id: 'ikfini_2',
+  titleEn: 'Allah suffices for every concern',
+  titleUr: 'ہر فکر میں اللہ کافی ہے',
+  arabic: 'اَللّٰهُمَّ رَبَّ السَّمٰوَاتِ السَّبْعِ وَرَبَّ الْعَرْشِ الْعَظِيمِ، اِكْفِنِي كُلَّ مُهِمٍّ مِنْ حَيْثُ شِئْتَ وَمِنْ أَيْنَ شِئْتَ، حَسْبِيَ اللّٰهُ لِدِينِي، حَسْبِيَ اللّٰهُ لِدُنْيَايَ، حَسْبِيَ اللّٰهُ لِمَا أَهَمَّنِي، حَسْبِيَ اللّٰهُ لِمَنْ بَغَى عَلَيَّ، حَسْبِيَ اللّٰهُ لِمَنْ حَسَدَنِي، حَسْبِيَ اللّٰهُ لِمَنْ كَادَنِي بِسُوءٍ، حَسْبِيَ اللّٰهُ عِنْدَ الْمَوْتِ، حَسْبِيَ اللّٰهُ عِنْدَ الْمَسْأَلَةِ فِي الْقَبْرِ، حَسْبِيَ اللّٰهُ عِنْدَ الْمِيزَانِ، حَسْبِيَ اللّٰهُ عِنْدَ الصِّرَاطِ، حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ، عَلَيْهِ تَوَكَّلْتُ، وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ',
+  translit: "Allahumma Rabbas-samawatis-sab'i wa Rabbal-'Arshil-'Azim, ikfini kulla muhimmin min haythu shi'ta wa min ayna shi'ta. Hasbiyallahu li-dini, hasbiyallahu li-dunyaya, hasbiyallahu lima ahammani, hasbiyallahu liman bagha 'alayya, hasbiyallahu liman hasadani, hasbiyallahu liman kadani bisu', hasbiyallahu 'indal-mawt, hasbiyallahu 'indal-mas'alati fil-qabr, hasbiyallahu 'indal-mizan, hasbiyallahu 'indas-sirat, hasbiyallahu la ilaha illa huwa, 'alayhi tawakkaltu, wa huwa Rabbul-'Arshil-'Azim",
+  en: 'O Allah, Lord of the seven heavens and Lord of the Mighty Throne, suffice me in every worry, from wherever and however You will. Allah is sufficient for me for my religion, for my worldly life and for whatever concerns me; Allah is sufficient for me against whoever wrongs me, envies me or plots evil against me; Allah is sufficient for me at death, at the questioning in the grave, at the Scale and at the Bridge. Allah is sufficient for me; there is no god but He. In Him I trust, and He is the Lord of the Mighty Throne.',
+  ur: 'اے اللہ! ساتوں آسمانوں کے رب اور عرشِ عظیم کے رب! جہاں سے اور جیسے تو چاہے میری ہر فکر کے لیے کافی ہو جا۔ میرے دین کے لیے، میری دنیا کے لیے اور میری ہر فکر کے لیے اللہ کافی ہے؛ جو مجھ پر زیادتی کرے، مجھ سے حسد کرے یا میرے خلاف بری چال چلے اس کے مقابلے میں اللہ کافی ہے؛ موت کے وقت، قبر کے سوال کے وقت، میزان پر اور پل صراط پر اللہ کافی ہے۔ مجھے اللہ کافی ہے، اس کے سوا کوئی معبود نہیں، اسی پر میں نے بھروسہ کیا اور وہی عرشِ عظیم کا رب ہے۔',
+  count: 1,
+  reference: 'Makarim al-Akhlaq (Kharaiti) 1037; Nawadir al-Usul 2/274',
+);
+
+const _me_bika_e = Zikr(
+  id: 'bika_e',
+  titleEn: "Allah's companionship",
+  titleUr: 'اللہ تعالیٰ کی معیت',
+  arabic: 'اَللّٰهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ',
+  translit: 'Allahumma bika amsayna, wa bika asbahna, wa bika nahya, wa bika namutu, wa ilaykan-nushur',
+  en: 'O Allah, by You we enter the evening and by You we enter the morning, by You we live and by You we die, and to You is the resurrection.',
+  ur: 'اے اللہ! تیرے ہی حکم سے ہم نے شام کی اور تیرے ہی حکم سے صبح کی، تیرے ہی حکم سے ہم جیتے اور مرتے ہیں، اور تیری ہی طرف اٹھ کر جانا ہے۔',
+  count: 1,
+  reference: 'Tirmidhi 3391',
+);
+
+const _me_fitrah_e = Zikr(
+  id: 'fitrah_e',
+  titleEn: 'Upon the natural religion of Islam',
+  titleUr: 'فطرتِ اسلام پر',
+  arabic: 'أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ ﷺ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ حَنِيفًا مُسْلِمًا، وَمَا كَانَ مِنَ الْمُشْرِكِينَ',
+  translit: "Amsayna 'ala fitratil-Islam, wa 'ala kalimatil-ikhlas, wa 'ala dini nabiyyina Muhammadin ﷺ, wa 'ala millati abina Ibrahima hanifan musliman, wa ma kana minal-mushrikin",
+  en: 'We have entered the evening upon the natural religion of Islam, the word of sincerity, the religion of our Prophet Muhammad ﷺ and the way of our father Ibrahim, who was upright, a Muslim, and not one of the polytheists.',
+  ur: 'ہم نے فطرتِ اسلام پر، کلمۂ اخلاص پر، اپنے نبی محمد ﷺ کے دین پر اور اپنے باپ ابراہیم کی ملت پر شام کی جو یکسو مسلمان تھے اور مشرکوں میں سے نہ تھے۔',
+  count: 1,
+  reference: "Sunan al-Kubra (Nasa'i) 9745",
+);
+
+const _me_mulk_e = Zikr(
+  id: 'mulk_e',
+  titleEn: 'The dominion belongs to Allah',
+  titleUr: 'بادشاہی اللہ کی ہے',
+  arabic: 'أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلّٰهِ، وَالْحَمْدُ لِلّٰهِ، لَا إِلٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هٰذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هٰذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابِ النَّارِ وَعَذَابِ الْقَبْرِ',
+  translit: "Amsayna wa amsal-mulku lillah, wal-hamdu lillah, la ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamd, wa huwa 'ala kulli shay'in qadir. Rabbi as'aluka khayra ma fi hadhihil-laylati wa khayra ma ba'daha, wa a'udhu bika min sharri ma fi hadhihil-laylati wa sharri ma ba'daha. Rabbi a'udhu bika minal-kasali wa su'il-kibar. Rabbi a'udhu bika min 'adhabin-nari wa 'adhabil-qabr",
+  en: 'We have entered the evening and the dominion belongs to Allah; all praise is for Allah. There is no god but Allah alone, without partner; His is the dominion and His the praise, and He has power over all things. My Lord, I ask You for the good of this night and the good after it, and I seek refuge in You from the evil of this night and the evil after it. My Lord, I seek refuge in You from laziness and the misery of old age. My Lord, I seek refuge in You from the punishment of the Fire and the punishment of the grave.',
+  ur: 'ہم نے شام کی اور ساری بادشاہی اللہ کی ہے، تمام تعریفیں اللہ کے لیے ہیں، اللہ کے سوا کوئی معبود نہیں، وہ اکیلا ہے اس کا کوئی شریک نہیں، اسی کی بادشاہی اور اسی کی تعریف ہے اور وہ ہر چیز پر قادر ہے۔ اے میرے رب! میں تجھ سے اس رات کی اور اس کے بعد کی بھلائی مانگتا ہوں، اور اس رات کے اور اس کے بعد کے شر سے تیری پناہ چاہتا ہوں۔ اے میرے رب! میں سستی اور بڑھاپے کی خرابی سے تیری پناہ چاہتا ہوں۔ اے میرے رب! میں جہنم کے عذاب اور قبر کے عذاب سے تیری پناہ چاہتا ہوں۔',
+  count: 1,
+  reference: 'Tirmidhi 3390',
+);
+
+const _me_ma_bi_nimah_e = Zikr(
+  id: 'ma_bi_nimah_e',
+  titleEn: 'Gratitude for blessings',
+  titleUr: 'نعمتوں پر شکر',
+  arabic: 'اَللّٰهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ أَوْ بِأَحَدٍ مِنْ خَلْقِكَ فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ',
+  translit: "Allahumma ma amsa bi min ni'matin aw bi-ahadin min khalqika faminka wahdaka la sharika lak, falakal-hamdu wa lakash-shukr",
+  en: 'O Allah, whatever blessing I or any of Your creation have this evening is from You alone, without partner; so to You is all praise and all thanks.',
+  ur: 'اے اللہ! شام کے وقت مجھ پر یا تیری مخلوق میں سے کسی پر جو بھی نعمت ہے وہ صرف تیری طرف سے ہے، تیرا کوئی شریک نہیں، پس تیرے ہی لیے تعریف ہے اور تیرا ہی شکر ہے۔',
+  count: 1,
+  reference: "Shu'ab al-Iman 4059; Abu Dawud 5073",
+);
+
+const _me_ashhaduka_e = Zikr(
+  id: 'ashhaduka_e',
+  titleEn: 'Bearing witness to Tawhid',
+  titleUr: 'توحید کی گواہی',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلَائِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللّٰهُ لَا إِلٰهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ',
+  translit: "Allahumma inni amsaytu ushhiduka, wa ushhidu hamalata 'arshika, wa mala'ikataka, wa jami'a khalqika, annaka antallahu la ilaha illa anta wahdaka la sharika lak, wa anna Muhammadan 'abduka wa rasuluk",
+  en: 'O Allah, this evening I call You to witness, and I call the bearers of Your Throne, Your angels and all Your creation to witness, that You are Allah; there is no god but You alone, without partner, and that Muhammad is Your servant and Messenger. (Said four times, it frees one from the Fire.)',
+  ur: 'اے اللہ! میں نے شام کی، میں تجھے گواہ بناتا ہوں اور تیرے عرش اٹھانے والوں، تیرے فرشتوں اور تیری ساری مخلوق کو گواہ بناتا ہوں کہ تو ہی اللہ ہے، تیرے سوا کوئی معبود نہیں، تو اکیلا ہے تیرا کوئی شریک نہیں، اور محمد ﷺ تیرے بندے اور رسول ہیں۔ (چار مرتبہ پڑھنے والے کو اللہ جہنم سے آزاد فرما دیتا ہے۔)',
+  count: 4,
+  reference: 'Abu Dawud 5078, 5069',
+);
+
+const _me_nimah_satr_e = Zikr(
+  id: 'nimah_satr_e',
+  titleEn: 'Completion of blessing, well-being and cover',
+  titleUr: 'نعمت، عافیت اور پردے کی تکمیل',
+  arabic: 'اَللّٰهُمَّ إِنِّي أَمْسَيْتُ مِنْكَ فِي نِعْمَةٍ وَعَافِيَةٍ وَسِتْرٍ، فَأَتِمَّ عَلَيَّ نِعْمَتَكَ وَعَافِيَتَكَ وَسِتْرَكَ فِي الدُّنْيَا وَالْآخِرَةِ',
+  translit: "Allahumma inni amsaytu minka fi ni'matin wa 'afiyatin wa sitr, fa-atimma 'alayya ni'mataka wa 'afiyataka wa sitraka fid-dunya wal-akhirah",
+  en: 'O Allah, I have entered the evening in blessing, well-being and cover from You; so complete Your blessing, well-being and cover upon me in this world and the Hereafter.',
+  ur: 'اے اللہ! میں نے تیری طرف سے نعمت، عافیت اور پردہ پوشی میں شام کی، پس دنیا اور آخرت میں مجھ پر اپنی نعمت، عافیت اور پردہ پوشی کو مکمل فرما دے۔',
+  count: 3,
+  reference: 'Ibn Sunni 55',
+);
+
+const _me_ala_nafsi = Zikr(
+  id: 'ala_nafsi',
+  titleEn: "Allah's name over self, family and wealth",
+  titleUr: 'جان، گھر والوں اور مال پر اللہ کا نام',
+  arabic: 'بِسْمِ اللّٰهِ عَلَى نَفْسِي وَدِينِي، بِسْمِ اللّٰهِ عَلَى أَهْلِي وَمَالِي وَوَلَدِي، بِسْمِ اللّٰهِ عَلَى مَا أَعْطَانِيَ اللّٰهُ، اَللّٰهُ رَبِّي لَا أُشْرِكُ بِهِ شَيْئًا، اَللّٰهُ أَكْبَرُ، اَللّٰهُ أَكْبَرُ، اَللّٰهُ أَكْبَرُ، وَأَعَزُّ وَأَجَلُّ وَأَعْظَمُ مِمَّا أَخَافُ وَأَحْذَرُ، عَزَّ جَارُكَ، وَجَلَّ ثَنَاؤُكَ، وَلَا إِلٰهَ غَيْرُكَ، اَللّٰهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ كُلِّ شَيْطَانٍ مَرِيدٍ، وَمِنْ شَرِّ كُلِّ جَبَّارٍ عَنِيدٍ، فَإِنْ تَوَلَّوْا فَقُلْ حَسْبِيَ اللّٰهُ لَا إِلٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ، إِنَّ وَلِيِّيَ اللّٰهُ الَّذِي نَزَّلَ الْكِتَابَ وَهُوَ يَتَوَلَّى الصَّالِحِينَ',
+  translit: "Bismillahi 'ala nafsi wa dini, bismillahi 'ala ahli wa mali wa waladi, bismillahi 'ala ma a'taniyallah. Allahu Rabbi la ushriku bihi shay'a. Allahu akbar, Allahu akbar, Allahu akbar, wa a'azzu wa ajallu wa a'zamu mimma akhafu wa ahdhar. 'Azza jaruka, wa jalla thana'uka, wa la ilaha ghayruk. Allahumma inni a'udhu bika min sharri nafsi, wa min sharri kulli shaytanin marid, wa min sharri kulli jabbarin 'anid. Fa in tawallaw faqul hasbiyallahu la ilaha illa huwa 'alayhi tawakkaltu wa huwa Rabbul-'Arshil-'Azim. Inna waliyyiyallahul-ladhi nazzalal-kitaba wa huwa yatawallas-salihin",
+  en: 'In the name of Allah over myself and my religion; in the name of Allah over my family, my wealth and my children; in the name of Allah over whatever Allah has given me. Allah is my Lord; I associate nothing with Him. Allah is the Greatest (3 times), mightier, more majestic and greater than what I fear and dread. Honoured is the one under Your protection, exalted is Your praise, and there is no god besides You. O Allah, I seek refuge in You from the evil of my soul, from the evil of every rebellious devil and from the evil of every stubborn tyrant. "But if they turn away, say: Allah is sufficient for me; there is no god but He. In Him I trust, and He is the Lord of the Mighty Throne." "Indeed my protector is Allah, who sent down the Book, and He protects the righteous."',
+  ur: 'اللہ کے نام سے اپنی جان اور اپنے دین پر، اللہ کے نام سے اپنے گھر والوں، اپنے مال اور اپنی اولاد پر، اللہ کے نام سے ہر اس چیز پر جو اللہ نے مجھے دی۔ اللہ میرا رب ہے، میں اس کے ساتھ کسی چیز کو شریک نہیں کرتا۔ اللہ سب سے بڑا ہے (3 مرتبہ)، وہ اس سے کہیں زیادہ غالب، بزرگ اور عظیم ہے جس سے میں ڈرتا اور بچتا ہوں۔ تیری پناہ میں آنے والا عزت پاتا ہے، تیری ثنا بلند ہے اور تیرے سوا کوئی معبود نہیں۔ اے اللہ! میں اپنے نفس کے شر سے، ہر سرکش شیطان کے شر سے اور ہر ضدی ظالم کے شر سے تیری پناہ مانگتا ہوں۔ "پھر اگر وہ منہ پھیریں تو کہہ دو: مجھے اللہ کافی ہے، اس کے سوا کوئی معبود نہیں، اسی پر میں نے بھروسہ کیا اور وہی عرشِ عظیم کا رب ہے۔" "بے شک میرا کارساز اللہ ہے جس نے کتاب نازل کی اور وہی نیک لوگوں کی کارسازی کرتا ہے۔"',
+  count: 1,
+  reference: 'Ibn Sunni 51, 350; Abu Dawud 1525',
+);
+
+const _me_rabbiyallah = Zikr(
+  id: 'rabbiyallah',
+  titleEn: 'Allah is my Lord; His knowledge encompasses all',
+  titleUr: 'اللہ میرا رب ہے، اس کا علم ہر چیز کو گھیرے ہوئے ہے',
+  arabic: 'رَبِّيَ اللّٰهُ الَّذِي لَا إِلٰهَ إِلَّا هُوَ الْعَلِيُّ الْعَظِيمُ، تَوَكَّلْتُ عَلَى اللّٰهِ، سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، لَا قُوَّةَ إِلَّا بِاللّٰهِ، مَا شَاءَ اللّٰهُ كَانَ، وَمَا لَمْ يَشَأْ لَمْ يَكُنْ، أَعْلَمُ أَنَّ اللّٰهَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، وَأَنَّ اللّٰهَ قَدْ أَحَاطَ بِكُلِّ شَيْءٍ عِلْمًا',
+  translit: "Rabbiyallahul-ladhi la ilaha illa huwal-'Aliyyul-'Azim, tawakkaltu 'alallah, subhanallahi wa bihamdihi, la quwwata illa billah, ma sha'Allahu kana, wa ma lam yasha' lam yakun, a'lamu annallaha 'ala kulli shay'in qadir, wa annallaha qad ahata bikulli shay'in 'ilma",
+  en: 'My Lord is Allah, besides whom there is no god, the Most High, the Magnificent. I put my trust in Allah. Glory and praise be to Allah; there is no power except with Allah. What Allah wills happens and what He does not will does not happen. I know that Allah has power over all things and that Allah encompasses everything in knowledge.',
+  ur: 'میرا رب اللہ ہے جس کے سوا کوئی معبود نہیں، وہ بلند اور عظیم ہے۔ میں نے اللہ پر بھروسہ کیا۔ اللہ پاک ہے اور اسی کی تعریف ہے، اللہ کے بغیر کوئی قوت نہیں۔ جو اللہ چاہے وہ ہوتا ہے اور جو نہ چاہے وہ نہیں ہوتا۔ میں جانتا ہوں کہ اللہ ہر چیز پر قادر ہے اور اللہ نے ہر چیز کو اپنے علم سے گھیر رکھا ہے۔',
+  count: 1,
+  reference: "Ibn Sunni 42; Sunan al-Kubra (Nasa'i) 9756",
+);
+
+const _me_lakal_hamd_e = Zikr(
+  id: 'lakal_hamd_e',
+  titleEn: 'Renewing the covenant with Allah',
+  titleUr: 'اللہ سے عہد کی تجدید',
+  arabic: 'اَللّٰهُمَّ لَكَ الْحَمْدُ، لَا إِلٰهَ إِلَّا أَنْتَ، أَنْتَ رَبِّي وَأَنَا عَبْدُكَ، آمَنْتُ بِكَ مُخْلِصًا لَكَ دِينِي، أَمْسَيْتُ عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَتُوبُ إِلَيْكَ مِنْ سَيِّئِ عَمَلِي، وَأَسْتَغْفِرُكَ لِذُنُوبِي الَّتِي لَا يَغْفِرُهَا إِلَّا أَنْتَ',
+  translit: "Allahumma lakal-hamd, la ilaha illa anta, anta Rabbi wa ana 'abduk, amantu bika mukhlisan laka dini, amsaytu 'ala 'ahdika wa wa'dika mastata't, atubu ilayka min sayyi'i 'amali, wa astaghfiruka li-dhunubil-lati la yaghfiruha illa ant",
+  en: 'O Allah, to You belongs all praise; there is no god but You. You are my Lord and I am Your servant. I believe in You, devoting my religion sincerely to You. This evening I hold to Your covenant and promise as much as I can. I turn to You in repentance from my bad deeds, and I ask Your forgiveness for my sins, which none forgives but You.',
+  ur: 'اے اللہ! تیرے ہی لیے تمام تعریف ہے، تیرے سوا کوئی معبود نہیں، تو میرا رب ہے اور میں تیرا بندہ ہوں۔ میں تجھ پر ایمان لایا، اپنا دین تیرے لیے خالص کرتے ہوئے۔ میں نے اپنی طاقت کے مطابق تیرے عہد اور وعدے پر شام کی۔ میں اپنے برے اعمال سے تیری طرف توبہ کرتا ہوں اور اپنے ان گناہوں کی تجھ سے معافی مانگتا ہوں جنہیں تیرے سوا کوئی معاف نہیں کر سکتا۔',
+  count: 3,
+  reference: 'Tabarani (Awsat) 3096',
+);
+
 const Map<AzkarType, List<Zikr>> azkar = {
   AzkarType.morning: [
-    _kursi,
-    _ikhlas,
-    _falaq,
-    _nas,
-    _bismillahLaYadurru,
-    Zikr(
-      id: 'raditu',
-      arabic: 'رَضِيتُ بِٱللَّٰهِ رَبًّا، وَبِٱلْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ ﷺ نَبِيًّا',
-      translit: 'Raditu billahi Rabba, wa bil-Islami dina, wa bi-Muhammadin ﷺ nabiyya',
-      en: 'I am pleased with Allah as my Lord, Islam as my religion and Muhammad ﷺ as my Prophet.',
-      ur: 'میں اللہ کے رب ہونے، اسلام کے دین ہونے اور محمد ﷺ کے نبی ہونے پر راضی ہوں۔',
-      count: 3,
-      reference: 'Abu Dawud 5072',
-    ),
-    _subhanAllahWaBihamdihi,
-    Zikr(
-      id: 'asbahna',
-      arabic: 'أَصْبَحْنَا وَأَصْبَحَ ٱلْمُلْكُ لِلَّٰهِ، وَٱلْحَمْدُ لِلَّٰهِ، لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ ٱلْمُلْكُ وَلَهُ ٱلْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
-      translit: "Asbahna wa asbahal-mulku lillah, wal-hamdu lillah, la ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamdu wa huwa 'ala kulli shay'in qadir",
-      en: 'We have entered the morning and the dominion belongs to Allah; praise be to Allah. None has the right to be worshipped but Allah alone, without partner; His is the dominion and His the praise, and He is over all things competent.',
-      ur: 'ہم نے صبح کی اور ساری بادشاہی اللہ کی ہے، تمام تعریفیں اللہ کے لیے ہیں، اللہ کے سوا کوئی معبود نہیں، وہ اکیلا ہے اس کا کوئی شریک نہیں، اسی کی بادشاہی اور اسی کی تعریف ہے اور وہ ہر چیز پر قادر ہے۔',
-      count: 1,
-      reference: 'Sahih Muslim 2723',
-    ),
-    Zikr(
-      id: 'istighfar_100',
-      arabic: 'أَسْتَغْفِرُ ٱللَّٰهَ وَأَتُوبُ إِلَيْهِ',
-      translit: 'Astaghfirullaha wa atubu ilayh',
-      en: 'I seek forgiveness from Allah and repent to Him.',
-      ur: 'میں اللہ سے بخشش مانگتا ہوں اور اسی کی طرف رجوع کرتا ہوں۔',
-      count: 100,
-      reference: 'Sahih Bukhari 6307, Sahih Muslim 2702',
-    ),
-    _z_sayyid_istighfar,
-    _z_bika_m,
-    _z_fitrah_m,
-    _z_afini_badani,
-    _z_ya_hayyu,
-    _z_afw_afiyah,
-    _z_alim_al_ghayb,
-    _z_hasbiyallah_7,
-    _z_ma_bi_nimah_m,
-    _z_tahlil_10,
-    _z_ajirni_nar,
-    _z_ilman_nafia,
-    _z_adada_khalqihi,
-    _z_hashr_last,
-    _z_rum_17_19,
+    _me_four_words,
+    _me_kursi,
+    _me_three_quls,
+    _me_adada_khalqihi,
+    _me_la_yadurru,
+    _me_bika_m,
+    _me_fitrah_m,
+    _me_ilman_nafia,
+    _me_fatir,
+    _me_mulk_m,
+    _me_raditu,
+    _me_afini_badani,
+    _me_ya_hayyu,
+    _me_sayyid_istighfar,
+    _me_afw_afiyah,
+    _me_audhu_kalimat,
+    _me_tahlil_10,
+    _me_ajirni_nar,
+    _me_ma_bi_nimah_m,
+    _me_subhan_bihamdihi,
+    _me_ashhaduka_m,
+    _me_nimah_satr_m,
+    _me_mashaallah,
+    _me_hamd_rabbi,
+    _me_kulli_shaytan,
+    _me_ghadabihi,
+    _me_la_yujawizuhunna,
+    _me_wajhillah,
+    _me_shirk_khafi,
+    _me_hashr_last,
+    _me_alayka_tawakkaltu,
+    _me_ikfini,
+    _me_hasbiyallah_7,
+    _me_lakal_hamd_m,
+    _me_kun_li_jaran,
+    _me_rum_17_19,
+    _me_tawadaa,
+    _me_adada_ma_khalaqa,
+    _me_subhan_azim,
+    _me_ikfini_2,
   ],
   AzkarType.evening: [
-    _kursi,
-    _ikhlas,
-    _falaq,
-    _nas,
-    _bismillahLaYadurru,
-    _audhuKalimat,
-    Zikr(
-      id: 'amsayna',
-      arabic: 'أَمْسَيْنَا وَأَمْسَى ٱلْمُلْكُ لِلَّٰهِ، وَٱلْحَمْدُ لِلَّٰهِ، لَا إِلَٰهَ إِلَّا ٱللَّٰهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ ٱلْمُلْكُ وَلَهُ ٱلْحَمْدُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ',
-      translit: "Amsayna wa amsal-mulku lillah, wal-hamdu lillah, la ilaha illallahu wahdahu la sharika lah, lahul-mulku wa lahul-hamdu wa huwa 'ala kulli shay'in qadir",
-      en: 'We have entered the evening and the dominion belongs to Allah; praise be to Allah. None has the right to be worshipped but Allah alone, without partner; His is the dominion and His the praise, and He is over all things competent.',
-      ur: 'ہم نے شام کی اور ساری بادشاہی اللہ کی ہے، تمام تعریفیں اللہ کے لیے ہیں، اللہ کے سوا کوئی معبود نہیں، وہ اکیلا ہے اس کا کوئی شریک نہیں، اسی کی بادشاہی اور اسی کی تعریف ہے اور وہ ہر چیز پر قادر ہے۔',
-      count: 1,
-      reference: 'Sahih Muslim 2723',
-    ),
-    _subhanAllahWaBihamdihi,
-    _z_sayyid_istighfar,
-    _z_bika_e,
-    _z_fitrah_e,
-    _z_afini_badani,
-    _z_ya_hayyu,
-    _z_afw_afiyah,
-    _z_alim_al_ghayb,
-    _z_hasbiyallah_7,
-    _z_ma_bi_nimah_e,
-    _z_ajirni_nar,
-    _z_hashr_last,
-    _z_rum_17_19,
+    _me_four_words,
+    _me_kursi,
+    _me_three_quls,
+    _me_adada_khalqihi,
+    _me_la_yadurru,
+    _me_bika_e,
+    _me_fitrah_e,
+    _me_fatir,
+    _me_mulk_e,
+    _me_raditu,
+    _me_afini_badani,
+    _me_ya_hayyu,
+    _me_sayyid_istighfar,
+    _me_afw_afiyah,
+    _me_audhu_kalimat,
+    _me_tahlil_10,
+    _me_ajirni_nar,
+    _me_ma_bi_nimah_e,
+    _me_ashhaduka_e,
+    _me_subhan_bihamdihi,
+    _me_nimah_satr_e,
+    _me_mashaallah,
+    _me_hamd_rabbi,
+    _me_kulli_shaytan,
+    _me_ghadabihi,
+    _me_la_yujawizuhunna,
+    _me_wajhillah,
+    _me_shirk_khafi,
+    _me_hashr_last,
+    _me_alayka_tawakkaltu,
+    _me_ikfini,
+    _me_hasbiyallah_7,
+    _me_ala_nafsi,
+    _me_rabbiyallah,
+    _me_lakal_hamd_e,
+    _me_kun_li_jaran,
+    _me_rum_17_19,
+    _me_adada_ma_khalaqa,
   ],
   AzkarType.sleep: [
     Zikr(

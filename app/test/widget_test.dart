@@ -541,13 +541,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Azkar: extras are optional, new Namaz and Kalima sets open', (tester) async {
+  testWidgets('Azkar: morning has all 40 items, sleep extras optional, Namaz and Kalima sets open', (tester) async {
     await pumpApp(tester);
     final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
     nav.push(MaterialPageRoute(builder: (_) => const AzkarDetailScreen(type: AzkarType.morning)));
     await tester.pumpAndSettle();
-    expect(find.text('9/9'), findsNothing);
-    expect(find.text('0/9'), findsOneWidget);
+    expect(find.text('0/40'), findsOneWidget);
+    expect(find.byKey(const Key('extra_azkar_header')), findsNothing);
+    nav.pop();
+    await tester.pumpAndSettle();
+    nav.push(MaterialPageRoute(builder: (_) => const AzkarDetailScreen(type: AzkarType.sleep)));
+    await tester.pumpAndSettle();
     await tester.dragUntilVisible(find.byKey(const Key('extra_azkar_header')), find.byType(ListView).last, const Offset(0, -600));
     expect(find.byKey(const Key('extra_azkar_header')), findsOneWidget);
     nav.pop();
