@@ -34,15 +34,26 @@ class ScreenHeader extends StatelessWidget {
                       child: canPop ? const BackButton(color: Colors.white) : null,
                     ),
                     Expanded(
-                      child: Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppScope.of(context).settings.urdu
-                            ? const TextStyle(color: Colors.white, fontSize: 20, height: 1.9, fontWeight: FontWeight.w700)
-                            : displayStyle(size: 21, color: Colors.white),
-                      ),
+                      child: AppScope.of(context).settings.urdu
+                          // Nastaleeq stacks letters high above the line: never
+                          // clip it, shrink a long title to fit instead.
+                          ? FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.visible,
+                                style: const TextStyle(color: Colors.white, fontSize: 20, height: 2.3, fontWeight: FontWeight.w700),
+                              ),
+                            )
+                          : Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: displayStyle(size: 21, color: Colors.white),
+                            ),
                     ),
                     if (actions.isEmpty) const SizedBox(width: 48) else Row(mainAxisSize: MainAxisSize.min, children: actions),
                   ],
@@ -109,7 +120,7 @@ class HeaderTabs extends StatelessWidget {
                 onTap: () => onChanged(i),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
-                  padding: EdgeInsets.symmetric(vertical: AppScope.of(context).settings.urdu ? 3 : 9),
+                  padding: EdgeInsets.symmetric(vertical: AppScope.of(context).settings.urdu ? 2 : 9),
                   decoration: BoxDecoration(
                     color: i == index ? Colors.white : Colors.transparent,
                     borderRadius: BorderRadius.circular(26),
@@ -121,7 +132,7 @@ class HeaderTabs extends StatelessWidget {
                     overflow: TextOverflow.visible,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      height: AppScope.of(context).settings.urdu ? 1.9 : null,
+                      height: AppScope.of(context).settings.urdu ? 2.4 : null,
                       color: i == index ? AppColors.emerald : Colors.white,
                     ),
                   ),
