@@ -96,7 +96,7 @@ ThemeData buildTheme(Brightness brightness, {bool urdu = false}) {
     brightness: brightness,
     // Urdu: Latin letters and digits stay in the clean system font (Roboto);
     // Urdu script falls back to Nastaleeq.
-    fontFamilyFallback: urdu ? const [urduFont, arabicFont] : null,
+    fontFamilyFallback: urdu ? const [urduFont, arabicFont] : const [arabicFont],
   );
   // Nastaleeq is very tall: Urdu text needs extra line height or lines
   // overlap.
