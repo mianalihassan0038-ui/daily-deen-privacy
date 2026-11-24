@@ -57,7 +57,7 @@ class MoreFeaturesScreen extends StatelessWidget {
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              mainAxisExtent: state.settings.urdu ? 160 : 130,
+              mainAxisExtent: textScaled(context, state.settings.urdu ? 160 : 130),
             ),
             children: [
               for (final it in items)

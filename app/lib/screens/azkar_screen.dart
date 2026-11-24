@@ -131,7 +131,7 @@ class AzkarCategoriesList extends StatelessWidget {
                   key: Key('azkar_cat_${t.name}'),
                   leading: IconBadge(icon, color: color),
                   title: Text(azkarTypeNames[t]![urdu ? 1 : 0], style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text('$doneCount / $core ${s.t('completed').toLowerCase()}'
+                  subtitle: Text('${ltr('$doneCount / $core')} ${s.t('completed').toLowerCase()}'
                       '${extras > 0 ? '  •  +$extras ${s.t('extra_azkar_short')}' : ''}'),
                   trailing: setDone
                       ? const Icon(Icons.check_circle, color: AppColors.onTime)
@@ -324,7 +324,7 @@ class ZikrCard extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: urduStyle(context, size: 16)),
               const SizedBox(height: 6),
-              Text(zikr.en, textDirection: TextDirection.ltr, style: theme.textTheme.bodyMedium),
+              Text(zikr.en, textDirection: TextDirection.ltr, style: theme.textTheme.bodyMedium?.copyWith(fontFamilyFallback: const [arabicFont])),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -510,12 +510,16 @@ class _TasbeehPanelState extends State<TasbeehPanel> {
                           gradient: const RadialGradient(colors: [AppColors.emeraldLight, AppColors.emerald]),
                           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 14, offset: const Offset(0, 6))],
                         ),
-                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        padding: const EdgeInsets.all(14),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(mainAxisSize: MainAxisSize.min, children: [
                           Text('$inRound',
                               key: const Key('tasbeeh_count'),
                               style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w800)),
                           Text(s.t('tap_to_count'), style: const TextStyle(color: Colors.white70, fontSize: 12)),
                         ]),
+                        ),
                       ),
                     ),
                   ),

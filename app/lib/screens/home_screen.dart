@@ -736,7 +736,7 @@ class _QuickGrid extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        mainAxisExtent: AppScope.of(context).settings.urdu ? 136 : 112,
+        mainAxisExtent: textScaled(context, AppScope.of(context).settings.urdu ? 136 : 112),
       ),
       children: [
         _QuickCard(

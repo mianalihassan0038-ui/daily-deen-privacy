@@ -669,7 +669,7 @@ class TrendText extends StatelessWidget {
     final c = up ? AppColors.onTime : AppColors.missed;
     return Row(mainAxisSize: MainAxisSize.min, children: [
       Icon(up ? Icons.arrow_upward : Icons.arrow_downward, size: size + 2, color: c),
-      Text('${up ? '+' : ''}$delta%', style: TextStyle(fontSize: size, fontWeight: FontWeight.w700, color: c)),
+      Text(ltr('${up ? '+' : ''}$delta%'), style: TextStyle(fontSize: size, fontWeight: FontWeight.w700, color: c)),
     ]);
   }
 }

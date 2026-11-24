@@ -47,6 +47,14 @@ const String indoPakFont = 'KFGQPCNastaleeq';
 /// lines above and below; Urdu text spells it out instead.
 String urduText(String s) => s.replaceAll('\uFDFA', 'صلی اللہ علیہ وسلم');
 
+/// Wraps numbers / Latin fragments so they keep left-to-right order inside
+/// Urdu (RTL) text, e.g. "0 / 40" or "-5%".
+String ltr(String s) => '\u2066$s\u2069';
+
+/// A fixed layout height grown with the user's system font size, so boxes
+/// that hold text never overflow on phones with large fonts.
+double textScaled(BuildContext context, double v) => MediaQuery.textScalerOf(context).scale(v);
+
 /// Scales long-form reading text with the screen width so it reads the same
 /// on small and large phones.
 double readingScale(BuildContext context) =>

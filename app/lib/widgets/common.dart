@@ -25,8 +25,8 @@ class ScreenHeader extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 14),
           child: Column(
             children: [
-              SizedBox(
-                height: 48,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
                 child: Row(
                   children: [
                     SizedBox(
@@ -40,7 +40,7 @@ class ScreenHeader extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppScope.of(context).settings.urdu
-                            ? const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)
+                            ? const TextStyle(color: Colors.white, fontSize: 20, height: 1.9, fontWeight: FontWeight.w700)
                             : displayStyle(size: 21, color: Colors.white),
                       ),
                     ),
@@ -109,7 +109,7 @@ class HeaderTabs extends StatelessWidget {
                 onTap: () => onChanged(i),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
-                  padding: const EdgeInsets.symmetric(vertical: 9),
+                  padding: EdgeInsets.symmetric(vertical: AppScope.of(context).settings.urdu ? 3 : 9),
                   decoration: BoxDecoration(
                     color: i == index ? Colors.white : Colors.transparent,
                     borderRadius: BorderRadius.circular(26),
@@ -117,8 +117,11 @@ class HeaderTabs extends StatelessWidget {
                   child: Text(
                     labels[i],
                     textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.visible,
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
+                      height: AppScope.of(context).settings.urdu ? 1.9 : null,
                       color: i == index ? AppColors.emerald : Colors.white,
                     ),
                   ),
