@@ -74,7 +74,7 @@ class _BookCard extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text(book.title,
+                Text(urduText(book.title),
                     textDirection: TextDirection.rtl,
                     style: urduStyle(context, size: 19, weight: FontWeight.w700, color: AppColors.emerald)),
                 Text('${s.t('book_author')}: ${book.author}',
@@ -176,12 +176,12 @@ class _BookChaptersScreenState extends State<BookChaptersScreen> {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
           sliver: SliverList.list(children: [
-            Text(book.title,
+            Text(urduText(book.title),
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.rtl,
                 style: urduStyle(context, size: 26, weight: FontWeight.w700, color: AppColors.emeraldMid)),
             Text(
-              [if (book.parent.isNotEmpty) '${s.t('book_parent')}: ${book.parent}', '${s.t('book_author')}: ${book.author}']
+              [if (book.parent.isNotEmpty) '${s.t('book_parent')}: ${urduText(book.parent)}', '${s.t('book_author')}: ${book.author}']
                   .join(' ، '),
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
@@ -302,7 +302,7 @@ class _ChapterReaderScreenState extends State<ChapterReaderScreen> {
     final paras = ch.paragraphs;
 
     return HeaderScaffold(
-      title: book.title,
+      title: urduText(book.title),
       body: NotificationListener<ScrollEndNotification>(
         onNotification: (_) {
           _save();
