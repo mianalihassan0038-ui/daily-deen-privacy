@@ -9,6 +9,8 @@ import 'package:dailydeen/screens/shell.dart';
 import 'package:dailydeen/services/schedule.dart';
 import 'package:dailydeen/services/prayer_times.dart';
 import 'package:dailydeen/services/quran_repo.dart';
+import 'package:dailydeen/services/books.dart';
+import 'package:dailydeen/screens/books_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -728,5 +730,47 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('tilawat_later')));
     await tester.pumpAndSettle();
+  });
+  testWidgets('Books: topics list, reader resumes where reading stopped', (tester) async {
+    BookRepository.debugBooks = [
+      Book('test_book', 'شمائل نبویہ ﷺ', 'Shamail', 'اصحاب الرسول ﷺ', 'مولانا خلیق احمد', [
+        for (var i = 1; i <= 56; i++)
+          BookChapter(i, 'باب نمبر $i', i <= 2 ? List.filled(60, 'یہ ایک لمبا پیراگراف ہے جو پڑھنے کے لیے ہے۔').join('\n\n') : ''),
+      ]),
+    ];
+    addTearDown(() => BookRepository.debugBooks = null);
+    final state = await pumpApp(tester);
+    final nav = tester.state<NavigatorState>(find.byType(Navigator).first);
+    nav.push(MaterialPageRoute(builder: (_) => const BooksScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('book_test_book')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('book_continue')), findsNothing);
+    await tester.enterText(find.byKey(const Key('chapter_search')), '56');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chapter_56')), findsOneWidget);
+    expect(find.byKey(const Key('chapter_1')), findsNothing);
+    await tester.enterText(find.byKey(const Key('chapter_search')), '');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chapter_1')));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byKey(const Key('book_reader_1')), const Offset(0, -1500));
+    await tester.pumpAndSettle();
+    final saved = state.chapterOffset('test_book', 1);
+    expect(saved, greaterThan(500));
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    // Reopen: continues at chapter 1, at the same place.
+    await tester.tap(find.byKey(const Key('book_continue')));
+    await tester.pumpAndSettle();
+    final list = tester.widget<ListView>(find.byKey(const Key('book_reader_1')));
+    expect(list.controller!.offset, closeTo(saved, 1));
+    // Next topic; an empty topic shows the "coming soon" note.
+    await tester.dragUntilVisible(find.byKey(const Key('chapter_next')), find.byKey(const Key('book_reader_1')), const Offset(0, -800));
+    await tester.tap(find.byKey(const Key('chapter_next')));
+    await tester.pumpAndSettle();
+    expect(state.bookChapter('test_book'), 2);
+    expect(state.chaptersRead('test_book'), contains(1));
+    expect(tester.takeException(), isNull);
   });
 }

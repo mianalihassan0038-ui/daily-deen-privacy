@@ -1,6 +1,8 @@
 // Generates screenshots of the main screens (run with --update-goldens in CI).
 import 'dart:io';
 
+import 'package:dailydeen/screens/books_screen.dart';
+import 'package:dailydeen/services/books.dart';
 import 'package:dailydeen/app_state.dart';
 import 'package:dailydeen/data/azkar.dart';
 import 'package:dailydeen/data/routine.dart';
@@ -264,6 +266,12 @@ void main() {
     await shot(tester, '26_evening_azkar_urdu_scrolled');
     await push(tester, const MoreFeaturesScreen());
     await shot(tester, '27_more_urdu');
+    await tester.runAsync(() => BookRepository.instance.books());
+    await push(tester, const BooksScreen());
+    await shot(tester, '30_books_urdu');
+    await tester.tap(find.byKey(const Key('book_shamail_nabawiyah')));
+    await tester.pumpAndSettle();
+    await shot(tester, '31_book_topics_urdu');
     await push(tester, const SettingsScreen());
     await shot(tester, '28_settings_urdu');
     await push(tester, const RoutineScreen());

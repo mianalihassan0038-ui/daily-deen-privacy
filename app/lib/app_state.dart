@@ -535,6 +535,26 @@ class AppState extends ChangeNotifier {
   /// resumes on its own.
   Map<int, int> surahPos = {};
 
+  // ---- Books: each book remembers its last chapter, each chapter its scroll
+  // position, and which chapters were read to the end.
+  Map<String, dynamic> bookPos = {}; // {bookId: {'c': chapter, 'o': {'n': offset}, 'r': [n...]}}
+
+  Map<String, dynamic> _book(String id) =>
+      (bookPos[id] ??= <String, dynamic>{'c': 1, 'o': <String, dynamic>{}, 'r': <dynamic>[]}) as Map<String, dynamic>;
+  bool hasBookProgress(String id) => bookPos.containsKey(id);
+  int bookChapter(String id) => (bookPos[id]?['c'] as num?)?.toInt() ?? 1;
+  double chapterOffset(String id, int n) => ((bookPos[id]?['o'] as Map?)?['$n'] as num?)?.toDouble() ?? 0;
+  Set<int> chaptersRead(String id) => {for (final v in (bookPos[id]?['r'] as List?) ?? const []) (v as num).toInt()};
+
+  void saveBookPosition(String id, int chapter, double offset, {bool finished = false}) {
+    final b = _book(id);
+    b['c'] = chapter;
+    (b['o'] as Map)['$chapter'] = double.parse(offset.toStringAsFixed(1));
+    if (finished && !(b['r'] as List).contains(chapter)) (b['r'] as List).add(chapter);
+    prefs.setString('bookPos', jsonEncode(bookPos));
+    notifyListeners();
+  }
+
   /// Ayah to resume [surah] from (1 if never read).
   int resumeAyah(int surah) {
     final t = readingTask;
@@ -593,6 +613,11 @@ class AppState extends ChangeNotifier {
     qazaPending = prefs.getInt('qazaPending') ?? 0;
     lastRead = QuranRef.parse(prefs.getString('lastRead') ?? '');
     surahPos = {};
+    try {
+      bookPos = jsonDecode(prefs.getString('bookPos') ?? '{}') as Map<String, dynamic>;
+    } catch (_) {
+      bookPos = {};
+    }
     try {
       taskPos = (jsonDecode(prefs.getString('taskPos') ?? '{}') as Map<String, dynamic>).map((k, v) => MapEntry(k, '$v'));
     } catch (_) {

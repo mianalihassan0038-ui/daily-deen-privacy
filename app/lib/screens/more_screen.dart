@@ -7,6 +7,7 @@ import '../app_state.dart';
 import '../core/theme.dart';
 import '../widgets/common.dart';
 import 'azkar_screen.dart';
+import 'books_screen.dart';
 import 'calendar_screen.dart';
 import 'extras_screens.dart';
 import 'muhasaba_screen.dart';
@@ -32,6 +33,7 @@ class MoreFeaturesScreen extends StatelessWidget {
       (s.t('dua_library'), s.t('dua_library_sub'), Icons.volunteer_activism, AppColors.gold,
           () => push(HeaderScaffold(title: s.t('dua_library'), body: const AzkarCategoriesList()))),
       (s.t('surah_list'), s.t('surah_list_sub'), Icons.menu_book, AppColors.emeraldMid, () => ShellScope.go(context, Tabs.quran)),
+      (s.t('books'), s.t('books_sub'), Icons.auto_stories, const Color(0xFF8A5A2B), () => push(const BooksScreen())),
       (s.t('routine_planner'), s.t('routine_planner_sub'), Icons.event_note, const Color(0xFF3E7BC4), () => push(const RoutineScreen())),
       (s.t('daily_muhasaba'), s.t('muhasaba_sub'), Icons.edit_note, const Color(0xFF7A5BC4), () => push(MuhasabaScreen(date: state.today))),
       (s.t('qibla'), s.t('qibla_sub'), Icons.explore, const Color(0xFF0B6E4F), () => push(const QiblaScreen())),
